@@ -1,0 +1,41 @@
+//////////////////////////////////////////
+//	This file contains links to useful, referenced or used files with minor descriptions.
+//	Descriptions will default to any provided by the author.  If possible, the author must be clearly identified / credited
+//
+//	Links will be referenced with the following preference: repository, short http (e.g. bit.ly)
+//
+//	One of the goals for this file is to make finding references fast.  Please use maximum brevity and the following
+//	example layout for any additions.
+//////////////////////////////////////////
+//
+//	Revision: May 28, 2013
+//
+//////////////////////////////////////////
+
+-----
+MATLAB: progress monitor (progress bar) that works with parfor.
+Jeremy Scheff 			jdscheff@gmail.com
+
+parfor_progress			git://github.com/jdscheff/parfor_progress.git			http://bit.ly/ZqpERm
+-----
+
+-----
+MATLAB: apply function to a moving window over a vector
+Jos
+
+slidefun											http://bit.ly/13fcgN4
+-----
+
+-----
+MATLAB: shift a row or column relative to the other elements in a matrix.			
+John T. McCarthy		jtmcc@iol.ie
+
+shift												http://bit.ly/13Wx663
+-----
+
+-----
+MATLAB: converts a vector into a string with its MATLAB colon notation (single resolution).
+Javier Lopez-Calderon
+
+vect2colon											http://bit.ly/10xiGIN
+-----
