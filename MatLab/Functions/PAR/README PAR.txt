@@ -1,0 +1,1 @@
+PAR files are wrappers for the parallel processing of vectorized parametric sweeps
