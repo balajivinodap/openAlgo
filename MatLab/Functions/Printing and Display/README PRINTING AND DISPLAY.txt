@@ -1,0 +1,1 @@
+These are trivial functions that help manipulate strings and provide moderate user feedback during processing.
