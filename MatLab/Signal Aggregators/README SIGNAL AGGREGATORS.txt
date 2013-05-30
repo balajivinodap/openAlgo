@@ -7,5 +7,5 @@ Naming Convention:
 			function				ELEMENTAL function
 			functionSIG				SIGNAL function
 			functionSTA				STATE function
-			functionFunctionSIGA	SIGNAL AGGREGATOR function
-			functionFunctionSTAA	STATE AGGREGATOR function
+			functionFunctionSIG		SIGNAL AGGREGATOR function
+			functionFunctionSTA		STATE AGGREGATOR function
