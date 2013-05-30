@@ -1,0 +1,9 @@
+libemlrt.lib
+libut.lib
+libmwblas.lib
+libmwmathutil.lib
+/export:mexFunction
+/export:emlrtMexFcnProperties
+/export:virtualBarsMEX
+/export:virtualBarsMEX_initialize
+/export:virtualBarsMEX_terminate
