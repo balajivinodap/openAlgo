@@ -1,0 +1,64 @@
+{ 
+rsiMatLab fucntion produces an RSI value of 
+Average Gains / Average Losses more consistent with the method used 
+by MatLab (original Wilder algorithm)
+}
+
+inputs: 
+	Price( numericseries ), 
+	Length( numericsimple ) ; { this input assumed to be a constant >= 1 }
+
+variables:
+	absChange(0),
+	advances(0),
+	declines(0),
+	iter(0),
+	totalGain(0),
+	totalLoss(0),
+	rs(0), 
+	Change(0) ;
+	
+	Change = Price - Price[1];					// diffdata
+	absChange = Absvalue(Change);				// priceChange
+	
+	If Change >= 0 Then
+		Begin
+			advances = absChange;
+			declines = 0;
+		End
+	Else
+		Begin
+			advances = 0;
+			declines = absChange;
+	End;
+	
+	If Currentbar < Length then 
+		Begin
+			rsiMatLab = 50;
+		End
+	Else 
+		Begin
+
+	totalGain = Summation(advances, Length);
+	totalLoss = Summation(declines, Length);
+		
+	If totalLoss <> 0 AND totalGain <> 0 Then 
+		Begin
+			rs = (totalGain / totalLoss);
+		end
+	Else
+		Begin
+			rs = rs[1];
+	End;
+
+	 rsiMatLab = 100 - (100 / (1+rs));
+	 
+end;
+	
+
+
+
+	
+
+
+

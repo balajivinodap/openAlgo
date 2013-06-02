@@ -1,0 +1,64 @@
+{ 
+rsiMatLab Indicator produces a visual indicator based on an RSI value of 
+Average Gains / Average Losses more consistent with the method used 
+by MatLab (original Wilder algorithm)
+
+TradeStation's read only RSI uses a predefined smoothing value of 'Length'.
+
+This indicator provides a variable input 'rsiDetrend' that allows for 
+various detrending  / smoothing methods of the input vector.
+
+rsiDetrend:		< 0		Price - (15 * rsiLength)
+				> 0 	Price - Average(Close, rsiDetrend)
+				= 0		Price 	(No detrending)
+				
+Author: Mark Tompkins
+}
+
+inputs:
+	Price( Close ),
+	rsiLength( 14 ),
+	rsiDetrend(0),
+	OverSold( 30 ),
+	OverBought( 70 ),
+	OverSColor( Cyan ), 
+	OverBColor( Red ) ;
+
+variables:  
+	MyRSI(0), 
+	rsiPrice(0),
+	maRSI(0);
+
+If rsiDetrend < 0 Then Begin
+	maRSI = 15 * rsiLength;
+end;
+
+If rsiDetrend = 0 Then Begin
+	maRSI = 0;
+End;
+
+If rsiDetrend > 0 Then Begin
+	maRSI = Average(Close, rsiDetrend);
+end;
+
+rsiPrice = Close - maRSI;
+
+MyRSI = rsiMatLab(rsiPrice, rsiLength ) ;
+ 
+Plot1( MyRSI, "rsiMatLab" ) ;
+Plot2( OverBought, "OverBot" ) ;
+Plot3( OverSold, "OverSld" ) ;
+
+{ Color criteria }
+if MyRSI > OverBought then 
+	SetPlotColor( 1, OverBColor ) 
+else if MyRSI < OverSold then 
+	SetPlotColor( 1, OverSColor ) ;
+
+{ Alert criteria }
+if MyRSI crosses over OverSold then
+	Alert( "Indicator exiting oversold zone" )
+else if MyRSI crosses under OverBought then
+	Alert( "Indicator exiting overbought zone" ) ;
+
+
