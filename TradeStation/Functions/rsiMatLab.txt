@@ -1,5 +1,5 @@
 { 
-rsiMatLab fucntion produces an RSI value of 
+rsiMatLab function produces an RSI value of 
 Average Gains / Average Losses more consistent with the method used 
 by MatLab (original Wilder algorithm)
 }
