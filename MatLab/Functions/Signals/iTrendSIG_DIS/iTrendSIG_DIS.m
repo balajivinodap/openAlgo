@@ -1,19 +1,27 @@
 function [ varargout ] = iTrendSIG_DIS(price,scaling,cost,bigPoint,hSub)
 %ITRENDSIGDIS An indicator based on the work of John Elhers
-%   instantaneousTrend returns a trading signal for a given iTrend and MA cross as well as a
-%   technical indicator.
+%   instantaneousTrend returns a trading signal for a given iTrend and moving average crossover 
+%
+%   Input 'price' should be of an O | H | L | C form as we use the average of the Open & Close
+%   when passed to iTrend.m
 %
 %   S = ITRENDSIGDIS(PRICE) returns a trading signal based upon a 14-period
 %   iTrend and a Closing price (~ 1 day average).  
-%   S is the trading signal of values -2, 0, 2 where -2 denotes
-%   a sell (short reverse), 0 is neutral, and 2 is buy (long reverse).
 %
 %   S = ITRENDSIGDIS(PRICE,I,T) returns a trading signal for a I-period iTrend and
 %   a T-period simple moving average.
 %
-%   [S,R,SH,ITREND,MA] = ITRENDSIGDIS(...) returns the trading signal S, the
-%   absolute return in R, the Sharpe Ratio in SH calcualted using R, and
-%   the ITREND or MA series.
+%   [S,R,SH,ITREND,MA] = ITRENDSIGDIS(...) 
+%           S       derived trading signal 
+%           R       absolute return in R
+%           SH      derived Sharpe based on R
+%           ITREND  iTrend as calculated with a call to iTrend.m
+%           MA
+%
+% Author:           Mark Tompkins
+% Revision:			4902.23938
+% All rights reserved.
+
 %% Error check
 rows = size(price,1);
 if rows < 55

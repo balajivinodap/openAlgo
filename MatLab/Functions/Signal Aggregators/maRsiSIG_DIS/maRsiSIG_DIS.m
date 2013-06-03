@@ -5,7 +5,9 @@ function varargout = maRsiSIG_DIS(price,N,M,typeMA,Mrsi,thresh,typeRSI,isSignal,
 %   isSignal:   0 - Filter (default), 1 - Signal
 %               We can either combine the signals from each element, MA + RSi or we can use the RSI as a
 %               filter condition for MA.  
-% Copyright 2010, The MathWorks, Inc.
+%
+% Author:           Mark Tompkins
+% Revision:			4902.23857
 % All rights reserved.
 
 %% NEED TO ADD ERROR CHECKING OF INPUTS

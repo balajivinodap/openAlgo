@@ -32,6 +32,9 @@ function varargout = maRaviSIG_DIS(price,maF,maS,typeMA,raviF,raviS,raviD,raviM,
 %
 %
 %   We should expect performance to be better in trending phases compared to ranging
+%
+% Author:           Mark Tompkins
+% Revision:			4902.23830
 
 %% NEED TO ADD ERROR CHECKING OF INPUTS
 %% Defaults

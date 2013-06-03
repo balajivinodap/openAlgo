@@ -17,8 +17,9 @@ function varargout = atr(price,M,hSub)
 %					 		lookback of 'M' observations while allowing the parameters
 %							of hSub to be passed for graphing
 %
-% Author:			Mark Tompkins
-% Last Revision:	June 2, 2013
+% Author:           Mark Tompkins
+% Revision:			4902.19117
+
 %% Error check
 
 %% Validate inputs

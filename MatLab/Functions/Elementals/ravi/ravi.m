@@ -1,6 +1,9 @@
 function [ ind ] = ravi(price,lead,lag,D,M)
 %RAVI Indictor to detect a change between trending and ranging states
 %   Detailed explanation goes here
+%
+% Author:           Mark Tompkins
+% Revision:			4902.19244
 
 if size(price,2) < 4
     error('RAVI:tooFewInputs', ...

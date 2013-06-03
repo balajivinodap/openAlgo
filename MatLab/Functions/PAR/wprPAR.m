@@ -1,8 +1,8 @@
 function sh = wprPAR(x,data,scaling,cost,bigPoint)
 % WPR wrapper
-%%
-% Copyright 2010, The MathWorks, Inc.
-% All rights reserved.% define wpr to accept vectorized inputs and return only sharpe ratio
+%
+% Author:           Mark Tompkins
+% Revision:			4902.23682
 
 row = size(x,1);
 sh = zeros(row,1);

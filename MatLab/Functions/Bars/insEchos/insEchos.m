@@ -7,6 +7,9 @@ function [dirtyS] = insEchos( s )
 % s(lead<lag) = -2;  
 % Functions currently clean these echos with remEchosMEX
 % When aggregating signals we often needs these echoes reintroduced
+%
+% Author:		Mark Tompkins
+% Revision: 	4902.18918
 
 dirtyS = s;
 [rows,cols] = size(dirtyS);

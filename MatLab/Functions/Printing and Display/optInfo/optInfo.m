@@ -15,8 +15,8 @@ function [] = optInfo(isPar, range, tenI, numSampled)
 % also reference parameterSweep.m for future development
 % numSampled = the amount to subtract from range iterations
 %
-% Author: Mark Tompkins
-%
+% Author:           Mark Tompkins
+% Revision:			4902.23750
 
 if ~exist('numSampled','var')
     numSampled = 0;

@@ -10,8 +10,8 @@ function [ OpenClose ] = importOpenCloseFromTxt(filename, startRow, endRow)
 %
 %    See also TEXTSCAN.
 %
-% Author: Mark Tompkins
-%
+% Author:           Mark Tompkins
+% Revision:			4902.23500
 
 %% Initialize variables.
 delimiter = ',';

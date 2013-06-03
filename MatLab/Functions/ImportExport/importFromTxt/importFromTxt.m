@@ -7,8 +7,8 @@ function [ price ] = importFromTxt( filename )
 %   This assumes the columns are in standard order of Date | Time | Open | High | Low | Close ...
 %   and therefore imported into the struct as Open (:,1) & Close (:,4)
 %
-% Author: Mark Tompkins
-%
+% Author:           Mark Tompkins
+% Revision:			4902.23490
 
 %% Import from provided file
 try

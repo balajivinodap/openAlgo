@@ -10,8 +10,8 @@ function [ vBars ] = virtualBars( data,inc )
 %   left with only full virtualized observations.  There may be need to have partial observations formed
 %   which we can revisit.
 %
-% Author:               Mark Tompkins
-% Last Revision:        June 2, 2013
+% Author:           Mark Tompkins
+% Revision:        	4902.18954
 
 %% MEX code to be skipped
 coder.extrinsic('slidefun');

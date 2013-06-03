@@ -1,4 +1,7 @@
 function amp = snr(price,iMult,qMult)
+%
+% Author:           Mark Tompkins
+% Revision:			4902.19258
 
 %% MEX code to be skipped
 coder.extrinsic('OHLCSplitter');

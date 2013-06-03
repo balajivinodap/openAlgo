@@ -8,6 +8,10 @@ function [cleanS] = remEchos( s )
 % In this instance we only want to have a new signal trigger when there is a cross.
 % NOT in the case of every check
 % This function removes the echos and makes it a 'On Cross'
+%
+% Author:		Mark Tompkins
+% Revision: 	4902.18945
+
 
 % Now that we've adjusted the first trade we need to remove all dupe information
 % so that we'll be left with only singals and not echos

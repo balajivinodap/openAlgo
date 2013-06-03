@@ -10,8 +10,8 @@ function importSymbolDef( filename)
 %
 %   Expected assignments bigPoint, minTick
 %
-% Author: Mark Tompkins
-%
+% Author:           Mark Tompkins
+% Revision:			4902.23511
 
 %% Make sure the file exists
 if ~exist(filename,'file')

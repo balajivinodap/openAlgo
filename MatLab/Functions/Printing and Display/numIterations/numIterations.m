@@ -6,8 +6,8 @@ function [I] = numIterations(range)
 %
 %   I = NUMITERATIONS(RANGE) returns the number of iterations from a given range variable
 %
-% Author: Mark Tompkins
-%
+% Author:           Mark Tompkins
+% Revision:			4902.23741
 
 N = length(range);
 	I = length(range{1});

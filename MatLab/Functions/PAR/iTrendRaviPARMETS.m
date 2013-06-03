@@ -4,8 +4,8 @@ function shMETS = iTrendRaviPARMETS(x,data,scaling,cost,bigPoint)
 %                       rsiRavi(price,rsiM,rsiThresh,rsiType,raviF,raviS,raviD,raviM,raviE, ...
 %                               raviThresh, scaling,cost,bigPoint)
 %
-% Author: Mark Tompkins
-%
+% Author:           Mark Tompkins
+% Revision:			4902.23557
 
 row = size(x,1);
 shTest = zeros(row,1);

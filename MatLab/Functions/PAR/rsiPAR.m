@@ -1,8 +1,8 @@
 function sh = rsiPAR(x,data,scaling,cost,bigPoint)
 % define rsi to accept vectorized inputs and return only sharpe ratio
 %
-% Author: Mark Tompkins
-%
+% Author:           Mark Tompkins
+% Revision:			4902.23658
 
 row = size(x,1);
 sh = zeros(row,1);

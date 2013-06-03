@@ -11,7 +11,7 @@ function [ tLine,instT ] = iTrend(price)
 %   PRICE is ordinarily (H+L)/2 but can be any simple array
 %
 % Author:           Mark Tompkins
-% Last Revision:    June 2, 2013
+% Revision:			4902.19146
 
 %% Error check
 rows = size(price,1);

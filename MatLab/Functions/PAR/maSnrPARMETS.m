@@ -3,8 +3,8 @@ function shMETS = maSnrPARMETS(x,data,scaling,cost,bigPoint)
 %% 
 % maSnrPARMETS(price,N,M,typeMA,Mrsi,thresh,typeRSI,scaling,cost,bigPoint)
 %
-% Author: Mark Tompkins
-%
+% Author:           Mark Tompkins
+% Revision:			4902.23629
 
 row = size(x,1);
 shTest = zeros(row,1);

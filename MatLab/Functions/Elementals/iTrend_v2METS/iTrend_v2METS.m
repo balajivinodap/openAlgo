@@ -6,6 +6,11 @@ function [ varargout ] = iTrend_v2METS(price,iMult,qMult,hSub)
 %   T = ITREND_v2METS(PRICE) returns the instantaneous trend
 %
 %   [ITREND] = ITREND_v2METS(...) returns the Instantaneous Trend
+%
+% Author:           Mark Tompkins
+% Revision:			4902.19178
+
+
 %% Error check
 rows = size(price,1);
 if rows < 41

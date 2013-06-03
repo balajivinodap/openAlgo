@@ -1,8 +1,9 @@
 function sh = iTrendMaPAR(x,data,scaling,cost,bigPoint)
 % iTrendMA wrapper
 %
-% Author: Mark Tompkins
 %
+% Author:           Mark Tompkins
+% Revision:			4902.23546
 
 row = size(x,1);
 sh = zeros(row,1);

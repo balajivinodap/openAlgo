@@ -3,8 +3,8 @@ function shMETS = maRsiPARMETS(x,data,scaling,cost,bigPoint)
 %% 
 % marsiMETS(price,N,M,typeMA,Mrsi,thresh,typeRSI,scaling,cost,bigPoint)
 %
-% Author: Mark Tompkins
-%
+% Author:           Mark Tompkins
+% Revision:			4902.23619
 
 row = size(x,1);
 shTest = zeros(row,1);

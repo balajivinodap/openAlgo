@@ -1,8 +1,9 @@
 function varargout = wprSIG_DIS(price,N,thresh,scaling,cost,bigPoint,hSub)
 %
-%%
-% Copyright 2010, The MathWorks, Inc.
+% Author:           Mark Tompkins
+% Revision:			4902.24004
 % All rights reserved.
+
 if ~exist('scaling','var'), scaling = 1; end
 if ~exist('N','var'), N = 14; end
 if ~exist('cost','var'), cost = 0; end

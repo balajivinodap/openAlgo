@@ -1,4 +1,7 @@
 function [varargout] = signalNoiseRatio_DIS(price,iMult,qMult,hSub)
+%
+% Author:		Mark Tompkins
+% Revision: 	4902.18902
 
 %% Error check
 rows = size(price,1);

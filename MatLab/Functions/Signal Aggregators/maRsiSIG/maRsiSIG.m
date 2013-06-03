@@ -6,8 +6,8 @@ function varargout = maRsiSIG(price,N,M,typeMA,Mrsi,thresh,typeRSI,isSignal,scal
 %               We can either combine the signals from each element, MA + RSi or we can use the RSI as a
 %               filter condition for MA.  
 %
-% Author: 					Mark Tompkins
-% Last Revision: 			June 2, 2013
+% Author:           Mark Tompkins
+% Revision:			4902.23841
 % All rights reserved.
 
 %% NEED TO ADD ERROR CHECKING OF INPUTS

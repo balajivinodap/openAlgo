@@ -3,8 +3,8 @@ function out = thousandSepCash(in)
 % Example:
 % thousandSepCash(1234567)
 %
-% Author: Mark Tompkins
-%
+% Author:           Mark Tompkins
+% Revision:			4902.23769
 
 import java.text.*
 v = DecimalFormat('$###,##0.00');

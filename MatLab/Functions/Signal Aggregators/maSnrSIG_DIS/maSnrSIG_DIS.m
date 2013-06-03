@@ -22,6 +22,10 @@ function varargout = maSnrSIG_DIS(price,maF,maS,typeMA,snrThresh,snrEffect,scali
 %   snrEffect:      SNR effects
 %                   	Effect 0:   Drop signals less than the SNR threshhold
 %                       Effect 1:   Reverse signals that are generated when SNR is less than the threshold
+%
+% Author:           Mark Tompkins
+% Revision:			4902.23869
+% All rights reserved.
 
 %% Defaults
 if ~exist('maF','var'), maF = 12; end;

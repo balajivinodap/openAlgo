@@ -1,7 +1,8 @@
 function sh = ma2inputsPAR(x,data,scaling,cost,range,bigPoint,showBar)
 % define leadlag to accept vectorized inputs and return only sharpe ratio
-%%
-% All rights reserved.
+%
+% Author:           Mark Tompkins
+% Revision:			4902.23582
 
 [row,col] = size(x);
 sh  = zeros(row,1);

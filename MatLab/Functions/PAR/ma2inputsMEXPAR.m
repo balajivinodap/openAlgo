@@ -6,8 +6,8 @@ function sh = movAvg2inputsMEXPAR(x,data,scaling,cost,bigPoint)
 %   x(i,2) = lag
 %   x(i,3) = average type
 %
-% Author: Mark Tompkins
-%
+% Author:           Mark Tompkins
+% Revision:			4902.23570
 
 
 %% MEX code to be skipped

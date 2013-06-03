@@ -31,7 +31,7 @@ function [SIG,R,SH,LEAD,LAG] = ma2inputsSIG(price,F,S,type,scaling,cost,bigPoint
 %               bigPoint = value of one full tic
 %
 % Author:           Mark Tompkins
-% Last Revision:    June 2, 2013
+% Revision:			4902.23951
 % All rights reserved.
 %
 % See also movavg, sharpe, macd, tsmovavg

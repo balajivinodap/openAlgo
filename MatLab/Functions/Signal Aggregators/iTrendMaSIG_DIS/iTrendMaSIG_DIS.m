@@ -14,6 +14,10 @@ function varargout = iTrendMaSIG_DIS(price,M,typeMA,scaling,cost,bigPoint)
 %   [S,R,SH,ITREND,MA] = ITRENDMASIG_DIS(...) returns the trading signal S, the
 %   absolute return in R, the Sharpe Ratio in SH calcualted using R, and
 %   the ITREND or MA series.
+%
+% Author:           Mark Tompkins
+% Revision:			4902.23812
+
 %% Error check
 rows = size(price,1);
 if rows < 55

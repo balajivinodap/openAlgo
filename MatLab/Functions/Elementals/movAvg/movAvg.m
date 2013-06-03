@@ -26,9 +26,9 @@ function [short,long] = movAvg(asset,lead,lag,alpha)
 %   average data without plotting it. 
 % 
 %   See also BOLLING, HIGHLOW, CANDLE, POINTFIG. 
- 
-%       Copyright 1995-2010 The MathWorks, Inc.
-%       $Revision: 1.6.2.6 $   $Date: 2012/08/21 00:08:47 $ 
+%
+% Author:           Mark Tompkins
+% Revision:			4902.19196
 
 %% MEX code to be skipped
 coder.extrinsic('slidefun','tsmovavg');

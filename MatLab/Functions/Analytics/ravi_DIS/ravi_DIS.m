@@ -1,6 +1,9 @@
 function [ varargout ] = ravi_DIS(price,lead,lag,D,M,hSub)
 %RAVI_DIS Indictor to detect a change between trending and ranging states
 %   Detailed explanation goes here
+%
+% Author:		Mark Tompkins
+% Revision: 	4902.18884
 
 if size(price,2) < 4
     error('RAVI:tooFewInputs', ...

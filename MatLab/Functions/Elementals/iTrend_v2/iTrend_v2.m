@@ -9,7 +9,9 @@ function [ tLine ] = iTrend_v2(price,iMult,qMult)
 %
 %   PRICE is ordinarily (H+L)/2 but can be any simple array
 %
-% Author: Mark Tompkins
+% Author:           Mark Tompkins
+% Revision:			4902.23985
+% All rights reserved.
 
 %% MEX code to be skipped
 coder.extrinsic('exist');

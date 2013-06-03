@@ -17,12 +17,9 @@ function varargout = ma2inputsSIG_DIS(price,F,S,typeMA,scaling,cost,bigPoint,hSu
 %
 %   hSub so that we can return ma2inputs as a subPlot
 %
-%
-
-%%
-% Derived from Matlab's leadlag function
+% Author:           Mark Tompkins
+% Revision:			4902.23962
 % All rights reserved.
-%
 
 %% Process input args
 if ~exist('typeMA', 'var')

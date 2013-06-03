@@ -3,7 +3,8 @@ function [ varargout ] = OHLCSplitter( price )
 %   OHLCSPLITTER will parse a given dataset with the assumption that the given data is ordered if
 %   the supplied input is a matrix.
 %
-%	Author: Mark Tompkins
+% Author:		Mark Tompkins
+% Revision: 	4902.18930
 
 % Check if we've been given a dataset or matrix
 

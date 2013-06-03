@@ -18,6 +18,9 @@ function varargout = rsiSIG_DIS(price,M,thresh,type,scaling,cost,bigPoint,hSub)
 %   Signals with Echos represent a market state, not a signal.  I.e. "we should be ____".
 %   For RSI in oversold state, "we should be long".  Removing the Echos produces that buy signal.
 %
+% Author:           Mark Tompkins
+% Revision:			4902.23994
+% All rights reserved.
 
 %% Defaults and parsing
 if ~exist('scaling','var'), scaling = 1; end;

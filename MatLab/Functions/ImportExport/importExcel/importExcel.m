@@ -4,8 +4,9 @@ function [data,bigPoint] = importExcel()
 %
 % Prompt for specific file with file browser
 %
-% Author: Mark Tompkins
 %
+% Author:           Mark Tompkins
+% Revision:			4902.23478
 [fname,fpath] = uigetfile({'*.xlsx';'*.xls'});
 if fpath==0, error('no file selected'); 
 end
