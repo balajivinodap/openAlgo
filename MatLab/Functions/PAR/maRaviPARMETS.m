@@ -1,7 +1,7 @@
-function shMETS = maRsiPARMETS(x,data,scaling,cost,bigPoint)
+function shMETS = maRaviPARMETS(x,data,scaling,cost,bigPoint)
 % define ma+rsi to accept vectorized inputs and return only sharpe ratio
 %% 
-% marsiMETS(price,N,M,typeMA,Mrsi,thresh,typeRSI,scaling,cost,bigPoint)
+% maRaviPARMETS(price,N,M,typeMA,Mrsi,thresh,typeRSI,scaling,cost,bigPoint)
 %
 % Author: Mark Tompkins
 %
@@ -17,7 +17,7 @@ vBarsVal = data(testPts+1:end,:);
 
 %% Progress Bar
 try % Initialization
-      ppm = ParforProgressStarter2('Parametric Sweep: maRsiPARMETS', row, 0.1);
+      ppm = ParforProgressStarter2('Parametric Sweep: marsiPARMETS', row, 0.1);
 catch me % make sure "ParforProgressStarter2" didn't get moved to a different directory
       if strcmp(me.message, 'Undefined function or method ''ParforProgressStarter2'' for input arguments of type ''char''.')
           error('ParforProgressStarter2 not in path.');
@@ -38,16 +38,10 @@ parfor ii = 1:row
         shTest(ii) = NaN;
         shVal(ii) = NaN;
     else
-        % maRsiSIG(price,N,M,typeMA,Mrsi,thresh,typeRSI,scaling,cost,bigPoint)
-        % movAvg2inputsMEX_mex(price,N,M,typeMA,scaling,cost,bigPoint);
-        % rsiMETS(price,Mrsi,thresh,typeRSI,scaling,cost,bigPoint);
-        %                        price   N      M     typeMA   Mrsi    Mdet      thres   typeRSI
-        [~,~,shTest(ii)] =	maRsiSIG(vBarsTest,x(ii,1),x(ii,2),x(ii,3),...
-                                    [x(ii,4) x(ii,5)],x(ii,6),x(ii,7),x(ii,8),...
-                                    scaling,cost,bigPoint); 
-        [~,~,shVal(ii)] =	maRsiSIG(vBarsVal,x(ii,1),x(ii,2),x(ii,3),...
-                                    [x(ii,4) x(ii,5)],x(ii,6),x(ii,7),x(ii,8),...
-                                    scaling,cost,bigPoint);  %#ok<PFBNS>
+        [~,~,shTest(ii)] =	maRaviSIG_DIS(vBarsTest,x(ii,1),x(ii,2),x(ii,3),x(ii,4),x(ii,5),x(ii,6),...
+                                                x(ii,7),x(ii,8),x(ii,9),scaling,cost,bigPoint); 
+        [~,~,shVal(ii)] =	maRaviSIG_DIS(vBarsVal,x(ii,1),x(ii,2),x(ii,3),x(ii,4),x(ii,5),x(ii,6),...
+                                                x(ii,7),x(ii,8),x(ii,9),scaling,cost,bigPoint);  %#ok<PFBNS>
     end
     ppm.increment(ii); %#ok<PFBNS>
 end

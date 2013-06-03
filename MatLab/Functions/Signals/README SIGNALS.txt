@@ -61,5 +61,7 @@ SIGNAL	A signal is generated from one or more STATE conditions resolving to bool
 			function				ELEMENTAL function
 			functionSIG				SIGNAL function
 			functionSTA				STATE function
+			functionSIG_DIS			SIGNAL function with graphing
 			functionFunctionSIG		SIGNAL AGGREGATOR function
+			functionFunctionSIG_DIS	SIGNAL AGGREGATOR with graphing
 			functionFunctionSTA		STATE AGGREGATOR function

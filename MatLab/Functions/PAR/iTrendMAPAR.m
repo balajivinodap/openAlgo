@@ -1,4 +1,4 @@
-function sh = iTrendMAPAR(x,data,scaling,cost,bigPoint)
+function sh = iTrendMaPAR(x,data,scaling,cost,bigPoint)
 % iTrendMA wrapper
 %
 % Author: Mark Tompkins
@@ -25,7 +25,7 @@ end %try
 
 
 parfor ii = 1:row
-    [~,~,sh(ii)] = iTrendMA(data,x(ii,1),x(ii,2),scaling,cost,bigPoint);
+    [~,~,sh(ii)] = iTrendMaSIG(data,x(ii,1),x(ii,2),scaling,cost,bigPoint);
     ppm.increment(ii); %#ok<PFBNS>
 end
 
