@@ -63,7 +63,18 @@
 #include <list>
 #include <iterator>
 
-extern "C" mxArray *mxCreateSharedDataCopy(const mxArray *pr);
+// Declare external reference to undocumented C function
+#ifdef __cplusplus
+	extern "C"
+	{
+#endif
+
+mxArray *mxCreateSharedDataCopy(const mxArray *pr);
+// and any other prototypes for undocumented API functions you are using
+
+#ifdef __cplusplus
+	}
+#endif
 
 using namespace std;
 
@@ -113,6 +124,7 @@ int sign(int num);
 #define isRealScalar(P) (isReal2DfullDouble(P) && mxGetNumberOfElements(P) == 1)
 
 // Global Variables
+double PROFIT_TGT;								// Calculated profit target (for readability)
 double numTicks;								// Number of ticks (representing $ multiples) in which to take a profit
 double minTick;									// What a sigle tick increment is for a given contract
 double openAvg;									// Should we manage profit taking on a per contract basis or average the net position (0 = atomic | 1 = average)
@@ -124,6 +136,8 @@ int shiftOpen;									// used for readability
 int shiftHigh;
 int shiftLow;
 int shiftClose;
+
+
 
 void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				 int nrhs, const mxArray *prhs[]) /* Input variables */
@@ -237,6 +251,9 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	numTicks =	mxGetScalar(numTicks_IN);
 	openAvg =	mxGetScalar(openAvg_IN);
 
+	// const double PROFIT_TGT = (minTick * numTicks);
+	PROFIT_TGT = (minTick * numTicks);
+
 	// START //
 	// Initialize variables
 	int	sigIndex;							// Iterator that will store the index of the referenced signal
@@ -244,7 +261,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	int anyTrades = 0;						// Variable that indicates if we have any trades
 
 	// Check that we have at least one signal (at least one trade)
-	for (sigIndex=0; sigIndex < rowsSig+1; sigIndex++)					// Remember C++ starts counting at '0'
+	for (sigIndex=0; sigIndex < rowsSig; sigIndex++)					// Remember C++ starts counting at '0'
 	{
 		if (sigInPtr[sigIndex] !=0)	// See if we have a signal
 		{
@@ -295,7 +312,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 		// ITERATE REMAINING BARS
 		// sigIndex = first signal index
-		for (int curBar=sigIndex + 1; curBar < rowsSig+1 + 1; curBar++)
+		for (int curBar=sigIndex + 1; curBar < rowsSig; curBar++)
 		{
 			if (sigInPtr[curBar] == 0)
 			{
@@ -348,7 +365,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			else
 			{
 				// Signal Input Error
-				mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:inputSignalError", "A signal was given that was not of the form (int)[-2 <= SIG >= 2]. Aborting.");
+				mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:inputSignalError", "A signal was given that was not of the form (int)[-2 <= SIG >= 2]. Aborting.");
 			}
 		}
 		// Iterations complete
@@ -368,15 +385,15 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			int numNewObsv = profitLedger.size();				// number of new signals and virtual profit bars to add
 
 			// Feedback which can be removed
-			mexPrintf("\n\nProcessing %g profit bars.\n\n",numNewObsv);
+			mexPrintf("\n\nProcessing %d profit bars...\n\n",numNewObsv);
 
 			/* Create matrices for the return arguments */ 
 			// http://www.mathworks.com/help/matlab/matlab_external/c-c-source-mex-files.html
 			// http://www.mathworks.com/help/matlab/apiref/mxcreatedoublematrix.html
 			mwSize numNewRows = rowsPrice + (mwSize)numNewObsv;
 
-			bars_IN = mxCreateDoubleMatrix(numNewRows, 4, mxREAL);
-			sig_IN = mxCreateDoubleMatrix(numNewRows, 1, mxREAL);
+			bars_OUT = mxCreateDoubleMatrix(numNewRows, 4, mxREAL);
+			sig_OUT = mxCreateDoubleMatrix(numNewRows, 1, mxREAL);
 
 			// assign the variables for manipulating the arrays (by pointer reference)
 			barsOutPtr = mxGetPr(bars_OUT);
@@ -388,6 +405,8 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 			// List iterators
 			myDblListIter signalsIter		= signals.begin();
+			//myDblListIter vBarsIter			= vBars.begin();
+
 			myDblListIter vBarsOpenIter		= vBars.begin();
 			myDblListIter vBarsHighIter		= vBars.begin();
 			myDblListIter vBarsLowIter		= vBars.begin();
@@ -402,14 +421,15 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			for (int iter = 0; iter < rowsPrice; iter++)
 			{
 				// Convert reverses to a fraction so we can identify them later
-				if (abs(sigInPtr[iter]) == 2)
+				/*if (abs(sigInPtr[iter]) == 2)
 				{
 					*signalsIter = sign(sigInPtr[iter] * 0.5);
 				}
 				else
-				{
+				{*/
 					*signalsIter	=	sigInPtr[iter];
-				}
+					//*vBarsIter		=	barsInPtr[iter];
+				/*}*/
 				*vBarsOpenIter	=	barsInPtr[iter + shiftOpen];
 				*vBarsHighIter	=	barsInPtr[iter + shiftHigh];
 				*vBarsLowIter	=	barsInPtr[iter + shiftLow];
@@ -420,7 +440,12 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				vBarsHighIter++;
 				vBarsLowIter++;
 				vBarsCloseIter++;
+					//vBarsIter++;
 			}
+
+			// memcpy ( &person_copy, &person, sizeof(person) );
+			//memcpy (&vBars, &barsInPtr, sizeof(double));
+			//memcpy (&signals, &sigInPtr, sizeof(double));
 
 			// Inserts based on profitLedger
 			list<profitEntry>::iterator pftIter;
@@ -430,10 +455,10 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 			// Reset pointers
 			signalsIter		= signals.begin();
-			vBarsOpenIter	= vBars.begin(); 
-			vBarsHighIter	= vBars.begin(); advance(vBarsHighIter, shiftHigh);
-			vBarsLowIter	= vBars.begin(); advance(vBarsLowIter, shiftLow);
-			vBarsCloseIter	= vBars.begin(); advance(vBarsCloseIter, shiftClose);
+			//vBarsOpenIter	= vBars.begin(); 
+			//vBarsHighIter	= vBars.begin(); advance(vBarsHighIter, shiftHigh);
+			//vBarsLowIter	= vBars.begin(); advance(vBarsLowIter, shiftLow);
+			//vBarsCloseIter	= vBars.begin(); advance(vBarsCloseIter, shiftClose);
 
 			// Move price pointer to sync with signal pointer (signal lags price by one bar)
 			vBarsOpenIter++;
@@ -478,7 +503,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		
 			// Assign values to output matrices
 			// Check for different array sizes
-			if ((signals.size()) != vBars.size())
+			if ((signals.size()) != (vBars.size()/4))
 			{
 				mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:arraySizeCheck", "A final check for array size failed prior to assigning outputs. Aborting.");
 			}
@@ -491,6 +516,10 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			{
 				barsOutPtr[outIter] = *vBarsOpenIter;
 				sigOutPtr[outIter] = *signalsIter;
+
+				// Increment pointers and indexes
+				vBarsOpenIter++;
+				signalsIter++;
 				outIter++;
 			}
 		}
@@ -507,14 +536,14 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	}
 
 	// Destructors
-	barsInPtr = NULL;
-	sigInPtr = NULL;
-
 	profitLedger.clear();
 	profitLedger.~list();
 
 	openLedger.clear();
 	openLedger.~list();
+
+	barsInPtr = NULL;
+	sigInPtr = NULL;
 
 	return;
 }
@@ -577,9 +606,11 @@ void moveOpenLedger(int ID, int qty)
 
 void sameBarProfitCheck(int ID, double qty)
 {
+	
 	// Is there a profit on the bar of the trade? 
 		// Short signal - check LOW
-		if ((qty < 0) && (barsInPtr[ID + 1 + shiftLow] < barsInPtr[ID + 1 + shiftOpen] - (minTick * numTicks)))
+		//if ((qty < 0) && (barsInPtr[ID + 1 + shiftLow] < barsInPtr[ID + 1 + shiftOpen] - (minTick * numTicks)))
+		if ((qty < 0) && (barsInPtr[ID + 1 + shiftLow] < barsInPtr[ID + 1 + shiftOpen] - PROFIT_TGT))
 		{
 			// We have a profit on the same observation.  Put an entry in the profit ledger
 			moveProfitLedger(ID, qty, barsInPtr[ID + 1 + shiftOpen] - (minTick * numTicks));

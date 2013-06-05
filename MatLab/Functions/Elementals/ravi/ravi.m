@@ -1,9 +1,33 @@
 function [ ind ] = ravi(price,lead,lag,D,M)
-%RAVI Indictor to detect a change between trending and ranging states
-%   Detailed explanation goes here
+%RAVI A measurement which attempts to detect a change between trending and ranging states
+%
+%	From the work of Tushar S. Chande, PhD. and cited in his book "Beyond Technical Analysis"
+%	the Ravi calculation is a measurement of current market "trendiness".  A value greater than
+%	3% is claimed to be a measurement of when the market is in a trending phase.  Values less
+%	than 3% are a ranging phase.
+%
+%	PRICE:	We call ATR to normalize price data in the ravi function so we need O | H | L | C as price input.
+%	LEAD:	Observation period for the fast period harmonic mean used to calculate Ravi measurement
+%	LAG:	Observation period for the slow period harmonic mean used to calculate Ravi measurement
+%	D:		Detrender option:
+%				0	-	Ravi (default)
+%				1	-	ATR 
+%	M:		Mean ravi shift used to calibrate the returned vector.
+%				e.g.	M = 10 	the mean of the RAVI vector is set to 10%
+%	hSub:	String used to manipulate the graphing of the Ravi vector
+%
+%	RAVI(PRICE)				Returns a graph of the 'ravi.m' function with default values.
+%	RAVI(PRICE,...)			Returns a graph of the 'ravi.m' function with declared values.
+%
+%   ind = RAVI(PRICE) 		returns a RAVI vector with default values:
+%								Lead	5
+%								Lag		65
+%								D		0
+%								M		20				
 %
 % Author:           Mark Tompkins
-% Revision:			4902.19244
+% Revision:			4903.16719
+% All rights reserved.
 
 if size(price,2) < 4
     error('RAVI:tooFewInputs', ...

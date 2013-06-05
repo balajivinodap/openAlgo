@@ -1,15 +1,26 @@
 function [dirtyS] = insEchos( s )
 %INSECHOS Will insert echos from a trading signal
-% Trading signals may have an echo when they are generated from some strategies.
-% For example, when generating signals from a lead / lag moving average calculation
-% the following method is used:
-% s(lead>lag) = 2;                                
-% s(lead<lag) = -2;  
-% Functions currently clean these echos with remEchosMEX
-% When aggregating signals we often needs these echoes reintroduced
+% insEchos will effectively transform a SIGNAL to a STATE. One must be vigilant in
+% its use as the logical that might otherwise indicate a given state may no longer
+% be true.
 %
-% Author:		Mark Tompkins
-% Revision: 	4902.18918
+% When aggregating SIGNALS or STATES it is sometimes necessary to artificially
+% normalize the inputs. For example, consider the following logical condition:
+%
+%	"What is the most recent SIGNAL from function_SIG?  ...was it a BUY or SELL?"
+%
+% insEchos will replicate the last non-zero value until the next non-zero value in a 
+% serial fashion.
+%
+%	Example:
+%				in	[0 0 0 1 0 0 0 -1  0  0  0 -1  0  0  0 1 0 0]
+%				out	[0 0 0 1 1 1 1 -1 -1 -1 -1 -1 -1 -1 -1 1 1 1]
+%
+%	Note:	Matrix inputs are permitted
+%
+% Author:           Mark Tompkins
+% Revision:			4903.17854
+% All rights reserved.
 
 dirtyS = s;
 [rows,cols] = size(dirtyS);

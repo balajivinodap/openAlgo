@@ -1,12 +1,39 @@
 function [ varargout ] = ravi_DIS(price,lead,lag,D,M,hSub)
-%RAVI_DIS Indictor to detect a change between trending and ranging states
-%   Detailed explanation goes here
+%RAVI_DIS A measurement which attempts to detect a change between trending and ranging states
 %
-% Author:		Mark Tompkins
-% Revision: 	4902.18884
+%	From the work of Tushar S. Chande, PhD. and cited in his book "Beyond Technical Analysis"
+%	the Ravi calculation is a measurement of current market "trendiness".  A value greater than
+%	3% is claimed to be a measurement of when the market is in a trending phase.  Values less
+%	than 3% are a ranging phase. 
+%
+%	DIS		This function calls the elemental function 'ravi.m' for calculationand can provide a graphical response.
+%
+%	INPUTS
+%			PRICE	We call ATR to normalize price data in the ravi function so we need O | H | L | C as price input.
+%			LEAD	Observation period for the fast period harmonic mean used to calculate Ravi measurement
+%			LAG		Observation period for the slow period harmonic mean used to calculate Ravi measurement
+%			D		Detrender option:
+%						0	-	Ravi (default)
+%						1	-	ATR 
+%			M		Mean ravi shift used to calibrate the returned vector.
+%						e.g.	M = 10 	the mean of the RAVI vector is set to 10%
+%			HSUB	String used to manipulate the graphing of the Ravi vector
+%
+%	RAVI_DIS(PRICE)				Returns a graph of the 'ravi.m' function with default values.
+%	RAVI_DIS(PRICE,...)			Returns a graph of the 'ravi.m' function with declared values.
+%
+%   ind = RAVI_DIS(PRICE) 		returns a RAVI vector with default values:
+%									Lead	5
+%									Lag		65
+%									D		0
+%									M		20				
+%
+% Author:           Mark Tompkins
+% Revision:			4903.16719
+% All rights reserved.
 
 if size(price,2) < 4
-    error('RAVI:tooFewInputs', ...
+    error('ravi_DIS:tooFewInputs', ...
             'We call ATR to normalize price data therefore we need O | H | L | C as price input. Exiting.');
 end; %if
 
@@ -18,7 +45,7 @@ if D == 0
 elseif D == 1
     div = ' ATR';
 else
-    error('RAVI:inputArg','Unknown input in value ''D''. Aborting.');
+    error('ravi_DIS:inputArg','Unknown input in value ''D''. Aborting.');
 end;
 
 %% Plot if requested
@@ -63,7 +90,7 @@ else
             case 1
                 varargout{1} = ind; 
             otherwise
-                warning('RAVI:OutputArg',...
+                warning('ravi_DIS:OutputArg',...
                     'Too many output arguments requested, ignoring last ones');
         end; %switch
     end; %for

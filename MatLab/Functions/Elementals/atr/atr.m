@@ -18,7 +18,8 @@ function varargout = atr(price,M,hSub)
 %							of hSub to be passed for graphing
 %
 % Author:           Mark Tompkins
-% Revision:			4902.19117
+% Revision:			4903.17425
+% All rights reserved.
 
 %% Error check
 

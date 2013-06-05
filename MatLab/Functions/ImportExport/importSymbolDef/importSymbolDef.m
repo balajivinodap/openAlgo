@@ -23,8 +23,8 @@ else
     delimiterIn = ',';
     tmpStruct = importdata(filename,delimiterIn);
     % Iterate through each detected header / value pair
-    for i=1:size(tmpStruct.colheaders,2)
-        assignin('base',tmpStruct.colheaders{i},tmpStruct.data(1,i));
+    for ii=1:size(tmpStruct.colheaders,2)
+        assignin('base',tmpStruct.colheaders{ii},tmpStruct.data(1,ii));
     end;
     clearvars tmpStruct;
 end; %if

@@ -1,14 +1,13 @@
 // calcProfitLoss.cpp : Defines the entry point for the console application.
 // http://www.kobashicomputing.com/node/177 for a reference to x64 bit
 //
-//
 // nlhs Number of output variables nargout 
 // plhs Array of mxArray pointers to the output variables varargout
 // nrhs Number of input variables nargin
 // prhs Array of mxArray pointers to the input variables varargin
 //
 // Matlab function:
-// [cash,openEQ,netLiq,returns] = calcProfitLossMEX(data,sig,bigPoint,cost)
+// [cash,openEQ,netLiq,returns] = calcProfitLoss_mex(data,sig,bigPoint,cost)
 // 
 // Inputs:
 //		data		A 2-D array of prices in the form of Open | Close
@@ -22,8 +21,47 @@
 //		netLiq		A 2D array of aggregated cash transactions plus the current openEQ if any up to a given observation
 //		returns		A 2D array of bar to bar returns
 //
+//	NOTE: This function accepts both advanced (fractional) and standard SIGNAL inputs
+//
+//		By leveraging fractions as additional logic, we are able to construct more meaningful signals beyond the scope of a simple Buy or Sell of quantity X.
+//		As you can't buy or sell 1/2 a share or 1/2 a lot, we can quickly check for additional handling of a signal that contains a fractional element.
+//		
+//		The convention that is used refines to the following to effectuate some advanced handling of produced signals. 'NET' is a current net position:
+//
+//			NET = any	SIGNAL = 0					THEN No Action						A zero signal is an evaluated false to a possible state trigger and instructs to 'do nothing'.  
+//																						Signal IF conditions have a boolean output of TRUE == 1 or FALSE == 0
+//			NET = any	SIGNAL = X		(INTEGER)	THEN Buy or Sell X					An integer instructs to BUY or SELL quantity X. 
+//																						This can be additive, reductive or initiating in respect to NET.
+//			NET = any	SIGNAL = +/-0.5	(FRACTION)	THEN Close Out Any Position			Close out any existion position such that a NET = 0 flat condition exists.
+//																						If no position exists, no error is thrown.
+//			
+//			NET <= 0	SIGNAL =  X.5	(FRACTION)	THEN Reverse to position NET = X	Close out any existing short position and buy X longs to create a NET long position of quantity X
+//			NET >= 0	SIGNAL = -X.5	(FRACTION)	THEN Reverse to position NET = -X	Close out any existing long position and sell X shorts to create a NET short position of quantity X
+//			
+//			NET < 0		SIGNAL = -X.5 | INT(X)<=-1	ERROR								An error is thrown when we have an existing short position and we are given a reverse to net short signal
+//			NET > 0		SIGNAL = +X.5 | INT(X)>= 1	ERROR								An error is thrown when we have an existing long position and we are given a reverse to net long signal
+//																						
+//		NOTE: 	This convention should also work with those who do not want to avail themselves with the fractional logic.
+//				For example consider the following:
+//				
+//		EX 1	Without fractional logic				With fractional logic
+//				NET		 	= 	-1						NET			=	-1
+//				SIGNAL		=	 2						SIGNAL		=	1.5
+//				final NET	=	 1						final NET	=	 1
+//				
+//		EX 2	Without fractional logic				With fractional logic
+//				NET		 	= 	-50						NET			=	-50
+//				SIGNAL		=	 51						SIGNAL		=	1.5
+//				final NET	=	 1						final NET	=	 1
+//				
+//		EX 3	Without fractional logic				With fractional logic
+//				NET		 	= 	-50						NET			=	-50
+//				SIGNAL		=	 55						SIGNAL		=	5.5
+//				final NET	=	 5						final NET	=	 5
+//
 // Author:			Mark Tompkins
-// Last update:		June 2, 2013
+// Last update:		4903.21627
+// All rights reserved.
 //
 
 #include "mex.h"
@@ -32,13 +70,15 @@
 
 // Declare external reference to undocumented C function
 #ifdef __cplusplus
-extern "C"
-{
+	extern "C"
+	{
 #endif
+
 mxArray *mxCreateSharedDataCopy(const mxArray *pr);
 // and any other prototypes for undocumented API functions you are using
+
 #ifdef __cplusplus
-}
+	}
 #endif
 
 
@@ -73,8 +113,6 @@ int nrhs, const mxArray *prhs[]) /* Input variables */
 // mexErrMsgTxt		Issue error message and exit returning control to Matlab
 // mexWarnMsgTxt	Issue warning message
 // mexPrintf("Hello, world!"); /* Do something interesting */
-
-	
 
 	// Check number of inputs
 	if (nrhs != 4)
@@ -147,7 +185,6 @@ int nrhs, const mxArray *prhs[]) /* Input variables */
 	netLiq_OUT = mxCreateDoubleMatrix(rowsData, 1, mxREAL); 
 	returns_OUT = mxCreateDoubleMatrix(rowsData, 1, mxREAL); 
 	
-
 	/* Assign pointers to the arrays */ 
 	dataPtr = mxGetPr(prhs[0]);
 	sigPtr = mxGetPr(prhs[1]);
@@ -175,7 +212,7 @@ int nrhs, const mxArray *prhs[]) /* Input variables */
 	
 	// Initialize numTrades counter
 	numTrades = 0;
-	for (ii=1; ii<rowsSig+1; ii++)					// Remember C++ starts counting at '0' & MatLab starts counting at '1'
+	for (ii=1; ii<rowsSig+1; ii++)				// Remember C++ starts counting at '0' & MatLab starts counting at '1'
 	{
 		trades[ii]=*sigPtr++;
 		if(trades[ii]!=0)

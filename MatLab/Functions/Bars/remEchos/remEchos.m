@@ -1,16 +1,19 @@
 function [cleanS] = remEchos( s )
-%REMECHOS Will remove echos froms a trading signal
-% Trading signals may have an echo when they are generated from some strategies.
-% For example, when generating signals from a lead / lag moving average calculation
-% the following method is used:
-% s(lead>lag) = 2;                                
-% s(lead<lag) = -2;  
-% In this instance we only want to have a new signal trigger when there is a cross.
-% NOT in the case of every check
-% This function removes the echos and makes it a 'On Cross'
+%REMECHOS Will remove echos froms a provided vector
+% The primary purpose of remEchos is to transform a STATE vector in to a SIGNAL vector.
+% For example, when attempting to generating signals from a lead / lag moving average STATE function
+% a logical output of whether a condition is true or not is provide.
+%	Example (where s is a given STATE vector):
+%		s(lead>lag) =  1
+%		s(lead<=lag) = -1
+% 	We can transform the output of this STATE condition as follows:
+%		in	[1 1 1 1 1 1 -1 -1 -1 -1 -1 1 1 1 1]	<-- STATE INPUT
+%		out	[1 0 0 0 0 0 -1  0  0  0  0 1 0 0 0]	<-- SIGNAL OUTPUT
+%	This output is now "actionable" as a SIGNAL
 %
-% Author:		Mark Tompkins
-% Revision: 	4902.18945
+% Author:           Mark Tompkins
+% Revision:			4903.19069
+% All rights reserved.
 
 
 % Now that we've adjusted the first trade we need to remove all dupe information

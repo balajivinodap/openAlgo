@@ -3,8 +3,16 @@ function [ varargout ] = OHLCSplitter( price )
 %   OHLCSPLITTER will parse a given dataset with the assumption that the given data is ordered if
 %   the supplied input is a matrix.
 %
-% Author:		Mark Tompkins
-% Revision: 	4902.18930
+%	The requested output can be of any:
+%		close 					= OHLCSPLITTER(price)
+%		[open, close] 			= OHLCSPLITTER(price)
+%		[open, high, low, close]= OHLCSPLITTER(price)
+%
+%	NOTE:	The order of the outputs is determinate
+%
+% Author:           Mark Tompkins
+% Revision:			4903.18340
+% All rights reserved.
 
 % Check if we've been given a dataset or matrix
 
@@ -35,6 +43,10 @@ else
 end; %if
 
 %% Return values
+	% No output requested, error
+	if nargout ==0
+	error('OHLCSPLITTER:OutputArg','No output requested. Exiting.');
+	end; %if
     % One output requested, return Close
     if nargout == 1, varargout{1} = c; end;         % Close
     % Two outputs requested, return Open | Close
@@ -42,7 +54,7 @@ end; %if
         varargout{1} = o;                           % Open
         varargout{2} = c;                           % Close
     end; %if
-    if nargout == 3, error('Ambiguous output requested.  Three outputs can''t be provided.'); end; 
+    if nargout == 3, error('OHLCSPLITTER:OutputArg','Ambiguous output requested.  Three outputs can''t be provided.'); end; 
     if nargout == 4 && cols == 4
         varargout{1} = o;                           % Open
         varargout{2} = h;                           % Close
