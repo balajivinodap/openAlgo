@@ -11,8 +11,8 @@
 // [barsOut,sigOut,sharpeOut] = numTicksProfit(barsIn,sigIn,sharpeIn,minTick,numTicks,openAvg)
 // 
 // Inputs:
-//		barsIn		A 2-D array of prices in the form of Open | High | Low | Close
-//		sigIn		An array the same length as barsIn, which gives the quantity bought or sold on a given bar.  Consider Matlab remEchosMEX
+//		barsIn		A matrix array of prices in the form of Open | High | Low | Close
+//		sigIn		An 1-D array the same length as barsIn, which gives the quantity bought or sold on a given bar.  Consider Matlab remEchosMEX
 //		sharpeIn	Double representing the sharpe ratio adjuster for the given number of bars
 //		minTick		Double representing the per contract minimum tick increment
 //		numTicks	Double representing the number of ticks for the open position price to take a profit
@@ -29,7 +29,9 @@
 //					This is the version that should be used with a SIGNAL input.
 //					There is (will be) a version that should be used when a STATE input is supplied to allow for continued reentry
 //
-// Author: Mark Tompkins
+// Author:			Mark Tompkins
+// Revision:		4905.31958
+// All rights reserved.
 
 // MATLAB array return sample
 /*
@@ -111,13 +113,19 @@ list<profitEntry> profitLedger;
 openEntry createOpenLedgerEntry(int ID, int qty, double price);
 profitEntry createProfitLedgerEntry(int ID, int qty, double price);
 
-void sameBarProfitCheck(int ID, double qty);
+void sameBarProfitCheck(int ID, int qty);
 void moveProfitLedger(int ID, int qty, double price);
 void moveOpenLedger(int ID, int qty);
 void cleanSignal(myDblList &sigList);
 void checkMinMax(int ID);
+void newMinMax(int ID);
 void shrinkProfitLedger();
-int sign(int num);
+void newAvgChk(int ID);
+
+bool fraction(double num);
+
+double sign(double num);
+double getAvgPftPrice();
 
 // Macros
 #define isReal2DfullDouble(P) (!mxIsComplex(P) && mxGetNumberOfDimensions(P) == 2 && !mxIsSparse(P) && mxIsDouble(P))
@@ -153,11 +161,11 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 	// Check number of inputs
 	if (nrhs != 6)
-		mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:NumInputs",
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:NumInputs",
 		"Number of input arguments is not correct. Aborting.");
 	// Check number of output assignments
 	if (nlhs != 3)
-		mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:NumOutputs",
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:NumOutputs",
 		"Number of output assignments is not correct. Aborting.");
 
 	// Define constants (#define assigns a variable as either a constant or a macro)
@@ -180,27 +188,27 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	
 	// Check type of supplied inputs
 	if (!isReal2DfullDouble(bars_IN)) 
-		mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:BadInputType",
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:BadInputType",
 		"Input 'barsIn' must be a 2 dimensional full double array of type Open | High | Low | Close. Aborting.");
 
 	if (!isReal2DfullDouble(sig_IN)) 
-		mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:BadInputType",
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:BadInputType",
 		"Input 'sigIn' must be a 2 dimensional full double array. Aborting.");
 
 	if (!isRealScalar(sharpe_IN)) 
-		mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:BadInputType",
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:BadInputType",
 		"Input 'sharpeIn' must be a single scalar double. Aborting.");
 
 	if (!isRealScalar(minTick_IN)) 
-		mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:BadInputType",
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:BadInputType",
 		"Input 'minTick' must be a single scalar double. Aborting.");
 
 	if (!isRealScalar(numTicks_IN)) 
-		mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:BadInputType",
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:BadInputType",
 		"Input 'numTicks' must be a single scalar double. Aborting.");
 
 	if (!isRealScalar(openAvg_IN)) 
-		mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:BadInputType",
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:BadInputType",
 		"Input 'openAvg_IN' must be a single scalar double. Aborting.");
 	
 	// Assign variables
@@ -208,6 +216,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	colsPrice = mxGetN(bars_IN);
 	rowsSig = mxGetM(sig_IN);
 	colsSig = mxGetN(sig_IN);
+	const double mxLINEAR_SIZE = rowsPrice * colsPrice;					// mxArray is passed as a continous 1 dimensional array
 
 	//	Assign shift variables
 	//	This allows up to properly traverse the mxArray which is in an N x 1 form concatenating all columns
@@ -218,27 +227,27 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 	// Additional check of inputs
 	if (rowsPrice != rowsSig)
-		mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:ArrayMismatch",
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:ArrayMismatch",
 		"The number of rows in the price array and the signal array are different. Aborting.");
 
 	if (colsSig > 1)
-		mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:ArrayMismatch",
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:ArrayMismatch",
 		"Input 'sigIn' must be a single column array. Aborting.");
 
 	if (!isRealScalar(sharpe_IN)) 
-		mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:ScalarMismatch",
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:ScalarMismatch",
 		"Input 'sharpeIn' must be a double scalar value. Aborting.");
 
 	if (!isRealScalar(minTick_IN)) 
-		mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:ScalarMismatch",
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:ScalarMismatch",
 		"Input 'minTick' must be a double scalar value. Aborting.");
 
 	if (!isRealScalar(numTicks_IN)) 
-		mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:ScalarMismatch",
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:ScalarMismatch",
 		"Input 'numTicks' must be a double scalar value. Aborting.");
 
 	if (colsPrice != 4)
-		mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:ArrayMismatch",
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:ArrayMismatch",
 		"Input 'barsIn' must be a 2 dimensional full double array of type Open | High | Low | Close. Aborting.");
 
 	/* Assign pointers to the input arrays */ 
@@ -250,6 +259,12 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	minTick =	mxGetScalar(minTick_IN);
 	numTicks =	mxGetScalar(numTicks_IN);
 	openAvg =	mxGetScalar(openAvg_IN);
+
+	if ((openAvg != 0) && (openAvg != 1))
+	{
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:ProfitTargetCalc",
+		"Input 'openAvg' must be either 0 - atomic price | 1 - average price. \nInput was given as %d. Aborting.", openAvg);
+	}
 
 	// const double PROFIT_TGT = (minTick * numTicks);
 	PROFIT_TGT = (minTick * numTicks);
@@ -263,7 +278,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	// Check that we have at least one signal (at least one trade)
 	for (sigIndex=0; sigIndex < rowsSig; sigIndex++)					// Remember C++ starts counting at '0'
 	{
-		if (sigInPtr[sigIndex] !=0)	// See if we have a signal
+		if (abs(sigInPtr[sigIndex]) >=1)	// See if we have a signal
 		{
 			anyTrades=1;					// Trade found
 			break;							// Exit the for loop
@@ -271,15 +286,17 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	}	
 
 	// Either return the input if not trades found, or start the check for profit targets reached per open position
-	if (anyTrades == 0)						// We have no trades
+	// We have no trades
+	if (anyTrades == 0)						
 	{
 		// http://www.mathworks.com/support/solutions/en/data/1-6NU359/index.html
 		// Return what we were given
 		bars_OUT	= mxCreateSharedDataCopy(bars_IN);
 		sig_OUT		= mxCreateSharedDataCopy(sig_IN);
-		sharpe_OUT	= mxCreateSharedDataCopy(sharpe_OUT);
+		sharpe_OUT	= mxCreateSharedDataCopy(sharpe_IN);
 	}
-	else									// We have trades
+	// We have trades
+	else									
 	{
 /////////////
 //
@@ -288,20 +305,19 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 /////////////	
 		// sigIndex = first signal index
 		// Check for profit on same observation
-		sameBarProfitCheck(sigIndex, sigInPtr[sigIndex]);
+		sameBarProfitCheck(sigIndex, int(sigInPtr[sigIndex]));
 		
-		if (sigInPtr[sigIndex] == -1)		// Short signal.  Assign minMax to LOW
+		// Short signal.  Assign minMax to LOW
+		if (sigInPtr[sigIndex] < 0)		
 		{
 			minMax = barsInPtr[sigIndex + 1 + shiftLow];
 		}
-		else if (sigInPtr[sigIndex] == 1)	// Long signal. Assign minMax to HIGH
+		// Long signal. Assign minMax to HIGH
+		else if (sigInPtr[sigIndex] > 0)	
 		{
 			minMax = barsInPtr[sigIndex + 1 + shiftHigh];
 		}
-		else // Error check that shouldn't be necessary
-		{
-			mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:FirstBarParseError", "We've been given a first trade signal of something other than +/- 1. Aborting.");
-		}
+
 // FIRST BAR END
 
 /////////////
@@ -314,65 +330,64 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		// sigIndex = first signal index
 		for (int curBar=sigIndex + 1; curBar < rowsSig; curBar++)
 		{
-			if (sigInPtr[curBar] == 0)
+			// Check observation for signal
+			
+			// Fractional signal on observation
+			if (fraction(sigInPtr[curBar]))
 			{
-				// Do we have an openPosition ?
+				// Is there an openPosition to consider ?
 				if (openPosition != 0)
 				{
-					checkMinMax(curBar);
+					// Is fraction the same sign (additive in nature) ?
+					// Additive
+					if (sign(sigInPtr[curBar] == sign(openPosition)))
+					{
+						// Nothing to do with the current logic
+						// The only fraction currently in use is |0.5| to liquidate entire opposing openPosition
+					}
+					// Reductive (liquidate)
+					else
+					{
+						// Adding logic here for prevention of 'other' fractions or surprising inputs
+						if (abs((sigInPtr[curBar] - int(sigInPtr[curBar]))) == 0.5)
+						{
+							// Liquidate any open position
+							openLedger.clear();
+							openPosition = 0;
+						}
+						// Unknown advanced instruction
+						else
+						{
+							mexErrMsgIdAndTxt( "MATLAB:AdvancedSignal:fractionUnknown",
+							"A signal contained an advanced fractional instruction that we could not interpret. Aborting.");
+						}
+					}
 				}
 			}
-			else if (abs(sigInPtr[curBar]) == 1)
+			
+			// Do we have a signal with an integer portion ?
+			if (abs(int(sigInPtr[curBar])) >= 1)
 			{
+				// Signal is additive
 				if ((sigInPtr[curBar] < 0 && openPosition <= 0) || (sigInPtr[curBar] > 0 && openPosition >= 0))					
 				{
-					// Signal is additive
-					sameBarProfitCheck(curBar, sigInPtr[curBar]);
-					checkMinMax(curBar);
+					
+					sameBarProfitCheck(curBar, int(sigInPtr[curBar]));	
 				}
-				else // Signal is reductive
+				// Signal is reductive
+				else 
 				{
-					openPosition = openPosition + sigInPtr[curBar];
-					checkMinMax(curBar);
+					openPosition = openPosition + int(sigInPtr[curBar]);
 				}
 			}
-			//	We will use the following convention:
-			//	If openPosition is +/-1 and we are given a +/-2 additive, throw an error.
-			//	These should have been cleaned prior to this function.
-			//	therefore +/-2 MUST be a reverse
-			else if (abs(sigInPtr[curBar]) == 2)
+
+			// Check for extremes that result in a profit for any openPosition
+			if (openPosition != 0)
 			{
-				if ((sigInPtr[curBar] > 0 && openPosition < 0) || (sigInPtr[curBar] < 0 && openPosition > 0))
-				{
-					if (!openLedger.empty())
-					{
-						openLedger.clear();
-					}
-					openPosition = 0;
-					sameBarProfitCheck(curBar, (sigInPtr[curBar]/2));	// Half the quantity because if true we record a signal lot P&S
-					checkMinMax(curBar);
-				}
-				else
-				{
-					//mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:inputSignalError", "A signal was given (+/-2) when there was no openPosition or it was additive. Aborting.");
-                    
-                    // We were given an reverse when there is no open position.  This will need to be
-                    // reviewed when we move to the signal convention of x.5 being a reverse.
-                    // For now, we will halve the signal.
-                    
-                }
-			}
-			else
-			{
-				// Signal Input Error
-				mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:inputSignalError", "A signal was given that was not of the form (int)[-2 <= SIG >= 2]. Aborting.");
+				checkMinMax(curBar);
 			}
 		}
-		// Iterations complete
-		// List deconstructor
-		//openLedger.clear();
-		//openLedger.~list();
-		//~openLedger();
+
 
 /////////////
 //
@@ -383,9 +398,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		{
 			shrinkProfitLedger();
 			int numNewObsv = profitLedger.size();				// number of new signals and virtual profit bars to add
-
-			// Feedback which can be removed
-			mexPrintf("\n\nProcessing %d profit bars...\n\n",numNewObsv);
 
 			/* Create matrices for the return arguments */ 
 			// http://www.mathworks.com/help/matlab/matlab_external/c-c-source-mex-files.html
@@ -400,12 +412,12 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			sigOutPtr = mxGetPr(sig_OUT);
 
 			// Temporary lists
-			myDblList signals(numNewRows);
-			myDblList vBars(numNewRows*4);
+			myDblList signals;
+			myDblList vBars;
 
 			// List iterators
 			myDblListIter signalsIter		= signals.begin();
-			//myDblListIter vBarsIter			= vBars.begin();
+			myDblListIter vBarsIter			= vBars.begin();
 
 			myDblListIter vBarsOpenIter		= vBars.begin();
 			myDblListIter vBarsHighIter		= vBars.begin();
@@ -413,52 +425,39 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			myDblListIter vBarsCloseIter	= vBars.begin();
 
 			// Preposition pointers
-			advance(vBarsHighIter, shiftHigh);
-			advance(vBarsLowIter, shiftLow);
-			advance(vBarsCloseIter, shiftClose);
+			std::advance(vBarsHighIter, shiftHigh);
+			std::advance(vBarsLowIter, shiftLow);
+			std::advance(vBarsCloseIter, shiftClose);
 
 			// deep copy mxArray --> myDblList
-			for (int iter = 0; iter < rowsPrice; iter++)
+			for (int iter = 0; iter < mxLINEAR_SIZE; iter++)
 			{
-				// Convert reverses to a fraction so we can identify them later
-				/*if (abs(sigInPtr[iter]) == 2)
-				{
-					*signalsIter = sign(sigInPtr[iter] * 0.5);
-				}
-				else
-				{*/
-					*signalsIter	=	sigInPtr[iter];
-					//*vBarsIter		=	barsInPtr[iter];
-				/*}*/
-				*vBarsOpenIter	=	barsInPtr[iter + shiftOpen];
-				*vBarsHighIter	=	barsInPtr[iter + shiftHigh];
-				*vBarsLowIter	=	barsInPtr[iter + shiftLow];
-				*vBarsCloseIter =	barsInPtr[iter + shiftClose];
-
-				// Advance iterators
-				vBarsOpenIter++;
-				vBarsHighIter++;
-				vBarsLowIter++;
-				vBarsCloseIter++;
-					//vBarsIter++;
+				vBars.push_back(barsInPtr[iter]);
 			}
 
-			// memcpy ( &person_copy, &person, sizeof(person) );
-			//memcpy (&vBars, &barsInPtr, sizeof(double));
-			//memcpy (&signals, &sigInPtr, sizeof(double));
+			for (int iter = 0; iter < rowsSig; iter++)
+			{
+				signals.push_back(sigInPtr[iter]);
+			}
 
 			// Inserts based on profitLedger
 			list<profitEntry>::iterator pftIter;
-			int numAdded = 0;											// Counter to offset adds
-			int addIdx = 0;
-			int shiftAdd = 0;											
+			//int numAddedSig = 0;											// Counter to offset adds
+			//int numAddedBar = 0;
+			//int addIdx = 0;
+			int shiftAdd = 0;
+			int lastLoc = 0;
 
 			// Reset pointers
 			signalsIter		= signals.begin();
-			//vBarsOpenIter	= vBars.begin(); 
-			//vBarsHighIter	= vBars.begin(); advance(vBarsHighIter, shiftHigh);
-			//vBarsLowIter	= vBars.begin(); advance(vBarsLowIter, shiftLow);
-			//vBarsCloseIter	= vBars.begin(); advance(vBarsCloseIter, shiftClose);
+			vBarsOpenIter	= vBars.begin();
+			vBarsHighIter	= vBars.begin();
+			vBarsLowIter	= vBars.begin();
+			vBarsCloseIter	= vBars.begin();
+
+			std::advance(vBarsHighIter, shiftHigh);
+			std::advance(vBarsLowIter, shiftLow);
+			std::advance(vBarsCloseIter, shiftClose);
 
 			// Move price pointer to sync with signal pointer (signal lags price by one bar)
 			vBarsOpenIter++;
@@ -468,28 +467,40 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 			// At this point we should have pointers as
 			// signals[0]
-			// vBars...[1]
+			// vBarsOpenIter[1]
+			// vBarsHighIter[1 + shiftHigh] ...
+			
+			// Because we insert before the current index we move all pointers 'in front' of the insertion point
+			signalsIter++;
+			vBarsOpenIter++;
+			vBarsHighIter++;
+			vBarsLowIter++;
+			vBarsCloseIter++;
 
 			while (!profitLedger.empty())
 			{
 				pftIter = profitLedger.begin();
 
-				shiftAdd = pftIter->barIndex - shiftAdd;
+				shiftAdd = pftIter->barIndex - lastLoc;
 
-				// Advance the pointers to insert location (+1 because list.insert is a 'before' insertion)
-				advance(signalsIter, shiftAdd + 1 + numAdded);
-				advance(vBarsOpenIter, shiftAdd + 1 + numAdded);
-				advance(vBarsHighIter, shiftAdd + 1 + numAdded);
-				advance(vBarsLowIter, shiftAdd + 1 + numAdded);
-				advance(vBarsCloseIter, shiftAdd + 1 + numAdded);
+				// Advance the pointers to insert location
 
+				std::advance(signalsIter, shiftAdd);
 				signals.insert(signalsIter, pftIter->qtyProfit);
+
+				std::advance(vBarsOpenIter, shiftAdd);
 				vBars.insert (vBarsOpenIter,pftIter->profitPrice);
+
+				std::advance(vBarsHighIter, shiftAdd);
 				vBars.insert (vBarsHighIter,pftIter->profitPrice);
+
+				std::advance(vBarsLowIter, shiftAdd);
 				vBars.insert (vBarsLowIter,pftIter->profitPrice);
+
+				std::advance(vBarsCloseIter, shiftAdd);
 				vBars.insert (vBarsCloseIter,pftIter->profitPrice);
 
-				++numAdded;
+				lastLoc = pftIter->barIndex;
 
 				profitLedger.pop_front();
 			}
@@ -499,27 +510,23 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			// Adjust sharpe ratio output
 			// http://www.mathworks.com/help/matlab/apiref/mxcreatedoublescalar.html
 			double newSharpe = sharpeIn + (double)numNewObsv;		// cast int to double
-			plhs[2] = mxCreateDoubleScalar(newSharpe);
-		
-			// Assign values to output matrices
-			// Check for different array sizes
-			if ((signals.size()) != (vBars.size()/4))
-			{
-				mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:arraySizeCheck", "A final check for array size failed prior to assigning outputs. Aborting.");
-			}
+			sharpe_OUT = mxCreateDoubleScalar(newSharpe);
 
 			// Reset pointer
-			vBarsOpenIter	= vBars.begin();
+			
 			int outIter = 0;
 
+			for (vBarsIter	= vBars.begin(); vBarsIter != vBars.end(); vBarsIter++)
+			{
+				barsOutPtr[outIter] = *vBarsIter;
+				outIter++;
+			}
+
+			// Reset index
+			outIter = 0;
 			for (signalsIter = signals.begin(); signalsIter != signals.end(); signalsIter++)
 			{
-				barsOutPtr[outIter] = *vBarsOpenIter;
 				sigOutPtr[outIter] = *signalsIter;
-
-				// Increment pointers and indexes
-				vBarsOpenIter++;
-				signalsIter++;
 				outIter++;
 			}
 		}
@@ -530,20 +537,10 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		
 			bars_OUT = mxCreateSharedDataCopy(bars_IN);
 			sig_OUT = mxCreateSharedDataCopy(sig_IN);
-			sharpe_OUT = mxCreateSharedDataCopy(sharpe_OUT);
+			sharpe_OUT = mxCreateSharedDataCopy(sharpe_IN);
 		}
 		// Processing all trades complete
 	}
-
-	// Destructors
-	profitLedger.clear();
-	profitLedger.~list();
-
-	openLedger.clear();
-	openLedger.~list();
-
-	barsInPtr = NULL;
-	sigInPtr = NULL;
 
 	return;
 }
@@ -604,85 +601,182 @@ void moveOpenLedger(int ID, int qty)
 	openPosition = openPosition + qty;
 }
 
-void sameBarProfitCheck(int ID, double qty)
+// sameBarProfitCheck uses the Signal index and will look at the corresponding
+// 'next' observation for price data.
+void sameBarProfitCheck(int ID, int qty)
 {
-	
-	// Is there a profit on the bar of the trade? 
+	if (openAvg == 0)
+	{
+		// Is there a profit on the bar of the trade? 
 		// Short signal - check LOW
-		//if ((qty < 0) && (barsInPtr[ID + 1 + shiftLow] < barsInPtr[ID + 1 + shiftOpen] - (minTick * numTicks)))
 		if ((qty < 0) && (barsInPtr[ID + 1 + shiftLow] < barsInPtr[ID + 1 + shiftOpen] - PROFIT_TGT))
 		{
 			// We have a profit on the same observation.  Put an entry in the profit ledger
-			moveProfitLedger(ID, qty, barsInPtr[ID + 1 + shiftOpen] - (minTick * numTicks));
+			moveProfitLedger(ID, qty, barsInPtr[ID + 1 + shiftOpen] - PROFIT_TGT);
 		}
 		// Long signal - check HIGH
-		else if ((qty > 0) && (barsInPtr[ID + 1 + shiftHigh] > barsInPtr[ID + 1 + shiftOpen] + (minTick * numTicks)))	
+		else if ((qty > 0) && (barsInPtr[ID + 1 + shiftHigh] > barsInPtr[ID + 1 + shiftOpen] + PROFIT_TGT))	
 		{
 			// We have a profit on the same observation.  Put an entry in the profit ledger
-			moveProfitLedger(ID, qty, barsInPtr[ID + 1 + shiftOpen] + (minTick * numTicks));		
+			moveProfitLedger(ID, qty, barsInPtr[ID + 1 + shiftOpen] + PROFIT_TGT);		
 		} 
-		// Signal is not liquidated.
+		// Signal is not liquidated on same bar. Move it to the open ledger.
 		else
 		{
 			// Put trade on openLedger with calculated profit price
 			moveOpenLedger(ID, qty);
+			newMinMax(ID);
 		}
+	}
+	else
+	{
+		// Put trade on openLedger with calculated profit price
+		// This can be done in a seemingly 'reverse' order because the impact of the new entry must be calculated
+		// It is not considered a 'one-off' or individual trade unless it is the only position.
+		
+		moveOpenLedger(ID, qty);
+
+		minMax = barsInPtr[ID + 1 + shiftOpen];
+
+		newMinMax(ID);
+
+	}
 }
 
 void newMinMax(int ID)
 {
-	if (openPosition < 0)						// Short.  Update minMax to new lower price
+	// Short.  Update minMax to new lower price
+	if (openPosition < 0)						
 	{
 		minMax = barsInPtr[ID + 1 + shiftLow];
 	}
-	else if (openPosition > 0)					// Long.  Update minMax to new high price
+	// Long.  Update minMax to new high price
+	else if (openPosition > 0)					
 	{
 		minMax = barsInPtr[ID + 1 + shiftHigh];
-	}
-	else
-	{
-		mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:newMinMaxError", "A call was made to newMinMax without an existing openPosition.  This is a logical coding error. Aborting.");
 	}
 
 	if (!openLedger.empty())
 	{
-		list<openEntry>::iterator iter;
-		for (iter = openLedger.begin(); iter != openLedger.end(); iter++)
+		if (openAvg == 0)
 		{
-			if (openPosition < 0)				// Short. Check minMax <= profitPrice
+			list<openEntry>::iterator iter;
+			for (iter = openLedger.begin(); iter != openLedger.end(); iter++)
 			{
-				if (minMax <= iter->profitPrice)
+				// Short. Check minMax <= profitPrice
+				if (openPosition < 0)				
 				{
-					if (barsInPtr[ID + 1 + shiftOpen] <= iter->profitPrice)
+					if (minMax <= iter->profitPrice)
 					{
-						// Open satisfies profit threshold
-						moveProfitLedger(ID, iter->qtyOpen, barsInPtr[ID + 1 + shiftOpen]);
+						if (barsInPtr[ID + 1 + shiftOpen] <= iter->profitPrice)
+						{
+							// Open satisfies profit threshold
+							moveProfitLedger(ID, iter->qtyOpen, barsInPtr[ID + 1 + shiftOpen]);
+						}
+						else
+						{
+							moveProfitLedger(ID, iter->qtyOpen, iter->profitPrice);
+						}
+						openLedger.erase(iter);
 					}
-					else
-					{
-						moveProfitLedger(ID, iter->qtyOpen, iter->profitPrice);
-					}
-					openLedger.erase(iter);
 				}
-			}
-			else if (openPosition > 0)		// Long. Check minMax >= profitPrice
-			{
-				if (minMax >= iter->profitPrice)
+				// Long. Check minMax >= profitPrice
+				else if (openPosition > 0)		
 				{
-					if (barsInPtr[ID + 1 + shiftOpen] >= iter->profitPrice)
+					if (minMax >= iter->profitPrice)
 					{
-						// Open satisfies profit threshold
-						moveProfitLedger(ID, iter->qtyOpen, barsInPtr[ID + 1 + shiftOpen]);
+						if (barsInPtr[ID + 1 + shiftOpen] >= iter->profitPrice)
+						{
+							// Open satisfies profit threshold
+							moveProfitLedger(ID, iter->qtyOpen, barsInPtr[ID + 1 + shiftOpen]);
+						}
+						else
+						{
+							moveProfitLedger(ID, iter->qtyOpen, iter->profitPrice);
+						}
+						openLedger.erase(iter);
 					}
-					else
-					{
-						moveProfitLedger(ID, iter->qtyOpen, iter->profitPrice);
-					}
-					openLedger.erase(iter);
 				}
 			}
 		}
+		// Using the average price approach 
+		else
+		{
+			newAvgChk(ID);
+		}
 	}
+}
+
+void newAvgChk(int ID)
+{
+	double profitPrice = getAvgPftPrice();
+			
+	if (openPosition < 0)				// Short. Check minMax <= profitPrice
+	{
+		if (minMax <= profitPrice)
+		{
+			if (barsInPtr[ID + 1 + shiftOpen] <= profitPrice)
+			{
+				// Open satisfies profit threshold
+				moveProfitLedger(ID, openPosition, barsInPtr[ID + 1 + shiftOpen]);
+			}
+			else
+			{
+				moveProfitLedger(ID, openPosition, profitPrice);
+			}
+			openLedger.clear();
+			openPosition = 0;
+		}
+	}
+	else if (openPosition > 0)			// Long. Check minMax >= profitPrice
+	{
+		if (minMax >= profitPrice)
+		{
+			if (barsInPtr[ID + 1 + shiftOpen] >= profitPrice)
+			{
+				// Open satisfies profit threshold
+				moveProfitLedger(ID, openPosition, barsInPtr[ID + 1 + shiftOpen]);
+			}
+			else
+			{
+				moveProfitLedger(ID, openPosition, profitPrice);
+			}
+			openLedger.clear();
+			openPosition = 0;
+		}
+	}
+}
+
+double getAvgPftPrice()
+{
+	int netQty = 0;
+	double wghtPrices = 0;
+	double sumWghts = 0;
+	double wghtAvg = 0;
+	double profitPrice = 0;
+
+
+	list<openEntry>::iterator iter;
+	for (iter = openLedger.begin(); iter != openLedger.end(); iter++)
+	{
+		netQty = netQty + iter->qtyOpen;
+		sumWghts = sumWghts + (abs(iter->qtyOpen) * iter->openPrice);
+	}
+
+	wghtAvg = sumWghts / abs(netQty);
+
+	// Short objective
+	if (openPosition < 0)
+	{
+		profitPrice = wghtAvg - PROFIT_TGT;
+	}
+	// Long objective
+	else
+	{
+		profitPrice = wghtAvg + PROFIT_TGT;
+	}
+
+	return profitPrice;
 }
 
 void checkMinMax(int ID)
@@ -712,15 +806,12 @@ void shrinkProfitLedger()
 	for (iterMain = profitLedger.begin(); iterMain != profitLedger.end(); iterMain++)
 	{
 		++iterPlusOne;						// Advance the look ahead pointer so it is always iterMain+1;
-		//if (iterMain != profitLedger.end())
-		//{
-			if ((iterMain->barIndex == iterPlusOne->barIndex) &&
-				(sign(iterMain->qtyProfit) == sign(iterPlusOne->qtyProfit)))
-			{
-				iterPlusOne->qtyProfit = iterPlusOne->qtyProfit + iterMain->qtyProfit;
-				profitLedger.erase(iterMain);
-			}
-		//}
+		if ((iterMain->barIndex == iterPlusOne->barIndex) &&
+			(sign(iterMain->qtyProfit) == sign(iterPlusOne->qtyProfit)))
+		{
+			iterPlusOne->qtyProfit = iterPlusOne->qtyProfit + iterMain->qtyProfit;
+			profitLedger.erase(iterMain);
+		}
 	}
 }
 
@@ -736,7 +827,7 @@ void cleanSignal(myDblList &sigList)
 			// Reverse logic error.  Advise and abort.
 			if(((netPosition < 0) && (*iter < 0)) || ((netPosition > 0) && (*iter > 0)))
 			{
-				mexErrMsgIdAndTxt( "MATLAB:numTicksProfitSigCPP:cleanSignal", "Reverse logic encountered in signal array. Aborting.");
+				mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:cleanSignal", "Reverse logic encountered in signal array. Aborting.");
 			}
 			else
 			{
@@ -751,7 +842,16 @@ void cleanSignal(myDblList &sigList)
 }
 
 // Get sign of signal
-int sign(int num)
+double sign(double num)
 {
 	return num > 0 ? 1 : (num < 0 ? -1 : 0);
+}
+
+bool fraction(double num)
+{
+	if (int(num) == num)
+	{
+		return false;
+	}
+	return true;
 }

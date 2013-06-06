@@ -45,8 +45,9 @@ if nargin > 0
     s = zeros(rows,1);
     
     [tLine,instT] = iTrend_mex(HighLow);
-    s(instT>tLine) = 2;
-    s(instT<tLine) = -2;
+    
+    s(instT>tLine) = 	1.5;
+    s(instT<tLine) =   -1.5;
     
     % Clear erroneous signals calculated prior to enough data
     s(1:54) = 0;
