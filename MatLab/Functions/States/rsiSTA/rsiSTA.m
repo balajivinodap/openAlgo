@@ -1,6 +1,6 @@
 function [state,ri,ma] = rsiSTA(price,M,thresh,type)
-%RSISTA returns a logical STATE for from rsindex.m by The MathWorks, Inc.
-% RSISTA returns a logical STATE for from rsindex.m by The MathWorks, Inc.
+%RSISTA returns a logical STATE for from 'rsindex.m' by The MathWorks, Inc.
+% RSISTA returns a logical STATE for from 'rsindex.m' by The MathWorks, Inc.
 % which is a value that is above/below an upper/lower threshold intended to locate
 % overbought and oversold conditions.  
 % M serves as a detrending function
@@ -50,7 +50,6 @@ else
     M = 15*M(1);
 end
     
-
 % Preallocate so we can MEX
 rows = size(price,1);
 fClose = zeros(rows,1);                                     %#ok<NASGU>

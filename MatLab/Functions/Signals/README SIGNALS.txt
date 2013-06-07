@@ -32,18 +32,18 @@
 //				
 //		EX 1	Without fractional logic				With fractional logic
 //				NET		 	= 	-1						NET			=	-1
-//				SIGNAL		=	2						SIGNAL		=	1.5
-//				final NET	=	1						final NET	=	1
+//				SIGNAL		=	 2						SIGNAL		=	1.5
+//				final NET	=	 1						final NET	=	 1
 //				
 //		EX 2	Without fractional logic				With fractional logic
 //				NET		 	= 	-50						NET			=	-50
-//				SIGNAL		=	51						SIGNAL		=	1.5
-//				final NET	=	1						final NET	=	1
+//				SIGNAL		=	 51						SIGNAL		=	1.5
+//				final NET	=	 1						final NET	=	 1
 //				
 //		EX 3	Without fractional logic				With fractional logic
 //				NET		 	= 	-50						NET			=	-50
-//				SIGNAL		=	55						SIGNAL		=	5.5
-//				final NET	=	5						final NET	=	5
+//				SIGNAL		=	 55						SIGNAL		=	5.5
+//				final NET	=	 5						final NET	=	 5
 //																							
 //																						
 //		A SIGNAL is an actionable array that should be able to be passed to the P&L function for analysis.
