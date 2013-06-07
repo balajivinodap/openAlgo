@@ -60,17 +60,6 @@ if nargin > 0
         % Clean up repeating information
         sigClean = remEchos_mex(sigClean);
         
-        firstIdx = find(sigClean,1);                           % Index of first trade
-        firstPO = sigClean(firstIdx);
-        % Current signal is same as first signal
-        % ... and we still have additional observations
-        % Notice we have to ensure the row is in range FIRST!!
-        % Loop until first position change
-      	while ((firstIdx <= length(sigClean)) && firstPO == sigClean(firstIdx))	
-            sigClean(firstIdx) = sigClean(firstIdx)/2;
-            firstIdx = firstIdx + 1;
-        end;
-
         [~,~,~,returns] = calcProfitLoss([fOpen fClose],sigClean,bigPoint,cost);
         sharpeRatio=scaling*sharpe(returns,0);
     

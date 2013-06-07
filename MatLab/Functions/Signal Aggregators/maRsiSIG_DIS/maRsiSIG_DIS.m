@@ -7,7 +7,7 @@ function varargout = maRsiSIG_DIS(price,N,M,typeMA,Mrsi,thresh,typeRSI,isSignal,
 %               filter condition for MA.  
 %
 % Author:           Mark Tompkins
-% Revision:			4902.23857
+% Revision:			4906.24976
 % All rights reserved.
 
 %% NEED TO ADD ERROR CHECKING OF INPUTS
@@ -36,9 +36,6 @@ if length(Mrsi) == 1
 end
 
 [fOpen,fClose] = OHLCSplitter(price);
-
-%[sma,~,~,lead,lag] = ma2inputsSIG_mex(price,N,M,typeMA,scaling,cost,bigPoint);
-%[srsi,~,~,ri,ma,thresh] = rsiSIG(price,Mrsi,thresh,typeRSI,scaling,cost,bigPoint);
 
 [sma,lead,lag] = ma2inputsSTA_mex(price,N,M,typeMA);
 [srsi,ri,ma] = rsiSTA_mex(price,Mrsi,thresh,typeRSI);
@@ -69,22 +66,8 @@ end; %if
 sClean = remEchos_mex(s);
 
 % Make sure we have at least one trade first
-if ~isempty(find(sClean,1))
-    
-    % Set the first position to +/- 1 lot
-    firstIdx = find(sClean,1);                           % Index of first trade
-    firstPO = sClean(firstIdx);
-
-    % Notice we have to ensure the row is in range FIRST!!
-    % Loop until first position change
-    while ((firstIdx <= length(sClean)) && firstPO == sClean(firstIdx))
-        % Changes first signal from +/-2 to +/-1
-        sClean(firstIdx) = sClean(firstIdx)/2;                
-        firstIdx = firstIdx + 1;
-    end; %while
-    
+if ~isempty(find(sClean,1))    
     [~,~,~,r] = calcProfitLoss([fOpen fClose],sClean,bigPoint,cost);
-
     sh = scaling*sharpe(r,0);
 else
     % No signal so no return or sharpe.
@@ -160,7 +143,7 @@ else
             case 5
                 varargout{5} = ma; % moving average
             otherwise
-                warning('RSI:OutputArg',...
+                warning('maRsiSIG_DIS:OutputArg',...
                     'Too many output arguments requested, ignoring last ones');
         end %switch
     end %for

@@ -2,12 +2,12 @@ function varargout = maRsiSIG(price,N,M,typeMA,Mrsi,thresh,typeRSI,isSignal,scal
 % MA+RSI in function call
 %%
 %
-%   isSignal:   0 - Filter (default), 1 - Signal
-%               We can either combine the signals from each element, MA + RSi or we can use the RSI as a
-%               filter condition for MA.  
-%
+%   isSignal:   0 - Filter (default)    We can either combine the signals from 
+%               1 - Signal              each element, MA + RSI or we can use
+%                                       the RSI as a filter condition for MA.
+%                  
 % Author:           Mark Tompkins
-% Revision:			4906.15702
+% Revision:			4906.23172
 % All rights reserved.
 
 %% NEED TO ADD ERROR CHECKING OF INPUTS
@@ -29,9 +29,8 @@ end
 
 [fOpen,fClose] = OHLCSplitter(price);
 
-%[sma] = ma2inputsSIG_mex(price,N,M,typeMA,scaling,cost,bigPoint);
 [sma] = ma2inputsSTA_mex(price,N,M,typeMA);
-%[srsi,~,~,ri,ma] = rsiSIG(price,Mrsi,thresh,typeRSI,scaling,cost,bigPoint);
+% NOTE: rsiSTA returns a 1 when oversold and -1 when overbought
 [srsi] = rsiSTA_mex(price,Mrsi,thresh,typeRSI);
 
 %%  The RSI is either used as a signal generator or a filter condition for another signal
@@ -61,22 +60,8 @@ end; %if
 sClean = remEchos_mex(s);
 
 %% Make sure we have at least one trade first
-if ~isempty(find(sClean,1))
-    
-    % Set the first position to +/- 1 lot
-    firstIdx = find(sClean,1);                           % Index of first trade
-    firstPO = sClean(firstIdx);
-
-    % Notice we have to ensure the row is in range FIRST!!
-    % Loop until first position change
-    while ((firstIdx <= length(sClean)) && firstPO == sClean(firstIdx))
-        % Changes first signal from +/-2 to +/-1
-        sClean(firstIdx) = sClean(firstIdx)/2;                
-        firstIdx = firstIdx + 1;
-    end; %while
-    
+if ~isempty(find(sClean,1))  
     [~,~,~,r] = calcProfitLoss([fOpen fClose],sClean,bigPoint,cost);
-
     sh = scaling*sharpe(r,0);
 else
     % No signal so no return or sharpe.
@@ -89,10 +74,6 @@ end; %if
     for i = 1:nargout
         switch i
             case 1
-                if isSignal == 1
-                    warning('We do not expect to use maRsiSIG to generate signals when isSignal == 1');
-                    warning('It is already the aggregation of two elemental signals.');
-                end;
                 varargout{1} = sign(s); % signal (with repeats because it contains an MA signal)
             case 2
                 varargout{2} = r; % return (pnl)

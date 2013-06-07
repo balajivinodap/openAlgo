@@ -19,7 +19,7 @@ function varargout = rsiSIG_DIS(price,M,thresh,type,scaling,cost,bigPoint,hSub)
 %   For RSI in oversold state, "we should be long".  Removing the Echos produces that buy signal.
 %
 % Author:           Mark Tompkins
-% Revision:			4902.23994
+% Revision:			4906.24976
 % All rights reserved.
 
 %% Defaults and parsing
@@ -27,39 +27,6 @@ if ~exist('scaling','var'), scaling = 1; end;
 if ~exist('type','var'), type=0; end;
 if ~exist('cost','var'), cost = 0; end;         % default cost
 if ~exist('bigPoint','var'), bigPoint = 1; end; % default bigPoint
-
-if ~exist('M','var')
-    M = 0; % no detrending
-    N = 14; % default value for rsi calc
-else
-    % Check if multiple elements are passed.
-    % The second element is number of bars to pass to rsindex
-    % The default for N (2nd element) is 14
-    % If detrender is set to a negative value we will also use the default of 15 * RSIBars
-    % This is done so we can test both 0 = No detrending & -1 = Default detrending in a sweep
-    % With this adjustment we can sweep [-1:1:14] which will test detrenders 1 through 15 as
-    % well as none.
-    if numel(M) > 1 
-        N = M(1);
-        if M(2) < 0
-            M = 15 * N;
-        else
-            M = M(2);
-        end; % if
-    else
-        % M is the detrend average
-        % It would appear we are taking a multiple of M below
-        % to capture a longer moving average to detrend
-        N = M;
-        M = 15*M;
-    end
-end
-
-% We can't exceed the lookback for the RSI Detrender
-if M > size(price,1)
-    M = size(price,1);
-    warning('Detrender reduced to match number of observations.');
-end; %if
 
 if ~exist('thresh','var')
     thresh = [30 70]; % default threshold
@@ -73,66 +40,31 @@ else
     end
 end
 
-[fOpen,fClose] = OHLCSplitter(price);
-
-%% Detrend with a moving average
-if M == 0
-    ma = zeros(length(fClose),1);
+if ~exist('M','var')
+    M = 0; % no detrending
+    N = 14; % default value for rsi calc
+% We can't exceed the lookback for the RSI Detrender
+elseif M > size(price,1)
+    M = size(price,1);
+    warning('Detrender reduced to match number of observations.');
+elseif numel(M) > 1 
+	N = M(1);
+	if M(2) < 0
+        M = 15 * N;
+    else
+        M = M(2);
+	end; % if
 else
-    [~,~,~,ma] = ma2inputs_mex(price,M,M,type,scaling,cost,bigPoint);
+    % M is the detrend average
+    % It would appear we are taking a multiple of M below
+    % to capture a longer moving average to detrend
+    N = M(1);
+    M = 15*M(1);
 end
 
-ri = rsindex(fClose - ma, N);
+[fClose] = OHLCSplitter(price);
+[s,r,sh,ri,ma,thresh] = rsiSIG_mex(price,[N M],thresh,type,scaling,cost,bigPoint);
 
-%% Keep on eye on this.  Original errors don't show at the moment
-% %% Adjust erronous ri values prior to M value
-% for ii = 1:find(ri==0,1)
-%     ri(ii)=50;
-% end;
-
-%% Generate signal
-s = zeros(length(fClose),1);
-sigClean = s;
-
-% Crossing the lower threshold (oversold)
-indx    = ri < thresh(1);
-% Unknown Matlab adjuster
-% indx    = [false; indx(1:end-1) & ~indx(2:end)];
-s(indx) = 2;
-
-% Crossing the upper threshold (overbought)
-indx    = ri > thresh(2);
-% Unknown Matlab adjuster
-% indx    = [false; indx(1:end-1) & ~indx(2:end)];
-s(indx) = -2;
-
-% Set the first position to 1 lot
-    % Make sure we have at least one trade first
-if ~isempty(find(s,1))
-    % We have to remove Echos while they are all 2's
-    % Clean up repeating information so we can calculate a PNL
-	sigClean = remEchos_mex(s);
-    
-	firstIdx = find(sigClean,1);                           % Index of first trade
-	firstPO = sigClean(firstIdx);
-    % Notice we have to ensure the row is in range FIRST!!
-    % Loop until first position change
-	while ((firstIdx <= length(sigClean)) && firstPO == sigClean(firstIdx))
-        % Changes first signal from +/-2 to +/-1
-    	sigClean(firstIdx) = sigClean(firstIdx)/2;                
-    	firstIdx = firstIdx + 1;
-	end;
-    
-
-    
-    %% PNL Caclulation
-	[~,~,~,r] = calcProfitLoss([fOpen fClose],sigClean,bigPoint,cost);
-	sh = scaling*sharpe(r,0);
-else
-    % No signal - no return or sharpe
-    r = zeros(length(fClose),1);
-	sh = 0;
-end; %if
 
 %% Plot if requested
 if nargout == 0 && (~exist('hSub','var'))% Plot
@@ -157,7 +89,7 @@ if nargout == 0 && (~exist('hSub','var'))% Plot
     title('RSI')
     
     ax(3) = subplot(3,1,3);
-    plot([sigClean,cumsum(r)]), grid on
+    plot([s,cumsum(r)]), grid on
     legend('Position','Cumulative Return','Location','North')
     title(['Final Return = ',thousandSepCash(sum(r))])
     linkaxes(ax,'x')
@@ -186,7 +118,7 @@ elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
     title('RSI')
     
     ax(3) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))),str2num(char(hSub(5)))); %#ok<ST2NM>
-    plot([sigClean,cumsum(r)]), grid on
+    plot([s,cumsum(r)]), grid on
     legend('Position','Cumulative Return','Location','North')
     title(['Final Return = ',thousandSepCash(sum(r))])
     linkaxes(ax,'x')
@@ -195,7 +127,7 @@ else
     for ii = 1:nargout
         switch ii
             case 1
-                varargout{1} = sign(s); % signal (contains Echos)
+                varargout{1} = s; % signal
             case 2
                 varargout{2} = r; % return (pnl)
             case 3
