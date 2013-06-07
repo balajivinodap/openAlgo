@@ -260,7 +260,7 @@ int nrhs, const mxArray *prhs[]) /* Input variables */
 					else
 					{
 						mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:AdvancedSignalError",
-						"Received an advanced signal instruction with the same sign as the openPosition. Aborting.");
+						"Received an advanced signal instruction  (%f) with the same sign as the openPosition (%d). Aborting.", trades[ii], netPO);
 					}
 				}
 				
