@@ -7,7 +7,7 @@ function varargout = maRsiSIG(price,N,M,typeMA,Mrsi,thresh,typeRSI,isSignal,scal
 %               filter condition for MA.  
 %
 % Author:           Mark Tompkins
-% Revision:			4902.23841
+% Revision:			4906.15702
 % All rights reserved.
 
 %% NEED TO ADD ERROR CHECKING OF INPUTS
@@ -30,32 +30,37 @@ end
 [fOpen,fClose] = OHLCSplitter(price);
 
 %[sma] = ma2inputsSIG_mex(price,N,M,typeMA,scaling,cost,bigPoint);
-[sma] = ma2inputsSIG_mex(price,N,M,typeMA,scaling,cost,bigPoint);
-[srsi,~,~,ri,ma] = rsiSIG(price,Mrsi,thresh,typeRSI,scaling,cost,bigPoint);
+[sma] = ma2inputsSTA_mex(price,N,M,typeMA);
+%[srsi,~,~,ri,ma] = rsiSIG(price,Mrsi,thresh,typeRSI,scaling,cost,bigPoint);
+[srsi] = rsiSTA_mex(price,Mrsi,thresh,typeRSI);
 
 %%  The RSI is either used as a signal generator or a filter condition for another signal
 %   If we are using it to generate a signal, we should return only an actionable signal with no repeats
 %   If we are using it as a filter, we should return the state of Overbought | Oversold including repeats
 %   For this specific 'marsiMETS' case, we combine it with a simple moving average
+
+%% Use RSI as FILTER
 if isSignal == 0
-    %% FILTER
-    % Aggregate the two signals including their repeats
+    % Aggregate the two states 
     s = (sma+srsi);
 
     % Any instance where the |sum| of the 2 signals is ~= 2 means both conditions are not met
     % Drop those instances
     s(abs(s)~=2) = 0;
+    
+    % Refine to a signal
+    s = sign(s) * 1.5;
 
+%% Use RSI as SIGNAL
 elseif isSignal == 1
-    %% SIGNAL
-    % Aggregate the two signals normalizing them to +/- 2
-    s = sign(sma+srsi) * 2;
+    % Aggregate the two signals normalizing them to +/- 1.5
+    s = sign(sma+srsi) * 1.5;
 end; %if
 
-% Drop any repeats for PNL
+%% Drop any repeats for PNL
 sClean = remEchos_mex(s);
 
-% Make sure we have at least one trade first
+%% Make sure we have at least one trade first
 if ~isempty(find(sClean,1))
     
     % Set the first position to +/- 1 lot

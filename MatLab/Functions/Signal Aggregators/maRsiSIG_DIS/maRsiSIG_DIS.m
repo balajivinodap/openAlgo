@@ -23,14 +23,25 @@ if ~exist('scaling','var'), scaling = 1; end;
 if ~exist('cost','var'), cost = 0; end;         % default cost
 if ~exist('bigPoint','var'), bigPoint = 1; end; % default bigPoint
 
+if numel(thresh) == 1 % scalar value
+	thresh = [100-thresh, thresh];
+else
+    if thresh(1) > thresh(2)
+        thresh = thresh(2:-1:1);
+    end %if	
+end %if
+
 if length(Mrsi) == 1
     Mrsi = [15*Mrsi Mrsi];
 end
 
 [fOpen,fClose] = OHLCSplitter(price);
 
-[sma,~,~,lead,lag] = ma2inputsSIG_mex(price,N,M,typeMA,scaling,cost,bigPoint);
-[srsi,~,~,ri,ma,thresh] = rsiSIG(price,Mrsi,thresh,typeRSI,scaling,cost,bigPoint);
+%[sma,~,~,lead,lag] = ma2inputsSIG_mex(price,N,M,typeMA,scaling,cost,bigPoint);
+%[srsi,~,~,ri,ma,thresh] = rsiSIG(price,Mrsi,thresh,typeRSI,scaling,cost,bigPoint);
+
+[sma,lead,lag] = ma2inputsSTA_mex(price,N,M,typeMA);
+[srsi,ri,ma] = rsiSTA_mex(price,Mrsi,thresh,typeRSI);
 
 %%  The RSI is either used as a signal generator or a filter condition for another signal
 %   If we are using it to generate a signal, we should return only an actionable signal with no repeats
@@ -38,17 +49,20 @@ end
 %   For this specific 'marsiMETS' case, we combine it with a simple moving average
 if isSignal == 0
     %% FILTER
-    % Aggregate the two signals including their repeats
+    % Aggregate the two states 
     s = (sma+srsi);
 
     % Any instance where the |sum| of the 2 signals is ~= 2 means both conditions are not met
     % Drop those instances
     s(abs(s)~=2) = 0;
+    
+    % Refine to a signal
+    s = sign(s) * 1.5;
 
 elseif isSignal == 1
     %% SIGNAL
-    % Aggregate the two signals normalizing them to +/- 2
-    s = sign(sma+srsi) * 2;
+    % Aggregate the two signals normalizing them to +/- 1.5
+    s = sign(sma+srsi) * 1.5;
 end; %if
 
 % Drop any repeats for PNL
