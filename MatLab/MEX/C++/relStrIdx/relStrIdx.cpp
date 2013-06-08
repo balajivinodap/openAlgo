@@ -30,13 +30,12 @@
 //		rsi			The calculated relative strength index (RSI)
 //
 // Author:			Mark Tompkins
-// Last update:		4907.27867
+// Last update:		4907.30618
 // All rights reserved.
 //
 
 #include "mex.h"
-#include <stdio.h>
-#include <math.h>
+#include <cmath>
 #include <limits>
 
 using namespace std;
@@ -113,6 +112,10 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		mexErrMsgIdAndTxt( "MATLAB:relStrIdx:BadInputType",
 		"The observation lookback must be a positive integer >= 1. Aborting.");
 
+	if (obsvIn > rowsData)
+		mexErrMsgIdAndTxt( "MATLAB:relStrIdx:BadInputType",
+		"The lookback cannot be greater than the number of observations. Aborting.");
+
 	/* Create matrices for the return arguments */ 
 	// http://www.mathworks.com/help/matlab/matlab_external/c-c-source-mex-files.html
 	rsi_OUT = mxCreateDoubleMatrix(rowsData, 1, mxREAL);
@@ -150,10 +153,8 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 	// Calculate avgGains & avgLosses
 	// Note: these are not averages in the formal sense
-	//for (int ii = (obsvIn - 1); ii != rowsData; ii++)
 	for (int ii = (obsvIn); ii != rowsData; ii++)
 	{
-		//if (ii == (obsvIn - 1))
 		if (ii == (obsvIn))
 		{
 			double sumAdv = 0;
