@@ -1,6 +1,6 @@
 function varargout = rsiSIG_DIS(price,M,thresh,type,scaling,cost,bigPoint,hSub)
-%rsiMETS RSI signal generator from rsi.m by The MathWorks, Inc.
-%RSISIG
+%RSISIG_DIS RSI signal generator from rsiSIG_mex with graphical feedback
+% RSISIG_DIS RSI signal generator from rsiSIG_mex with graphical feedback
 % RSISIG trading strategy.  Note that the trading signal is generated when the
 % RSISIG value is above/below the upper/lower threshold.  
 % M serves some detrending function which we must investigate
@@ -15,8 +15,10 @@ function varargout = rsiSIG_DIS(price,M,thresh,type,scaling,cost,bigPoint,hSub)
 %   passed out to any function call.  For calculating a direct PNL, the signal should first
 %   be cleaned with remEchoMEX_mex.
 %   
-%   Signals with Echos represent a market state, not a signal.  I.e. "we should be ____".
-%   For RSI in oversold state, "we should be long".  Removing the Echos produces that buy signal.
+%   Signals with Echos represent a market state, not a signal.  
+%   
+%   For RSI in oversold state, "we should be long".  
+%   Removing the Echos from rsiSTA produces that buy signal.
 %
 % Author:           Mark Tompkins
 % Revision:			4906.24976

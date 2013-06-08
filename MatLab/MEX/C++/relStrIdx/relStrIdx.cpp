@@ -150,9 +150,11 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 	// Calculate avgGains & avgLosses
 	// Note: these are not averages in the formal sense
-	for (int ii = (obsvIn - 1); ii != rowsData; ii++)
+	//for (int ii = (obsvIn - 1); ii != rowsData; ii++)
+	for (int ii = (obsvIn); ii != rowsData; ii++)
 	{
-		if (ii == (obsvIn - 1))
+		//if (ii == (obsvIn - 1))
+		if (ii == (obsvIn))
 		{
 			double sumAdv = 0;
 			double sumDec = 0;
@@ -176,7 +178,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	// Assign RSI values to output array
 	for (int ii = 0; ii != rowsData; ii++)
 	{
-		if (ii < (obsvIn - 1))
+		if (ii < (obsvIn))
 		{
 			RSI[ii] = m_Nan;
 		}
