@@ -1,5 +1,5 @@
 function [s,r,sh,ri,ma,thresh] = rsiSIG(price,M,thresh,type,scaling,cost,bigPoint)
-%RSISIG RSI signal generator from rsindex.m by The MathWorks, Inc.
+%RSISIG RSI signal generator from relStrIdx.m 
 % RSISIG trading strategy.  Note that the trading signal is generated when the
 % RSI value is above/below the upper/lower threshold.  
 % M serves as a detrending function
@@ -31,10 +31,10 @@ function [s,r,sh,ri,ma,thresh] = rsiSIG(price,M,thresh,type,scaling,cost,bigPoin
 %           thresh      Echos the input threshold value (primarily for debugging)
 %
 % Author:           Mark Tompkins
-% Revision:			4902.23980
+% Revision:			4907.27566
 % All rights reserved.
 
-coder.extrinsic('remEchos_mex','movAvg_mex','OHLCSplitter','rsindex','calcProfitLoss','sharpe')
+coder.extrinsic('remEchos_mex','movAvg_mex','OHLCSplitter','relStrIdx','calcProfitLoss','sharpe')
 
 %% Defaults and parsing
 
@@ -84,10 +84,11 @@ ri = zeros(rows,1);                                         %#ok<NASGU>
 %  This can happen on a parametric sweep when the data set is split between
 %  a validation and test set.
 if M > rows
-    Mtemp = M;
+    % Mtemp = M;
     M = round(rows/3);
-    fprintf('Warning: The RSI detrender M (%0.f) resulted in a smoothing value input (%.0f) which is larger \nthan the number of provided observations (%.0f). ',N,Mtemp,rows);
-    fprintf('The smoothing value was adjusted to (%.0f).\n\n',M);
+    %% IMPORTANT
+    % fprintf('Warning: The RSI detrender M (%0.f) resulted in a smoothing value input (%.0f) which is larger \nthan the number of provided observations (%.0f). ',N,Mtemp,rows);
+    % fprintf('The smoothing value was adjusted to (%.0f).\n\n',M);
 end; %if
 
 %% Detrend with a moving average
@@ -97,7 +98,8 @@ else
     ma = movAvg_mex(fClose,M,M,type);
 end
 
-ri = rsindex(fClose - ma, N);
+%ri = rsindex(fClose - ma, N);
+ri = relStrIdx(fClose - ma, N);                 % RSI
 
 %% Generate SIGNAL
 % Crossing the lower threshold (oversold)

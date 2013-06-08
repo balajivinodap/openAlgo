@@ -1,6 +1,6 @@
 function [state,ri,ma] = rsiSTA(price,M,thresh,type)
-%RSISTA returns a logical STATE for from 'rsindex.m' by The MathWorks, Inc.
-% RSISTA returns a logical STATE for from 'rsindex.m' by The MathWorks, Inc.
+%RSISTA returns a logical STATE for from 'relStrIdx.m'
+% RSISTA returns a logical STATE for from 'relStrIdx.m'
 % which is a value that is above/below an upper/lower threshold intended to locate
 % overbought and oversold conditions.  
 % M serves as a detrending function
@@ -23,7 +23,7 @@ function [state,ri,ma] = rsiSTA(price,M,thresh,type)
 % All rights reserved.
 
 %% MEX code to be skipped
-coder.extrinsic('movAvg_mex','OHLCSplitter','rsindex')
+coder.extrinsic('movAvg_mex','OHLCSplitter','relStrIdx')
 
 %% Defaults and parsing
 
@@ -64,10 +64,11 @@ ri = zeros(rows,1);                                         %#ok<NASGU>
 %  This can happen on a parametric sweep when the data set is split between
 %  a validation and test set.
 if M > rows
-    Mtemp = M;
+    %Mtemp = M;
     M = round(rows/3);
-    fprintf('Warning: The RSI detrender M (%0.f) resulted in a smoothing value input (%.0f) which is larger \nthan the number of provided observations (%.0f). ',N,Mtemp,rows);
-    fprintf('The smoothing value was adjusted to (%.0f).\n\n',M);
+    %% IMPORTANT
+    % fprintf('Warning: The RSI detrender M (%0.f) resulted in a smoothing value input (%.0f) which is larger \nthan the number of provided observations (%.0f). ',N,Mtemp,rows);
+    % fprintf('The smoothing value was adjusted to (%.0f).\n\n',M);
 end; %if
 
 %% Detrend with a moving average
@@ -77,8 +78,8 @@ else
     ma = movAvg_mex(fClose,M,M,type);
 end
 
-ri = rsindex(fClose - ma, N);
-
+%ri = rsindex(fClose - ma, N);
+ri = relStrIdx(fClose - ma, N);
 
 %% Generate STATE
 
