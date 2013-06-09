@@ -4,7 +4,7 @@ function varargout = iTrendMaSIG_DIS(price,M,typeMA,scaling,cost,bigPoint)
 %   technical indicator.
 %
 %   S = ITRENDMASIG_DIS(PRICE) returns a trading signal based upon a 14-period
-%   iTrend and a Closing price (~ 1 day average).  
+%   iTrend and a Closing price (~ 1 day average).
 %   S is the trading signal of values -2, 0, 2 where -2 denotes
 %   a sell (short reverse), 0 is neutral, and 2 is buy (long reverse).
 %
@@ -15,13 +15,12 @@ function varargout = iTrendMaSIG_DIS(price,M,typeMA,scaling,cost,bigPoint)
 %   absolute return in R, the Sharpe Ratio in SH calcualted using R, and
 %   the ITREND or MA series.
 %
-% Author:           Mark Tompkins
-% Revision:			4902.23812
 
 %% Error check
 rows = size(price,1);
 if rows < 55
-    error('iTrendMA:dataSizeFailure','iTrendMA requires a minimum of 55 observations. Exiting.');
+    error('iTrendMA:dataSizeFailure',...
+        'iTrendMA requires a minimum of 55 observations. Exiting.');
 end;
 
 %% Defaults
@@ -39,7 +38,7 @@ HighLow = (fHigh+fLow)/2;
 %% iTrend signal generation using dominant cycle crossing
 if nargin > 0
     %% Preallocate
-    returns = zeros(rows,1);                                 %#ok<NASGU>
+    returns = zeros(rows,1);                                 
     s = zeros(rows,1);
     
     [tLine] = iTrend_mex(HighLow);
@@ -47,71 +46,60 @@ if nargin > 0
     
     ma(1:M)=fClose(1:M);
     
-    s(ma>tLine) = 2;
-    s(ma<tLine) = -2;
+    % Create logical STATE conditions
+    s(ma>tLine) = 1;
+    s(ma<tLine) = -1;
+    
+    % Convert to SIGNAL
+    s = s * 1.5;
     
     % Clear erroneous signals calculated prior to enough data
+    % This is specific to iTrend calculations because of the nature of
+    % cyclical analysis
     s(1:54) = 0;
-    sigClean = s;
     
+    % Remove echos
+    s = remEchos_mex(s);
     % Set the first position to 1 lot
     % Make sure we have at least one trade first
-    if ~isempty(find(sigClean,1))      
-        % We have to remove Echos while they are all 2's
-        % Clean up repeating information
-        sigClean = remEchosMEX_mex(sigClean);
-        
-        firstIdx = find(sigClean,1);                           % Index of first trade
-        firstPO = sigClean(firstIdx);
-        % Current signal is same as first signal
-        % ... and we still have additional observations
-        % Notice we have to ensure the row is in range FIRST!!
-        % Loop until first position change
-      	while ((firstIdx <= length(sigClean)) && firstPO == sigClean(firstIdx))	
-            sigClean(firstIdx) = sigClean(firstIdx)/2;
-            firstIdx = firstIdx + 1;
-        end;
-
-        [~,~,~,returns] = calcProfitLoss([fOpen fClose],sigClean,bigPoint,cost);
+    if ~isempty(find(s,1))
+        [~,~,~,returns] = calcProfitLoss([fOpen fClose],s,bigPoint,cost);
         sharpeRatio=scaling*sharpe(returns,0);
-    
-	else
-    	returns = 0;
-    	sharpeRatio= 0;
+    else
+        sharpeRatio= 0;
     end; %if
     
     %% If no assignment to variable, show the averages in a chart
-    if (nargout == 0) && (~exist('hSub','var'))% Plot
+    if (nargout == 0) && (~exist('hSub','var'))% Plot     
+        % Plot results
+        ax(1) = subplot(2,1,1);
+        plot([fClose,tLine,ma]);
+        axis (ax(1),'tight');
+        grid on
+        legend('Close','iTrend',['MA ',num2str(M)],'Location','NorthWest')
+        title(['iTrend Results, Annual Sharpe Ratio = ',num2str(sharpeRatio,3)])
         
-    % Plot results
-    ax(1) = subplot(2,1,1);
-    plot([fClose,tLine,ma]); 
-    axis (ax(1),'tight');
-    grid on
-    legend('Close','iTrend',['MA ',num2str(M)],'Location','NorthWest')
-    title(['iTrend Results, Annual Sharpe Ratio = ',num2str(sharpeRatio,3)])
-    
-    ax(2) = subplot(2,1,2);
-    plot([sigClean,cumsum(returns)]); grid on
-    legend('Position','Cumulative Return','Location','North')
-    title(['Final Return = ',thousandSepCash(sum(returns))])
-    linkaxes(ax,'x')
-    
+        ax(2) = subplot(2,1,2);
+        plot([s,cumsum(returns)]); grid on
+        legend('Position','Cumulative Return','Location','North')
+        title(['Final Return = ',thousandSepCash(sum(returns))])
+        linkaxes(ax,'x')
+        
     elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
         % We pass hSub as a string so we can have asymmetrical graphs
         % The call to char() parses the passed cell array
         ax(1) = subplot(str2num(char(hSub(1))), str2num(char(hSub(2))), str2num(char(hSub(3)))); %#ok<ST2NM>
-        plot([fClose,tLine,ma]); 
+        plot([fClose,tLine,ma]);
         axis (ax(1),'tight');
         grid on
         legend('Close','iTrend',['MA ',num2str(M)],'Location','NorthWest')
         title(['iTrend Results, Annual Sharpe Ratio = ',num2str(sharpeRatio,3)])
         
         ax(2) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))), str2num(char(hSub(4)))); %#ok<ST2NM>
-        plot([sigClean,cumsum(returns)]); grid on
+        plot([s,cumsum(returns)]); grid on
         legend('Position','Cumulative Return','Location','North')
         title(['Final Return = ',thousandSepCash(sum(returns))])
-        linkaxes(ax,'x') 
+        linkaxes(ax,'x')
     else
         for i = 1:nargout
             switch i
@@ -131,8 +119,53 @@ if nargin > 0
             end %switch
         end %for
     end %if
-    
 end; %if
 
-end
+%%
+%   -------------------------------------------------------------------------
+%        This code is distributed in the hope that it will be useful,
+%
+%                      	   WITHOUT ANY WARRANTY
+%
+%                  WITHOUT CLAIM AS TO MERCHANTABILITY
+%
+%                  OR FITNESS FOR A PARTICULAR PURPOSE
+%
+%                          expressed or implied.
+%
+%   Use of this code, pseudocode, algorithmic or trading logic contained
+%   herein, whether sound or faulty for any purpose is the sole
+%   responsibility of the USER. Any such use of these algorithms, coding
+%   logic or concepts in whole or in part carry no covenant of correctness
+%   or recommended usage from the AUTHOR or any of the possible
+%   contributors listed or unlisted, known or unknown.
+%
+%   Any reference of this code or to this code including any variants from
+%   this code, or any other credits due this AUTHOR from this code shall be
+%   clearly and unambiguously cited and evident during any use, whether in
+%   whole or in part.
+%
+%   The public sharing of this code does not reliquish, reduce, restrict or
+%   encumber any rights the AUTHOR has in respect to claims of intellectual
+%   property.
+%
+%   IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
+%   DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+%   DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+%   OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+%   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+%   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+%   ANY WAY OUT OF THE USE OF THIS SOFTWARE, CODE, OR CODE FRAGMENT(S), EVEN
+%   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+%   -------------------------------------------------------------------------
+%
+%                             ALL RIGHTS RESERVED
+%
+%   -------------------------------------------------------------------------
+%
+%   Author:	Mark Tompkins
+%   Revision:	4906.24976
+%   Copyright:	(c)2013
+%
 

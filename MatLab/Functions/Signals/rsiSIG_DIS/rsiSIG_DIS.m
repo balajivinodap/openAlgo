@@ -2,7 +2,7 @@ function varargout = rsiSIG_DIS(price,M,thresh,type,scaling,cost,bigPoint,hSub)
 %RSISIG_DIS RSI signal generator from rsiSIG_mex with graphical feedback
 % RSISIG_DIS RSI signal generator from rsiSIG_mex with graphical feedback
 % RSISIG trading strategy.  Note that the trading signal is generated when the
-% RSISIG value is above/below the upper/lower threshold.  
+% RSISIG value is above/below the upper/lower threshold.
 % M serves some detrending function which we must investigate
 
 %   NOTE: It is important to consider that an RSI signal generator really has 3 states.
@@ -14,15 +14,12 @@ function varargout = rsiSIG_DIS(price,M,thresh,type,scaling,cost,bigPoint,hSub)
 %   We are defining this as an elementary signal and echos that are produced should be
 %   passed out to any function call.  For calculating a direct PNL, the signal should first
 %   be cleaned with remEchoMEX_mex.
-%   
-%   Signals with Echos represent a market state, not a signal.  
-%   
-%   For RSI in oversold state, "we should be long".  
+%
+%   Signals with Echos represent a market state, not a signal.
+%
+%   For RSI in oversold state, "we should be long".
 %   Removing the Echos from rsiSTA produces that buy signal.
 %
-% Author:           Mark Tompkins
-% Revision:			4906.24976
-% All rights reserved.
 
 %% Defaults and parsing
 if ~exist('scaling','var'), scaling = 1; end;
@@ -45,17 +42,17 @@ end
 if ~exist('M','var')
     M = 0; % no detrending
     N = 14; % default value for rsi calc
-% We can't exceed the lookback for the RSI Detrender
+    % We can't exceed the lookback for the RSI Detrender
 elseif M > size(price,1)
     M = size(price,1);
     warning('Detrender reduced to match number of observations.');
-elseif numel(M) > 1 
-	N = M(1);
-	if M(2) < 0
+elseif numel(M) > 1
+    N = M(1);
+    if M(2) < 0
         M = 15 * N;
     else
         M = M(2);
-	end; % if
+    end; % if
 else
     % M is the detrend average
     % It would appear we are taking a multiple of M below
@@ -66,7 +63,6 @@ end
 
 [fClose] = OHLCSplitter(price);
 [s,r,sh,ri,ma,thresh] = rsiSIG_mex(price,[N M],thresh,type,scaling,cost,bigPoint);
-
 
 %% Plot if requested
 if nargout == 0 && (~exist('hSub','var'))% Plot
@@ -87,7 +83,7 @@ if nargout == 0 && (~exist('hSub','var'))% Plot
     plot([ri,thresh(2)*ones(size(ri)),thresh(1)*ones(size(ri))])
     grid on
     legend(['RSI Bars ',num2str(N)],['RSI Upper ',num2str(thresh(2)),'%'],...
-            ['RSI Lower ',num2str(thresh(1)),'%'],'Location', 'North')
+        ['RSI Lower ',num2str(thresh(1)),'%'],'Location', 'North')
     title('RSI')
     
     ax(3) = subplot(3,1,3);
@@ -98,7 +94,7 @@ if nargout == 0 && (~exist('hSub','var'))% Plot
     
 elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
     % We pass hSub as a string so we can have asymmetrical graphs
-	% The call to char() parses the passed cell array
+    % The call to char() parses the passed cell array
     ax(1) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))),str2num(char(hSub(3)))); %#ok<ST2NM>
     if M == 0
         ma = price;
@@ -145,5 +141,52 @@ else
                     'Too many output arguments requested, ignoring last ones');
         end %switch
     end %for
-end
+end; %if
 
+%%
+%   -------------------------------------------------------------------------
+%        This code is distributed in the hope that it will be useful,
+%
+%                      	   WITHOUT ANY WARRANTY
+%
+%                  WITHOUT CLAIM AS TO MERCHANTABILITY
+%
+%                  OR FITNESS FOR A PARTICULAR PURPOSE
+%
+%                          expressed or implied.
+%
+%   Use of this code, pseudocode, algorithmic or trading logic contained
+%   herein, whether sound or faulty for any purpose is the sole
+%   responsibility of the USER. Any such use of these algorithms, coding
+%   logic or concepts in whole or in part carry no covenant of correctness
+%   or recommended usage from the AUTHOR or any of the possible
+%   contributors listed or unlisted, known or unknown.
+%
+%   Any reference of this code or to this code including any variants from
+%   this code, or any other credits due this AUTHOR from this code shall be
+%   clearly and unambiguously cited and evident during any use, whether in
+%   whole or in part.
+%
+%   The public sharing of this code does not reliquish, reduce, restrict or
+%   encumber any rights the AUTHOR has in respect to claims of intellectual
+%   property.
+%
+%   IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
+%   DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+%   DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+%   OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+%   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+%   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+%   ANY WAY OUT OF THE USE OF THIS SOFTWARE, CODE, OR CODE FRAGMENT(S), EVEN
+%   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+%   -------------------------------------------------------------------------
+%
+%                             ALL RIGHTS RESERVED
+%
+%   -------------------------------------------------------------------------
+%
+%   Author:	Mark Tompkins
+%   Revision:	4906.24976
+%   Copyright:	(c)2013
+%

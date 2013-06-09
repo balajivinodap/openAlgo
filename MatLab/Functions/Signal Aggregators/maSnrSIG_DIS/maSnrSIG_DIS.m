@@ -3,7 +3,7 @@ function varargout = maSnrSIG_DIS(price,maF,maS,typeMA,snrThresh,snrEffect,scali
 %   MA is a classic 2 input crossover signal generator
 %   SNR is an indicator that measures the dominant cycle's signal to noise ratio.
 %       The SNR is measured in decibels and uses a logarithmic scale
-%   
+%
 %   By using an SNR filter on a MA signal, we should have a noticable improvement on the
 %   resulting performance.
 %
@@ -23,9 +23,6 @@ function varargout = maSnrSIG_DIS(price,maF,maS,typeMA,snrThresh,snrEffect,scali
 %                   	Effect 0:   Drop signals less than the SNR threshhold
 %                       Effect 1:   Reverse signals that are generated when SNR is less than the threshold
 %
-% Author:           Mark Tompkins
-% Revision:			4902.23869
-% All rights reserved.
 
 %% Defaults
 if ~exist('maF','var'), maF = 12; end;
@@ -55,7 +52,7 @@ indSnr = snr < snrThresh == 1;
 if snrEffect == 0
     % Remove these signals
     s(indSnr) = 0;
-% Reverse signals less than the SNR threshhold
+    % Reverse signals less than the SNR threshhold
 elseif snrEffect == 1
     % Reverse these signals
     s(indSnr) = s(indSnr) * -1;
@@ -63,29 +60,15 @@ else
     error('MASNR:inputArgs','Cannot interpret an input of snrThresh = %d',snrThresh);
 end; %if
 
-% Normalize signals to +/-2
-s = s * 2;
+% Normalize signals to +/-1.5
+s = s * 1.5;
 
 % Drop any repeats
-sClean = remEchos_mex(s);
+s = remEchos_mex(s);
 
 % Make sure we have at least one trade first
-if ~isempty(find(sClean,1))
-    
-    % Set the first position to +/- 1 lot
-    firstIdx = find(sClean,1);                           % Index of first trade
-    firstPO = sClean(firstIdx);
-
-    % Notice we have to ensure the row is in range FIRST!!
-    % Loop until first position change
-    while ((firstIdx <= length(sClean)) && firstPO == sClean(firstIdx))
-        % Changes first signal from +/-2 to +/-1
-        sClean(firstIdx) = sClean(firstIdx)/2;                
-        firstIdx = firstIdx + 1;
-    end; %while
-
-    [~,~,~,r] = calcProfitLoss([fOpen fClose],sClean,bigPoint,cost);
-
+if ~isempty(find(s,1))
+    [~,~,~,r] = calcProfitLoss([fOpen fClose],s,bigPoint,cost);
     sh = scaling*sharpe(r,0);
 else
     % No signal so no return or sharpe.
@@ -94,7 +77,7 @@ else
 end; %if
 
 if nargout == 0
-   
+    
     figure()
     % Not using MEX so we get a graphical response
     % Each element must be the same length - nonsense - thanks MatLab
@@ -102,7 +85,7 @@ if nargout == 0
     layout = ['6     ';'2     ';'1 3 5 ';'7 9 11'];
     hSub = cellstr(layout);
     ma2inputsSIG_DIS(price,maF,maS,typeMA,scaling,cost,bigPoint,hSub);
-
+    
     ax(1) = subplot(6,2,[2 4]);
     plot([price,lead,lag]);
     axis (ax(1),'tight');
@@ -117,17 +100,17 @@ if nargout == 0
     title('SNR')
     
     ax(3) = subplot(6,2,[10 12]);
-    plot([sClean,cumsum(r)]), grid on
+    plot([s,cumsum(r)]), grid on
     legend('Position','Cumulative Return','Location', 'North')
     title(['Final Return = ',thousandSepCash(sum(r))])
     
     linkaxes(ax,'x')
 else
-     %% Return values
+    %% Return values
     for i = 1:nargout
         switch i
             case 1
-                varargout{1} = sign(s); % signal (with repeats because it contains an MA signal)
+                varargout{1} = s; % signal
             case 2
                 varargout{2} = r; % return (pnl)
             case 3
@@ -145,5 +128,50 @@ else
     end %for
 end; %if
 
-
-
+%%
+%   -------------------------------------------------------------------------
+%        This code is distributed in the hope that it will be useful,
+%
+%                      	   WITHOUT ANY WARRANTY
+%
+%                  WITHOUT CLAIM AS TO MERCHANTABILITY
+%
+%                  OR FITNESS FOR A PARTICULAR PURPOSE
+%
+%                          expressed or implied.
+%
+%   Use of this code, pseudocode, algorithmic or trading logic contained
+%   herein, whether sound or faulty for any purpose is the sole
+%   responsibility of the USER. Any such use of these algorithms, coding
+%   logic or concepts in whole or in part carry no covenant of correctness
+%   or recommended usage from the AUTHOR or any of the possible
+%   contributors listed or unlisted, known or unknown.
+%
+%   Any reference of this code or to this code including any variants from
+%   this code, or any other credits due this AUTHOR from this code shall be
+%   clearly and unambiguously cited and evident during any use, whether in
+%   whole or in part.
+%
+%   The public sharing of this code does not reliquish, reduce, restrict or
+%   encumber any rights the AUTHOR has in respect to claims of intellectual
+%   property.
+%
+%   IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
+%   DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+%   DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+%   OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+%   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+%   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+%   ANY WAY OUT OF THE USE OF THIS SOFTWARE, CODE, OR CODE FRAGMENT(S), EVEN
+%   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+%   -------------------------------------------------------------------------
+%
+%                             ALL RIGHTS RESERVED
+%
+%   -------------------------------------------------------------------------
+%
+%   Author:	Mark Tompkins
+%   Revision:	4906.24976
+%   Copyright:	(c)2013
+%

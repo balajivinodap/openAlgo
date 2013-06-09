@@ -17,49 +17,49 @@ function varargout = ma2inputsSIG_DIS(price,F,S,typeMA,scaling,cost,bigPoint,hSu
 %
 %   hSub so that we can return ma2inputs as a subPlot
 %
-% Author:           Mark Tompkins
-% Revision:			4904.27712
-% All rights reserved.
 
 if nargin == 0
-    error('MA2INPUTSSIG_DIS:NoLagWindowDefined','When defining a LEAD value LAG value must also be given.')
+    error('MA2INPUTSSIG_DIS:NoLagWindowDefined',...
+        'When defining a LEAD value LAG value must also be given.')
 end; %if
 
 %% Process input args
 if ~exist('typeMA', 'var')
     typeMA = 0;
-end;
+end; %if
+
 if ~exist('scaling','var')
     scaling = 1;
-end
+end; %if
 
 if ~exist('cost', 'var')
     cost = 0;
-end
+end; %if
 
 if ~exist('bigPoint', 'var')
     bigPoint = 1;
-end
+end; %if
 
 if nargin < 2
     % default values - often used in MACD
     S = 26;
     F = 12;
 elseif nargin < 3
-    error('MA2INPUTSSIG_DIS:NoLagWindowDefined','When defining a LEAD value LAG value must also be given.')
+    error('MA2INPUTSSIG_DIS:NoLagWindowDefined',...
+        'When defining a LEAD value LAG value must also be given.')
 end %if
 
 rows = size(price,1);
 
 %% Input with error check
 if (F > S)
-	error('MA2INPUTSSIG_DIS:invalidInputs', ...
-    	'At a minimum a price vector must be provided.');
+    error('MA2INPUTSSIG_DIS:invalidInputs', ...
+        'At a minimum a price vector must be provided.');
 end; %if
-        
+
 if F > rows || S > rows
-	error ('MA2INPUTSSIG_DIS:invalidInputs', ...
-    	'Lookback is greater than the number of observations (%d)',rows);
+    error ('MA2INPUTSSIG_DIS:invalidInputs', ...
+        'Lookback is greater than the number of observations (%d)',rows);
 end; %if
 
 [fOpen,fClose] = OHLCSplitter(price);
@@ -80,15 +80,15 @@ SIG(1:S-1) = 0;
 if(~isempty(find(SIG,1)))
     % Clean up repeating information for PNL
     SIG = remEchos_mex(SIG);
-
+    
     % Generate PNL
     [~,~,~,returns] = calcProfitLoss([fOpen fClose],SIG,bigPoint,cost);
-
+    
     % Calculate sharpe ratio
-    sharpeRatio=scaling*sharpe(returns,0);
+    sharpeRatio = scaling*sharpe(returns,0);
 else
     % No signals - no sharpe.
-    sharpeRatio= 0;
+    sharpeRatio = 0;
 end; %if
 
 % Correct calculations prior to enough bars for lead & lag
@@ -96,15 +96,15 @@ for ii = 1:S-1
     if (ii < F)
         LEAD(ii) = fClose(ii);                 % Reset the moving average calculation to equal the Close
     end;
-        LAG(ii) = fClose(ii);                  % Also reset the slower average
+    LAG(ii) = fClose(ii);                  % Also reset the slower average
 end; %for
-    
+
 %% If no assignment to variable, show the averages in a chart
-    if (nargout == 0) && (~exist('hSub','var'))% Plot
-        
+if (nargout == 0) && (~exist('hSub','var'))% Plot
+    
     % Plot results
     ax(1) = subplot(2,1,1);
-    plot([fClose,LEAD,LAG]); 
+    plot([fClose,LEAD,LAG]);
     axis (ax(1),'tight');
     grid on
     legend('Close',['Lead ',num2str(F)],['Lag ',num2str(S)],'Location','NorthWest')
@@ -116,37 +116,84 @@ end; %for
     title(['Final Return = ',thousandSepCash(sum(returns))])
     linkaxes(ax,'x')
     
-    elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
-        % We pass hSub as a string so we can have asymmetrical graphs
-        % The call to char() parses the passed cell array
-        ax(1) = subplot(str2num(char(hSub(1))), str2num(char(hSub(2))), str2num(char(hSub(3)))); %#ok<ST2NM>
-        plot([fClose,LEAD,LAG]); 
-        axis (ax(1),'tight');
-        grid on
-        legend('Close',['Lead ',num2str(F)],['Lag ',num2str(S)],'Location','NorthWest')
-        title(['Lead/Lag MA Results, Annual Sharpe Ratio = ',num2str(sharpeRatio,3)])
-        
-        ax(2) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))), str2num(char(hSub(4)))); %#ok<ST2NM>
-        plot([SIG,cumsum(returns)]); grid on
-        legend('Position','Cumulative Return','Location','North')
-        title(['Final Return = ',thousandSepCash(sum(returns))])
-        linkaxes(ax,'x') 
-    else
-        for i = 1:nargout
-            switch i
-                case 1
-                    varargout{1} = SIG;
-                case 2
-                    varargout{2} = returns;
-                case 3
-                    varargout{3} = sharpeRatio;
-                case 4
-                    varargout{4} = LEAD;
-                case 5
-                    varargout{5} = LAG;
-                otherwise
-                    warning('MOVAVG2INPUTS:OutputArg','Too many output arguments requested, ignoring last ones');
-            end %switch
-        end %for
-    end %if
+elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
+    % We pass hSub as a string so we can have asymmetrical graphs
+    % The call to char() parses the passed cell array
+    ax(1) = subplot(str2num(char(hSub(1))), str2num(char(hSub(2))), str2num(char(hSub(3)))); %#ok<ST2NM>
+    plot([fClose,LEAD,LAG]);
+    axis (ax(1),'tight');
+    grid on
+    legend('Close',['Lead ',num2str(F)],['Lag ',num2str(S)],'Location','NorthWest')
+    title(['Lead/Lag MA Results, Annual Sharpe Ratio = ',num2str(sharpeRatio,3)])
+    
+    ax(2) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))), str2num(char(hSub(4)))); %#ok<ST2NM>
+    plot([SIG,cumsum(returns)]); grid on
+    legend('Position','Cumulative Return','Location','North')
+    title(['Final Return = ',thousandSepCash(sum(returns))])
+    linkaxes(ax,'x')
+else
+    for i = 1:nargout
+        switch i
+            case 1
+                varargout{1} = SIG;
+            case 2
+                varargout{2} = returns;
+            case 3
+                varargout{3} = sharpeRatio;
+            case 4
+                varargout{4} = LEAD;
+            case 5
+                varargout{5} = LAG;
+            otherwise
+                warning('MOVAVG2INPUTS:OutputArg','Too many output arguments requested, ignoring last ones');
+        end %switch
+    end %for
 end %if
+
+%%
+%   -------------------------------------------------------------------------
+%        This code is distributed in the hope that it will be useful,
+%
+%                      	   WITHOUT ANY WARRANTY
+%
+%                  WITHOUT CLAIM AS TO MERCHANTABILITY
+%
+%                  OR FITNESS FOR A PARTICULAR PURPOSE
+%
+%                          expressed or implied.
+%
+%   Use of this code, pseudocode, algorithmic or trading logic contained
+%   herein, whether sound or faulty for any purpose is the sole
+%   responsibility of the USER. Any such use of these algorithms, coding
+%   logic or concepts in whole or in part carry no covenant of correctness
+%   or recommended usage from the AUTHOR or any of the possible
+%   contributors listed or unlisted, known or unknown.
+%
+%   Any reference of this code or to this code including any variants from
+%   this code, or any other credits due this AUTHOR from this code shall be
+%   clearly and unambiguously cited and evident during any use, whether in
+%   whole or in part.
+%
+%   The public sharing of this code does not reliquish, reduce, restrict or
+%   encumber any rights the AUTHOR has in respect to claims of intellectual
+%   property.
+%
+%   IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
+%   DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+%   DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+%   OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+%   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+%   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+%   ANY WAY OUT OF THE USE OF THIS SOFTWARE, CODE, OR CODE FRAGMENT(S), EVEN
+%   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+%   -------------------------------------------------------------------------
+%
+%                             ALL RIGHTS RESERVED
+%
+%   -------------------------------------------------------------------------
+%
+%   Author:	Mark Tompkins
+%   Revision:	4906.24976
+%   Copyright:	(c)2013
+%

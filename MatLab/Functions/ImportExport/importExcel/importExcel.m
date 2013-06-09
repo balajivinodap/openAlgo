@@ -4,12 +4,10 @@ function [data,bigPoint] = importExcel()
 %
 % Prompt for specific file with file browser
 %
-%
-% Author:           Mark Tompkins
-% Revision:			4902.23478
+
 [fname,fpath] = uigetfile({'*.xlsx';'*.xls'});
-if fpath==0, error('no file selected'); 
-end
+
+if fpath==0, error('no file selected'); end
 
 % !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 % !  NOTE - Datasets are no longer the preferred data structure type  !
@@ -21,7 +19,7 @@ end
 data = dataset('xlsfile', fullfile(fpath,fname));
 
 % Check for the BigPoint.txt file in the same directory as the data file.
-% BigPoint.txt is the dollar adjustment factor from the imported data's decimal point to 
+% BigPoint.txt is the dollar adjustment factor from the imported data's decimal point to
 % real dollars.
 if exist(fullfile(fpath,'BigPoint.txt'), 'file')
     bigPoint = load(fullfile(fpath,'BigPoint.txt'));
@@ -32,6 +30,50 @@ else
     uiwait(msgbox(warningMessage));
 end;
 
-
-end
-
+%%
+%   -------------------------------------------------------------------------
+%        This code is distributed in the hope that it will be useful,
+%
+%                      	   WITHOUT ANY WARRANTY
+%
+%                  WITHOUT CLAIM AS TO MERCHANTABILITY
+%
+%                  OR FITNESS FOR A PARTICULAR PURPOSE
+%
+%                          expressed or implied.
+%
+%   Use of this code, pseudocode, algorithmic or trading logic contained
+%   herein, whether sound or faulty for any purpose is the sole
+%   responsibility of the USER. Any such use of these algorithms, coding
+%   logic or concepts in whole or in part carry no covenant of correctness
+%   or recommended usage from the AUTHOR or any of the possible
+%   contributors listed or unlisted, known or unknown.
+%
+%   Any reference of this code or to this code including any variants from
+%   this code, or any other credits due this AUTHOR from this code shall be
+%   clearly and unambiguously cited and evident during any use, whether in
+%   whole or in part.
+%
+%   The public sharing of this code does not reliquish, reduce, restrict or
+%   encumber any rights the AUTHOR has in respect to claims of intellectual
+%   property.
+%
+%   IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
+%   DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+%   DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+%   OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+%   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+%   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+%   ANY WAY OUT OF THE USE OF THIS SOFTWARE, CODE, OR CODE FRAGMENT(S), EVEN
+%   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+%   -------------------------------------------------------------------------
+%
+%                             ALL RIGHTS RESERVED
+%
+%   -------------------------------------------------------------------------
+%
+%   Author:	Mark Tompkins
+%   Revision:	4906.24976
+%   Copyright:	(c)2013
+%

@@ -9,9 +9,6 @@ function [ tLine ] = iTrend_v2(price,iMult,qMult)
 %
 %   PRICE is ordinarily (H+L)/2 but can be any simple array
 %
-% Author:           Mark Tompkins
-% Revision:			4902.23985
-% All rights reserved.
 
 %% MEX code to be skipped
 coder.extrinsic('exist');
@@ -81,7 +78,7 @@ for ii = 41:rows
     %% {Resolve Instantaneous Period errors and smooth}
     if instPeriod(ii) == 0, instPeriod(ii) = instPeriod(ii-1); end;
     value5(ii) = (.25 * instPeriod(ii)) + (.75 * value5(ii-1));
-
+    
     %% {Compute Trendline as simple average over the measured dominant cycle period}
     period(ii) = fix(value5(ii));
     for jj = 0:period(ii)-1
@@ -91,8 +88,55 @@ for ii = 41:rows
     if rows < 26
         tLine(ii) = price(ii);
     end; %if
-    
 end; %for ii
-    tLine(1:40)=price(1:40);
-end
+
+tLine(1:40)=price(1:40);
+
+%%
+%   -------------------------------------------------------------------------
+%        This code is distributed in the hope that it will be useful,
+%
+%                      	   WITHOUT ANY WARRANTY
+%
+%                  WITHOUT CLAIM AS TO MERCHANTABILITY
+%
+%                  OR FITNESS FOR A PARTICULAR PURPOSE
+%
+%                          expressed or implied.
+%
+%   Use of this code, pseudocode, algorithmic or trading logic contained
+%   herein, whether sound or faulty for any purpose is the sole
+%   responsibility of the USER. Any such use of these algorithms, coding
+%   logic or concepts in whole or in part carry no covenant of correctness
+%   or recommended usage from the AUTHOR or any of the possible
+%   contributors listed or unlisted, known or unknown.
+%
+%   Any reference of this code or to this code including any variants from
+%   this code, or any other credits due this AUTHOR from this code shall be
+%   clearly and unambiguously cited and evident during any use, whether in
+%   whole or in part.
+%
+%   The public sharing of this code does not reliquish, reduce, restrict or
+%   encumber any rights the AUTHOR has in respect to claims of intellectual
+%   property.
+%
+%   IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
+%   DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+%   DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+%   OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+%   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+%   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+%   ANY WAY OUT OF THE USE OF THIS SOFTWARE, CODE, OR CODE FRAGMENT(S), EVEN
+%   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+%   -------------------------------------------------------------------------
+%
+%                             ALL RIGHTS RESERVED
+%
+%   -------------------------------------------------------------------------
+%
+%   Author:	Mark Tompkins
+%   Revision:	4906.24976
+%   Copyright:	(c)2013
+%
 

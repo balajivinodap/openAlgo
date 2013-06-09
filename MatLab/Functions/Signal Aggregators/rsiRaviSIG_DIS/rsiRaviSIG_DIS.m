@@ -1,10 +1,10 @@
 function varargout = rsiRaviSIG_DIS(price,rsiM,rsiThresh,rsiType,raviF,raviS,raviD,raviM,raviE, ...
-                             raviThresh, scaling,cost,bigPoint)
+    raviThresh, scaling,cost,bigPoint)
 %RSIRAVISIG_DIS RSI signal generation with a RAVI based transformer
 %   RSI is an Overbought | Oversold indicator.  Trending markets that of Over-bought|sold can become
 %   significantly more Over-B|S.
 %   RAVI is an indicator that shows whether a market is in a ranging or a trending phase.
-%   
+%
 %   By using a RAVI transformer on an RSI signal, we should have a noticable improvement on the
 %   resulting performance.
 %
@@ -26,10 +26,6 @@ function varargout = rsiRaviSIG_DIS(price,rsiM,rsiThresh,rsiType,raviF,raviS,rav
 %                   We are uncertain of a good raviThresh reading.  We need to sweep for this and update
 %                   with our findings.  Recommended sweep is similar to RSI percentage [10:5:40]
 %
-% Author:           Mark Tompkins
-% Revision:			4902.23879
-% All rights reserved.
-
 
 %% NEED TO ADD ERROR CHECKING OF INPUTS
 %% Defaults
@@ -40,7 +36,7 @@ if ~exist('raviF','var'), raviF = 5; end;
 if ~exist('raviS','var'), raviS = 65; end;
 if ~exist('raviD','var'), raviD = 0; end;
 if ~exist('raviM','var'), raviM = 20; end;
-if ~exist('raviE','var'), raviE = 0; end;           
+if ~exist('raviE','var'), raviE = 0; end;
 if ~exist('scaling','var'), scaling = 1; end;
 if ~exist('cost','var'), cost = 0; end;         % default cost
 if ~exist('bigPoint','var'), bigPoint = 1; end; % default bigPoint
@@ -51,12 +47,12 @@ end; %if
 
 [fOpen,fClose] = OHLCSplitter(price);
 
-[srsi,~,~,ri] = rsiSIG(price,rsiM,rsiThresh,rsiType,scaling,cost,bigPoint);
+[srsi,~,~,ri] = rsiSIG_mex(price,rsiM,rsiThresh,rsiType,scaling,cost,bigPoint);
 
 rav = ravi(price,raviF,raviS,raviD,raviM);
 
 s = srsi;
-    
+
 % RAVI is used to filter signals that are not considered trending.
 % These would be signals that occur when RAVI < raviThresh
 % Effect 0: Remove the signal in trending markets
@@ -65,13 +61,13 @@ s = srsi;
 % Effect 3: Reverse the signal in ranging markets
 if raviE == 0
     % Index period where market is in a trending phase
-    indRavi = rav > raviThresh == 1;   
+    indRavi = rav > raviThresh == 1;
     % Remove these signals
     s(indRavi) = 0;
-% Effect 1: This was a reverse but has since been changed to undefined
+    % Effect 1: This was a reverse but has since been changed to undefined
 elseif raviE == 1
     % Index period where market is in a ranging phase
-    indRavi = rav < raviThresh == 1;   
+    indRavi = rav < raviThresh == 1;
     % Remove these signals
     s(indRavi) = 0;
 elseif raviE == 2
@@ -87,38 +83,24 @@ else
     error('RSIRAVI:inputArge','Cannot interpret an input of raviE = %d',raviE);
 end;
 
-% Normalize signals to +/-2
-s = s * 2;
+% Normalize signals to +/-1.5
+s = s * 1.5;
 
 % Drop any repeats
-sClean = remEchos_mex(s);
+s = remEchos_mex(s);
 
-if ~isempty(find(sClean,1))
-    
-    % Set the first position to +/- 1 lot
-    firstIdx = find(sClean,1);                           % Index of first trade
-    firstPO = sClean(firstIdx);
-
-    % Notice we have to ensure the row is in range FIRST!!
-    % Loop until first position change
-    while ((firstIdx <= length(sClean)) && firstPO == sClean(firstIdx))
-        % Changes first signal from +/-2 to +/-1
-        sClean(firstIdx) = sClean(firstIdx)/2;                
-        firstIdx = firstIdx + 1;
-    end;
-
-    [~,~,~,r] = calcProfitLoss([fOpen fClose],sClean,bigPoint,cost);
-
+if ~isempty(find(s,1))
+    [~,~,~,r] = calcProfitLoss([fOpen fClose],s,bigPoint,cost);
     sh = scaling*sharpe(r,0);
 else
-	% No signal so no return or sharpe.
+    % No signal so no return or sharpe.
     r = zeros(length(price),1);
     sh = 0;
 end; %if
 
 %% Plot if requested
 if nargout == 0
-
+    
     figure()
     % Not using MEX so we get a graphical response
     % Each element must be the same length - nonsense - thanks MatLab
@@ -137,9 +119,9 @@ if nargout == 0
     grid on
     legend('Price','Location', 'NorthWest')
     title(['RSI & RAVI, Sharpe Ratio = ',num2str(sh,3)])
-   
+    
     ax(2) = subplot(3,2,6);
-    plot([sClean,cumsum(r)]), grid on
+    plot([s,cumsum(r)]), grid on
     legend('Position','Cumulative Return','Location','North')
     title(['Final Return = ',thousandSepCash(sum(r))])
     linkaxes(ax,'x')
@@ -148,7 +130,7 @@ else
     for i = 1:nargout
         switch i
             case 1
-                varargout{1} = sign(s); % signal 
+                varargout{1} = s; % signal
             case 2
                 varargout{2} = r; % return (pnl)
             case 3
@@ -164,5 +146,51 @@ else
     end %for
 end% if
 
-end
+%%
+%   -------------------------------------------------------------------------
+%        This code is distributed in the hope that it will be useful,
+%
+%                      	   WITHOUT ANY WARRANTY
+%
+%                  WITHOUT CLAIM AS TO MERCHANTABILITY
+%
+%                  OR FITNESS FOR A PARTICULAR PURPOSE
+%
+%                          expressed or implied.
+%
+%   Use of this code, pseudocode, algorithmic or trading logic contained
+%   herein, whether sound or faulty for any purpose is the sole
+%   responsibility of the USER. Any such use of these algorithms, coding
+%   logic or concepts in whole or in part carry no covenant of correctness
+%   or recommended usage from the AUTHOR or any of the possible
+%   contributors listed or unlisted, known or unknown.
+%
+%   Any reference of this code or to this code including any variants from
+%   this code, or any other credits due this AUTHOR from this code shall be
+%   clearly and unambiguously cited and evident during any use, whether in
+%   whole or in part.
+%
+%   The public sharing of this code does not reliquish, reduce, restrict or
+%   encumber any rights the AUTHOR has in respect to claims of intellectual
+%   property.
+%
+%   IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
+%   DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+%   DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+%   OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+%   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+%   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+%   ANY WAY OUT OF THE USE OF THIS SOFTWARE, CODE, OR CODE FRAGMENT(S), EVEN
+%   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+%   -------------------------------------------------------------------------
+%
+%                             ALL RIGHTS RESERVED
+%
+%   -------------------------------------------------------------------------
+%
+%   Author:	Mark Tompkins
+%   Revision:	4906.24976
+%   Copyright:	(c)2013
+%
 

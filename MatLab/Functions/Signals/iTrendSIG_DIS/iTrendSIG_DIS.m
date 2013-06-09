@@ -1,26 +1,23 @@
 function [ varargout ] = iTrendSIG_DIS(price,scaling,cost,bigPoint,hSub)
 %ITRENDSIGDIS An indicator based on the work of John Elhers
-%   instantaneousTrend returns a trading signal for a given iTrend and moving average crossover 
+%   instantaneousTrend returns a trading signal for a given iTrend and moving average crossover
 %
 %   Input 'price' should be of an O | H | L | C form as we use the average of the Open & Close
 %   when passed to iTrend.m
 %
 %   S = ITRENDSIGDIS(PRICE) returns a trading signal based upon a 14-period
-%   iTrend and a Closing price (~ 1 day average).  
+%   iTrend and a Closing price (~ 1 day average).
 %
 %   S = ITRENDSIGDIS(PRICE,I,T) returns a trading signal for a I-period iTrend and
 %   a T-period simple moving average.
 %
-%   [S,R,SH,ITREND,MA] = ITRENDSIGDIS(...) 
-%           S       derived trading signal 
+%   [S,R,SH,ITREND,MA] = ITRENDSIGDIS(...)
+%           S       derived trading signal
 %           R       absolute return in R
 %           SH      derived Sharpe based on R
 %           ITREND  iTrend as calculated with a call to iTrend.m
 %           MA
 %
-% Author:           Mark Tompkins
-% Revision:			4902.23938
-% All rights reserved.
 
 %% Error check
 rows = size(price,1);
@@ -37,7 +34,6 @@ if ~exist('bigPoint','var'), bigPoint = 1; end; % default bigPoint
 [fOpen,fHigh,fLow,fClose] = OHLCSplitter(price);
 HighLow = (fHigh+fLow)/2;
 
-
 %% iTrend signal generation using dominant cycle crossing
 if nargin > 0
     %% Preallocate
@@ -51,55 +47,53 @@ if nargin > 0
     
     % Clear erroneous signals calculated prior to enough data
     s(1:54) = 0;
-    sigClean = s;
     
     % Set the first position to 1 lot
     % Make sure we have at least one trade first
-    if ~isempty(find(sigClean,1))      
+    if ~isempty(find(s,1))
         % We have to remove Echos while they are all 2's
         % Clean up repeating information
-        sigClean = remEchos_mex(sigClean);
+        s = remEchos_mex(s);
         
-        [~,~,~,returns] = calcProfitLoss([fOpen fClose],sigClean,bigPoint,cost);
+        [~,~,~,returns] = calcProfitLoss([fOpen fClose],s,bigPoint,cost);
         sharpeRatio=scaling*sharpe(returns,0);
-    
-	else
-    	returns = 0;
-    	sharpeRatio= 0;
+    else
+        returns = 0;
+        sharpeRatio= 0;
     end; %if
     
     %% If no assignment to variable, show the averages in a chart
     if (nargout == 0) && (~exist('hSub','var'))% Plot
         
-    % Plot results
-    ax(1) = subplot(2,1,1);
-    plot([fClose,tLine,instT]); 
-    axis (ax(1),'tight');
-    grid on
-    legend('Close','iTrend','instT','Location','NorthWest')
-    title(['iTrend Results, Annual Sharpe Ratio = ',num2str(sharpeRatio,3)])
-    
-    ax(2) = subplot(2,1,2);
-    plot([sigClean,cumsum(returns)]); grid on
-    legend('Position','Cumulative Return','Location','North')
-    title(['Final Return = ',thousandSepCash(sum(returns))])
-    linkaxes(ax,'x')
-    
+        % Plot results
+        ax(1) = subplot(2,1,1);
+        plot([fClose,tLine,instT]);
+        axis (ax(1),'tight');
+        grid on
+        legend('Close','iTrend','instT','Location','NorthWest')
+        title(['iTrend Results, Annual Sharpe Ratio = ',num2str(sharpeRatio,3)])
+        
+        ax(2) = subplot(2,1,2);
+        plot([s,cumsum(returns)]); grid on
+        legend('Position','Cumulative Return','Location','North')
+        title(['Final Return = ',thousandSepCash(sum(returns))])
+        linkaxes(ax,'x')
+        
     elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
         % We pass hSub as a string so we can have asymmetrical graphs
         % The call to char() parses the passed cell array
         ax(1) = subplot(str2num(char(hSub(1))), str2num(char(hSub(2))), str2num(char(hSub(3)))); %#ok<ST2NM>
-        plot([fClose,tLine,instT]); 
+        plot([fClose,tLine,instT]);
         axis (ax(1),'tight');
         grid on
         legend('Close','iTrend','instT','Location','NorthWest')
         title(['iTrend Results, Annual Sharpe Ratio = ',num2str(sharpeRatio,3)])
         
         ax(2) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))), str2num(char(hSub(4)))); %#ok<ST2NM>
-        plot([sigClean,cumsum(returns)]); grid on
+        plot([s,cumsum(returns)]); grid on
         legend('Position','Cumulative Return','Location','North')
         title(['Final Return = ',thousandSepCash(sum(returns))])
-        linkaxes(ax,'x') 
+        linkaxes(ax,'x')
     else
         for i = 1:nargout
             switch i
@@ -122,5 +116,51 @@ if nargin > 0
     
 end; %if
 
-end
+%%
+%   -------------------------------------------------------------------------
+%        This code is distributed in the hope that it will be useful,
+%
+%                      	   WITHOUT ANY WARRANTY
+%
+%                  WITHOUT CLAIM AS TO MERCHANTABILITY
+%
+%                  OR FITNESS FOR A PARTICULAR PURPOSE
+%
+%                          expressed or implied.
+%
+%   Use of this code, pseudocode, algorithmic or trading logic contained
+%   herein, whether sound or faulty for any purpose is the sole
+%   responsibility of the USER. Any such use of these algorithms, coding
+%   logic or concepts in whole or in part carry no covenant of correctness
+%   or recommended usage from the AUTHOR or any of the possible
+%   contributors listed or unlisted, known or unknown.
+%
+%   Any reference of this code or to this code including any variants from
+%   this code, or any other credits due this AUTHOR from this code shall be
+%   clearly and unambiguously cited and evident during any use, whether in
+%   whole or in part.
+%
+%   The public sharing of this code does not reliquish, reduce, restrict or
+%   encumber any rights the AUTHOR has in respect to claims of intellectual
+%   property.
+%
+%   IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
+%   DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+%   DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+%   OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+%   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+%   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+%   ANY WAY OUT OF THE USE OF THIS SOFTWARE, CODE, OR CODE FRAGMENT(S), EVEN
+%   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+%   -------------------------------------------------------------------------
+%
+%                             ALL RIGHTS RESERVED
+%
+%   -------------------------------------------------------------------------
+%
+%   Author:	Mark Tompkins
+%   Revision:	4906.24976
+%   Copyright:	(c)2013
+%
 

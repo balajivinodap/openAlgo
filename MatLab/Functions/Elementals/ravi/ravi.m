@@ -11,7 +11,7 @@ function [ ind ] = ravi(price,lead,lag,D,M)
 %	LAG:	Observation period for the slow period harmonic mean used to calculate Ravi measurement
 %	D:		Detrender option:
 %				0	-	Ravi (default)
-%				1	-	ATR 
+%				1	-	ATR
 %	M:		Mean ravi shift used to calibrate the returned vector.
 %				e.g.	M = 10 	the mean of the RAVI vector is set to 10%
 %	hSub:	String used to manipulate the graphing of the Ravi vector
@@ -23,15 +23,12 @@ function [ ind ] = ravi(price,lead,lag,D,M)
 %								Lead	5
 %								Lag		65
 %								D		0
-%								M		20				
+%								M		20
 %
-% Author:           Mark Tompkins
-% Revision:			4903.16719
-% All rights reserved.
 
 if size(price,2) < 4
     error('RAVI:tooFewInputs', ...
-            'We call ATR to normalize price data therefore we need O | H | L | C as price input. Exiting.');
+        'We call ATR to normalize price data therefore we need O | H | L | C as price input. Exiting.');
 end; %if
 
 [~,~,~,fClose] = OHLCSplitter(price);
@@ -57,10 +54,10 @@ raviS = slidefun('harmmean',lag,fClose,'backward');
 if D == 0
     ind = (abs(raviF-raviS)./raviS);
 elseif D == 1
-	ind = (abs(raviF-raviS)./atr(price));
+    ind = (abs(raviF-raviS)./atr(price));
 else
     error('RAVI:inputArg','Unknown input in value ''D''. Aborting.');
-end;
+end; %if
 
 indAvg = mean(ind);
 
@@ -71,5 +68,51 @@ indAvg = mean(ind);
 norm = M / indAvg;
 ind = ind * norm;
 
-end
+%%
+%   -------------------------------------------------------------------------
+%        This code is distributed in the hope that it will be useful,
+%
+%                      	   WITHOUT ANY WARRANTY
+%
+%                  WITHOUT CLAIM AS TO MERCHANTABILITY
+%
+%                  OR FITNESS FOR A PARTICULAR PURPOSE
+%
+%                          expressed or implied.
+%
+%   Use of this code, pseudocode, algorithmic or trading logic contained
+%   herein, whether sound or faulty for any purpose is the sole
+%   responsibility of the USER. Any such use of these algorithms, coding
+%   logic or concepts in whole or in part carry no covenant of correctness
+%   or recommended usage from the AUTHOR or any of the possible
+%   contributors listed or unlisted, known or unknown.
+%
+%   Any reference of this code or to this code including any variants from
+%   this code, or any other credits due this AUTHOR from this code shall be
+%   clearly and unambiguously cited and evident during any use, whether in
+%   whole or in part.
+%
+%   The public sharing of this code does not reliquish, reduce, restrict or
+%   encumber any rights the AUTHOR has in respect to claims of intellectual
+%   property.
+%
+%   IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
+%   DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+%   DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+%   OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+%   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+%   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+%   ANY WAY OUT OF THE USE OF THIS SOFTWARE, CODE, OR CODE FRAGMENT(S), EVEN
+%   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+%   -------------------------------------------------------------------------
+%
+%                             ALL RIGHTS RESERVED
+%
+%   -------------------------------------------------------------------------
+%
+%   Author:	Mark Tompkins
+%   Revision:	4906.24976
+%   Copyright:	(c)2013
+%
 

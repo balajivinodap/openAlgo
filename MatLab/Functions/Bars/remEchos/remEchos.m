@@ -11,13 +11,6 @@ function [cleanS] = remEchos( s )
 %		out	[1 0 0 0 0 0 -1  0  0  0  0 1 0 0 0]	<-- SIGNAL OUTPUT
 %	This output is now "actionable" as a SIGNAL
 %
-% Author:           Mark Tompkins
-% Revision:			4903.19069
-% All rights reserved.
-
-
-% Now that we've adjusted the first trade we need to remove all dupe information
-% so that we'll be left with only singals and not echos
 
 cleanS = s;
 [rows,cols] = size(cleanS);
@@ -27,18 +20,65 @@ for jj=1:cols
         % Index of active trade - starts at first position
         actIdx = 1;
         actSig = cleanS(actIdx,jj);                     % Get the active signal so we can remove echos
-
+        
         % Define the iterate range from first trades to last signal
         for ii=1:rows-1
             if (cleanS(ii+1,jj)==actSig)             	% If the next line is the same, it is an echo. Zero it out.
                 cleanS(ii+1,jj) = 0;
             else                                       	% We have a new active signal.  Update.
                 if (cleanS(ii+1,jj) ~= 0)              	% Zeros are not new signals
-                    actSig = cleanS(ii+1,jj);                                      
+                    actSig = cleanS(ii+1,jj);
                 end; %if
             end; %if
         end; %for                                     	% Iterate until complete
     end; %if
 end; %for
-end
+
+%%
+%   -------------------------------------------------------------------------
+%        This code is distributed in the hope that it will be useful,
+%
+%                      	   WITHOUT ANY WARRANTY
+%
+%                  WITHOUT CLAIM AS TO MERCHANTABILITY
+%
+%                  OR FITNESS FOR A PARTICULAR PURPOSE
+%
+%                          expressed or implied.
+%
+%   Use of this code, pseudocode, algorithmic or trading logic contained
+%   herein, whether sound or faulty for any purpose is the sole
+%   responsibility of the USER. Any such use of these algorithms, coding
+%   logic or concepts in whole or in part carry no covenant of correctness
+%   or recommended usage from the AUTHOR or any of the possible
+%   contributors listed or unlisted, known or unknown.
+%
+%   Any reference of this code or to this code including any variants from
+%   this code, or any other credits due this AUTHOR from this code shall be
+%   clearly and unambiguously cited and evident during any use, whether in
+%   whole or in part.
+%
+%   The public sharing of this code does not reliquish, reduce, restrict or
+%   encumber any rights the AUTHOR has in respect to claims of intellectual
+%   property.
+%
+%   IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
+%   DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+%   DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+%   OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+%   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+%   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+%   ANY WAY OUT OF THE USE OF THIS SOFTWARE, CODE, OR CODE FRAGMENT(S), EVEN
+%   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+%   -------------------------------------------------------------------------
+%
+%                             ALL RIGHTS RESERVED
+%
+%   -------------------------------------------------------------------------
+%
+%   Author:	Mark Tompkins
+%   Revision:	4906.24976
+%   Copyright:	(c)2013
+%
 

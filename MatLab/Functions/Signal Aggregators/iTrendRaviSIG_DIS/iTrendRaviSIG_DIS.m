@@ -20,10 +20,9 @@ function varargout = iTrendRaviSIG_DIS(price,raviF,raviS,raviD,raviM,raviE,raviT
 %                   We are uncertain of a good raviThresh reading.  We need to sweep for this and update
 %                   with our findings.  Recommended sweep is similar to RSI percentage [10:5:40]
 %
-% Author:           Mark Tompkins
-% Revision:			4902.23821
-
-
+% <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+% NEEEDS WORK
+% <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 %% NEED TO ADD ERROR CHECKING OF INPUTS
 %% Defaults
 if ~exist('raviF','var'), raviF = 5; end;
