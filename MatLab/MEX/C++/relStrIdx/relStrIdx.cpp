@@ -60,18 +60,18 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	if (nrhs != 2)
 		mexErrMsgIdAndTxt( "MATLAB:relStrIdx:NumInputs",
 		"Number of input arguments is not correct. Aborting.");
-	
+
 	if (nlhs != 1)
 		mexErrMsgIdAndTxt( "MATLAB:relStrIdx:NumOutputs",
 		"Number of output assignments is not correct. Aborting.");
 
 	// Define constants (#define assigns a variable as either a constant or a macro)
 	// Inputs
-	#define bars_IN		prhs[0]
-	#define obsv_IN		prhs[1]
+#define bars_IN		prhs[0]
+#define obsv_IN		prhs[1]
 
 	// Outputs
-	#define rsi_OUT		plhs[0]
+#define rsi_OUT		plhs[0]
 
 	// Create a NaN value
 	// mxArray *nanvalue;
@@ -125,9 +125,9 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	double *avgGain = new double[rowsData];
 	double *avgLoss = new double[rowsData];
 
-/////////////
-// START
-/////////////
+	/////////////
+	// START
+	/////////////
 
 	// Calculate advances & declines
 	advances[0] = 0;
@@ -202,15 +202,22 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	avgGain = NULL;
 	avgLoss = NULL;
 
-/////////////
-// FINISHED
-/////////////
+	/////////////
+	// FINISHED
+	/////////////
 
 	return;
 }
 
 //
-//   -------------------------------------------------------------------------
+//  -------------------------------------------------------------------------
+//                                  _    _ 
+//         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _ 
+//        / _ \| '_ \ / _ \ '_ \  / _ \ | |/ _` |/ _ \ / _ \| '__/ _` |
+//       | (_) | |_) |  __/ | | |/ ___ \| | (_| | (_) | (_) | | | (_| |
+//        \___/| .__/ \___|_| |_/_/   \_\_|\__, |\___(_)___/|_|  \__, |
+//             |_|                         |___/                 |___/
+//  -------------------------------------------------------------------------
 //        This code is distributed in the hope that it will be useful,
 //
 //                      	   WITHOUT ANY WARRANTY
@@ -233,7 +240,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 //   clearly and unambiguously cited and evident during any use, whether in
 //   whole or in part.
 //
-//   The public sharing of this code does not reliquish, reduce, restrict or
+//   The public sharing of this code does not relinquish, reduce, restrict or
 //   encumber any rights the AUTHOR has in respect to claims of intellectual
 //   property.
 //

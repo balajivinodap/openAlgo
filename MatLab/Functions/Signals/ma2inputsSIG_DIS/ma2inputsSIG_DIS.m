@@ -18,7 +18,7 @@ function varargout = ma2inputsSIG_DIS(price,F,S,typeMA,scaling,cost,bigPoint,hSu
 %   hSub so that we can return ma2inputs as a subPlot
 %
 
-if nargin == 0
+if nargin == 2
     error('MA2INPUTSSIG_DIS:NoLagWindowDefined',...
         'When defining a LEAD value LAG value must also be given.')
 end; %if

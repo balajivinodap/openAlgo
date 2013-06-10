@@ -1,34 +1,38 @@
-function shMETS = maRaviPARMETS(x,data,scaling,cost,bigPoint)
-% define ma+rsi to accept vectorized inputs and return only sharpe ratio
-%% 
-% maRaviPARMETS(price,N,M,typeMA,Mrsi,thresh,typeRSI,scaling,cost,bigPoint)
-%
+function shMETS = ma2inputsNumTicksPftPARMETS(x,data,minTick,scaling,cost,bigPoint)
+% Wrapper for ma2inputs with numTicksProfit to accept vectorized inputs and return only sharpe ratio
+% in order to facilitate embarrassingly parallel parametric sweeps.
 
+%%
+%   Aggregating function:
+%   [barsOut,sigOut,R,SH,LEAD,LAG] = ma2inputsNumTicksPftSIG(price,F,S,typeMA,...
+%                                             minTick,numTicks,openAvg,...
+%                                             scaling,cost,bigPoint)
+
+%% Preallocate
 row = size(x,1);
 shTest = zeros(row,1);
 shVal = zeros(row,1);
-shMETS = zeros(row,1); %#ok<NASGU>
 
+%% Split dataset
 testPts = floor(0.8*length(data(:,1)));
 vBarsTest = data(1:testPts,:);
 vBarsVal = data(testPts+1:end,:);
 
 %% Progress Bar
 try % Initialization
-      ppm = ParforProgressStarter2('Parametric Sweep: marsiPARMETS', row, 0.1);
+    ppm = ParforProgressStarter2('Parametric Sweep: marsiPARMETS', row, 0.1);
 catch me % make sure "ParforProgressStarter2" didn't get moved to a different directory
-      if strcmp(me.message, 'Undefined function or method ''ParforProgressStarter2'' for input arguments of type ''char''.')
-          error('ParforProgressStarter2 not in path.');
-      else
-          % this should NEVER EVER happen.
-          msg{1} = 'Unknown error while initializing "ParforProgressStarter2":';
-          msg{2} = me.message;
-          print_error_red(msg);
-          % backup solution so that we can still continue.
-          ppm.increment = nan(1, nbr_files);
-      end %if
+    if strcmp(me.message, 'Undefined function or method ''ParforProgressStarter2'' for input arguments of type ''char''.')
+        error('ParforProgressStarter2 not in path.');
+    else
+        % this should NEVER EVER happen.
+        msg{1} = 'Unknown error while initializing "ParforProgressStarter2":';
+        msg{2} = me.message;
+        print_error_red(msg);
+        % backup solution so that we can still continue.
+        ppm.increment = nan(1, nbr_files);
+    end %if
 end %try
-
 
 %% Parallel iterations
 parfor ii = 1:row
@@ -36,19 +40,21 @@ parfor ii = 1:row
         shTest(ii) = NaN;
         shVal(ii) = NaN;
     else
-        [~,~,shTest(ii)] =	maRaviSIG_DIS(vBarsTest,x(ii,1),x(ii,2),x(ii,3),x(ii,4),x(ii,5),x(ii,6),...
-                                                x(ii,7),x(ii,8),x(ii,9),scaling,cost,bigPoint); 
-        [~,~,shVal(ii)] =	maRaviSIG_DIS(vBarsVal,x(ii,1),x(ii,2),x(ii,3),x(ii,4),x(ii,5),x(ii,6),...
-                                                x(ii,7),x(ii,8),x(ii,9),scaling,cost,bigPoint);  %#ok<PFBNS>
+        [~,~,~,shTest(ii)] =	ma2inputsNumTicksPftSIG_mex(vBarsTest,x(ii,1),x(ii,2),x(ii,3),...
+            minTick,x(ii,4),x(ii,5),...
+            scaling,cost,bigPoint);
+        [~,~,~,shVal(ii)] =	ma2inputsNumTicksPftSIG_mex(vBarsVal,x(ii,1),x(ii,2),x(ii,3),...
+            minTick,x(ii,4),x(ii,5),...
+            scaling,cost,bigPoint); %#ok<*PFBNS>
     end
     ppm.increment(ii); %#ok<PFBNS>
 end
 
 %% Destroy progress bar
-  try % use try / catch here, since delete(struct) will raise an error.
-      delete(ppm);
-  catch me %#ok<NASGU>
-  end
+try % use try / catch here, since delete(struct) will raise an error.
+    delete(ppm);
+catch me %#ok<NASGU>
+end; %try
 
 %% Aggregate sharpe ratios
 shMETS = ((shTest*2)+shVal)/3;
@@ -104,6 +110,6 @@ shMETS = ((shTest*2)+shVal)/3;
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4908.21261
+%   Revision:      4908.21539
 %   Copyright:     (c)2013
 %

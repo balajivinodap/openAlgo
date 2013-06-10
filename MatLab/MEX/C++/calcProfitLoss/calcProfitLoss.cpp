@@ -66,17 +66,16 @@
 
 // Declare external reference to undocumented C function
 #ifdef __cplusplus
-	extern "C"
-	{
+extern "C"
+{
 #endif
 
-mxArray *mxCreateSharedDataCopy(const mxArray *pr);
-// and any other prototypes for undocumented API functions you are using
+	mxArray *mxCreateSharedDataCopy(const mxArray *pr);
+	// and any other prototypes for undocumented API functions you are using
 
 #ifdef __cplusplus
-	}
+}
 #endif
-
 
 using namespace std;
 
@@ -99,41 +98,41 @@ bool fraction(double num);
 #define isRealScalar(P) (isReal2DfullDouble(P) && mxGetNumberOfElements(P) == 1)
 
 void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
-int nrhs, const mxArray *prhs[]) /* Input variables */
+				 int nrhs, const mxArray *prhs[]) /* Input variables */
 {
-// There are a number of provided functions for interfacing back to Matlab
-// mexFuncion		The gateway to C.  Required in every C & C++ solution to allow Matlab to call it
-// mexEvalString	Execute Matlab command
-// mexCallMatlab	Call Matlab function (.m or .dll) or script
-// mexPrintf		Print to the Matlab command window
-// mexErrMsgTxt		Issue error message and exit returning control to Matlab
-// mexWarnMsgTxt	Issue warning message
-// mexPrintf("Hello, world!"); /* Do something interesting */
+	// There are a number of provided functions for interfacing back to Matlab
+	// mexFuncion		The gateway to C.  Required in every C & C++ solution to allow Matlab to call it
+	// mexEvalString	Execute Matlab command
+	// mexCallMatlab	Call Matlab function (.m or .dll) or script
+	// mexPrintf		Print to the Matlab command window
+	// mexErrMsgTxt		Issue error message and exit returning control to Matlab
+	// mexWarnMsgTxt	Issue warning message
+	// mexPrintf("Hello, world!"); /* Do something interesting */
 
 	// Check number of inputs
 	if (nrhs != 4)
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:NumInputs",
 		"Number of input arguments is not correct. Aborting.");
-	
+
 	if (nlhs != 4)
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:NumOutputs",
 		"Number of output assignments is not correct. Aborting.");
 
 	// Define constants (#define assigns a variable as either a constant or a macro)
 	// Inputs
-	#define data_IN		prhs[0]
-	#define sig_IN		prhs[1]
-	#define bigPoint_IN	prhs[2]
-	#define cost_IN		prhs[3]
+#define data_IN		prhs[0]
+#define sig_IN		prhs[1]
+#define bigPoint_IN	prhs[2]
+#define cost_IN		prhs[3]
 	// Outputs
-	#define cash_OUT	plhs[0]
-	#define openEQ_OUT	plhs[1]
-	#define netLiq_OUT	plhs[2]
-	#define returns_OUT	plhs[3]
+#define cash_OUT	plhs[0]
+#define openEQ_OUT	plhs[1]
+#define netLiq_OUT	plhs[2]
+#define returns_OUT	plhs[3]
 
 	// Init Global variables
 	mwSize rowsData, colsData, rowsSig, colsSig;
-    double *cash, *openEQ, *netLiq, *returns, *dataPtr, *sigPtr, *bigPointPtr, *costPtr;
+	double *cash, *openEQ, *netLiq, *returns, *dataPtr, *sigPtr, *bigPointPtr, *costPtr;
 
 	// Check type of supplied inputs
 	if (!isReal2DfullDouble(data_IN)) 
@@ -157,7 +156,7 @@ int nrhs, const mxArray *prhs[]) /* Input variables */
 	colsData = mxGetN(data_IN);
 	rowsSig = mxGetM(sig_IN);
 	colsSig = mxGetN(sig_IN);
-	
+
 	if (rowsData != rowsSig)
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:ArrayMismatch",
 		"The number of rows in the data array and the signal array are different. Aborting.");
@@ -180,7 +179,7 @@ int nrhs, const mxArray *prhs[]) /* Input variables */
 	openEQ_OUT = mxCreateDoubleMatrix(rowsData, 1, mxREAL); 
 	netLiq_OUT = mxCreateDoubleMatrix(rowsData, 1, mxREAL); 
 	returns_OUT = mxCreateDoubleMatrix(rowsData, 1, mxREAL); 
-	
+
 	/* Assign pointers to the arrays */ 
 	dataPtr = mxGetPr(prhs[0]);
 	sigPtr = mxGetPr(prhs[1]);
@@ -205,7 +204,7 @@ int nrhs, const mxArray *prhs[]) /* Input variables */
 
 	// Shift signal down one observation
 	trades[0] = 0;
-	
+
 	// Initialize numTrades counter
 	numTrades = 0;
 	for (ii=1; ii<rowsSig+1; ii++)				// Remember C++ starts counting at '0' & MatLab starts counting at '1'
@@ -214,7 +213,7 @@ int nrhs, const mxArray *prhs[]) /* Input variables */
 		if(trades[ii]!=0)
 			numTrades++;						// We can either over allocate memory to idxTrades array or do a 2nd iteration
 	}											// Currently we'll do a 2nd pass after we know the size of the array
-	
+
 	// Check if any trades.  If so, start the P&L process
 	if (numTrades > 0)							// We have trades
 	{
@@ -228,10 +227,10 @@ int nrhs, const mxArray *prhs[]) /* Input variables */
 				c++;
 			}
 		}
-		
+
 		// Initialize a ledger for open positions
 		deque<tradeEntry> openLedger;
-		
+
 		// Put first trade on ledger
 		openLedger.push_back(createLineEntry(idxTrades[0],trades[idxTrades[0]],dataPtr[idxTrades[0]]));
 
@@ -256,10 +255,10 @@ int nrhs, const mxArray *prhs[]) /* Input variables */
 					else
 					{
 						mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:AdvancedSignalError",
-						"Received an advanced signal instruction  (%f) with the same sign as the openPosition (%d). Aborting.", trades[ii], netPO);
+							"Received an advanced signal instruction  (%f) with the same sign as the openPosition (%d). Aborting.", trades[ii], netPO);
 					}
 				}
-				
+
 				// Trade is an offsetting position
 				else	// Offset existing position
 				{
@@ -322,7 +321,7 @@ int nrhs, const mxArray *prhs[]) /* Input variables */
 									needQty = 0;
 								}
 								else
-								// Current line item quantity is equal to or smaller than what we need.  Process P&L and remove.
+									// Current line item quantity is equal to or smaller than what we need.  Process P&L and remove.
 								{
 									// P&L entire quantity
 									cash[ii] = cash[ii] + ((dataPtr[ii] - openLedger.at(0).price) * -openLedger.at(0).quantity * bigPoint) - (abs(openLedger.at(0).quantity)*cost);
@@ -353,7 +352,7 @@ int nrhs, const mxArray *prhs[]) /* Input variables */
 		// destroy the dynamic array
 		delete [] idxTrades;
 		idxTrades = NULL;
-		
+
 		// These are for convenience and could be removed for optimization
 		// Calculate a cumulative sum of closed trades and open equity per observation
 		double runSum = 0;
@@ -375,12 +374,12 @@ int nrhs, const mxArray *prhs[]) /* Input variables */
 		// Nothing to do as the arrays are initialized with a zero value
 		// This is here for logical reference
 	}
-	
+
 	// BE SURE TO destroy temporary arrays
 	delete [] trades;
 	trades = NULL;								// Best practice.  Null array pointer.
 
-return;
+	return;
 }
 
 /////////////
@@ -393,9 +392,9 @@ return;
 tradeEntry createLineEntry(int ID, int qty, double price)
 {
 	tradeEntry lineEntry;
-		lineEntry.index = ID;
-		lineEntry.quantity = qty;
-		lineEntry.price = price;
+	lineEntry.index = ID;
+	lineEntry.quantity = qty;
+	lineEntry.price = price;
 
 	return lineEntry;
 }
@@ -414,7 +413,7 @@ int isMember(int arr[], int elements, int search)
 	else 
 	{
 		{
-		return isMember(arr, elements - 1, search);
+			return isMember(arr, elements - 1, search);
 		}
 	}
 } 
@@ -429,6 +428,7 @@ int sumQty(const deque<tradeEntry>& x)
 		//sumOfQty += x[i].price;
 		sumOfQty += it->quantity;
 	}
+
 	return sumOfQty;
 }
 
@@ -442,7 +442,14 @@ bool fraction(double num)
 }
 
 //
-//   -------------------------------------------------------------------------
+//  -------------------------------------------------------------------------
+//                                  _    _ 
+//         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _ 
+//        / _ \| '_ \ / _ \ '_ \  / _ \ | |/ _` |/ _ \ / _ \| '__/ _` |
+//       | (_) | |_) |  __/ | | |/ ___ \| | (_| | (_) | (_) | | | (_| |
+//        \___/| .__/ \___|_| |_/_/   \_\_|\__, |\___(_)___/|_|  \__, |
+//             |_|                         |___/                 |___/
+//  -------------------------------------------------------------------------
 //        This code is distributed in the hope that it will be useful,
 //
 //                      	   WITHOUT ANY WARRANTY
@@ -465,7 +472,7 @@ bool fraction(double num)
 //   clearly and unambiguously cited and evident during any use, whether in
 //   whole or in part.
 //
-//   The public sharing of this code does not reliquish, reduce, restrict or
+//   The public sharing of this code does not relinquish, reduce, restrict or
 //   encumber any rights the AUTHOR has in respect to claims of intellectual
 //   property.
 //
