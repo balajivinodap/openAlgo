@@ -88,10 +88,10 @@ typedef struct tradeEntry
 } tradeEntry;
 
 // Prototypes
-int isMember(int arr[], int elements, int search);
-int sumQty(const deque<tradeEntry>& x);
 tradeEntry createLineEntry(int ID, int qty, double price);
+int sumQty(const deque<tradeEntry>& x);
 bool fraction(double num);
+bool knownAdvSig(double advSig);
 
 // Macros
 #define isReal2DfullDouble(P) (!mxIsComplex(P) && mxGetNumberOfDimensions(P) == 2 && !mxIsSparse(P) && mxIsDouble(P))
@@ -132,7 +132,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 	// Init Global variables
 	mwSize rowsData, colsData, rowsSig, colsSig;
-	double *cash, *openEQ, *netLiq, *returns, *dataPtr, *sigPtr, *bigPointPtr, *costPtr;
+	double *cashIdx, *openEQIdx, *netLiqIdx, *returnsIdx, *dataInPtr, *sigInPtr; // *bigPointPtr, *costPtr;
 
 	// Check type of supplied inputs
 	if (!isReal2DfullDouble(data_IN)) 
@@ -157,6 +157,10 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	rowsSig = mxGetM(sig_IN);
 	colsSig = mxGetN(sig_IN);
 
+	// Primarily for readability
+	// Price input must be in the form of O | H | L | C
+	const int SHIFT_CLOSE = rowsData;			
+
 	if (rowsData != rowsSig)
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:ArrayMismatch",
 		"The number of rows in the data array and the signal array are different. Aborting.");
@@ -164,6 +168,10 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	if (colsSig > 1)
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:ArrayMismatch",
 		"Input 'sig' must be a single column array. Aborting.");
+
+	if (colsData != 2)
+		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:ArrayMismatch",
+		"Input 'data' must be in the form of 'O | C'. Aborting.");
 
 	if (!isRealScalar(bigPoint_IN)) 
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:ScalarMismatch",
@@ -181,203 +189,211 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	returns_OUT = mxCreateDoubleMatrix(rowsData, 1, mxREAL); 
 
 	/* Assign pointers to the arrays */ 
-	dataPtr = mxGetPr(prhs[0]);
-	sigPtr = mxGetPr(prhs[1]);
-	bigPointPtr = mxGetPr(prhs[2]);
-	costPtr = mxGetPr(prhs[3]);
+	dataInPtr = mxGetPr(prhs[0]);
+	sigInPtr = mxGetPr(prhs[1]);
 
 	// assign values to the two variables passed as arrays
-	const double bigPoint = bigPointPtr[0];
-	const double cost = costPtr[0];
+	const double BIG_POINT = mxGetScalar(bigPoint_IN);
+	const double COST = mxGetScalar(cost_IN);
 
-	// assign the variables for manipulating the arrays (by pointer reference)
-	cash = mxGetPr(cash_OUT);
-	openEQ = mxGetPr(openEQ_OUT);
-	netLiq = mxGetPr(netLiq_OUT);
-	returns = mxGetPr(returns_OUT);
+	// assign the index variables for manipulating the arrays 
+	cashIdx = mxGetPr(cash_OUT);
+	openEQIdx = mxGetPr(openEQ_OUT);
+	netLiqIdx = mxGetPr(netLiq_OUT);
+	returnsIdx = mxGetPr(returns_OUT);
 
 	// START //
-	int	ii, numTrades;
+	// Initialize variables
+	int	sigIdx;							// Iterator that will store the index of the referenced signal
+	int barIdx;							// Iterator that will store the index of the referenced bar
+	bool anyTrades = false;				// Variable that indicates if we have any trades
 
-	// TRADES ARRAY
-	double *trades = new double[rowsSig + 1];
-
-	// Shift signal down one observation
-	trades[0] = 0;
-
-	// Initialize numTrades counter
-	numTrades = 0;
-	for (ii=1; ii<rowsSig+1; ii++)				// Remember C++ starts counting at '0' & MatLab starts counting at '1'
+	// Check that we have at least one signal (at least one trade)
+	for (sigIdx=0; sigIdx < rowsSig; sigIdx++)					// Remember C++ starts counting at '0'
 	{
-		trades[ii]=*sigPtr++;
-		if(trades[ii]!=0)
-			numTrades++;						// We can either over allocate memory to idxTrades array or do a 2nd iteration
-	}											// Currently we'll do a 2nd pass after we know the size of the array
-
-	// Check if any trades.  If so, start the P&L process
-	if (numTrades > 0)							// We have trades
-	{
-		int *idxTrades = new int[numTrades];
-		int c = 0;
-		for (ii=0; ii<rowsSig+1; ii++)
+		if (abs(sigInPtr[sigIdx]) >=1)		// See if we have a signal that generates a position
 		{
-			if (trades[ii]!=0)
-			{
-				idxTrades[c]=ii;
-				c++;
-			}
+			anyTrades=true;					// Trade found
+			break;							// Exit the for loop
 		}
+	}	
 
-		// Initialize a ledger for open positions
-		deque<tradeEntry> openLedger;
-
-		// Put first trade on ledger
-		openLedger.push_back(createLineEntry(idxTrades[0],trades[idxTrades[0]],dataPtr[idxTrades[0]]));
-
-		int netPO = 0, newPO = 0, needQty = 0;
-		for (ii = idxTrades[0]; ii<rowsSig; ii++)
+		// We have trades
+		// RETURN zeros if the signal is the last bar
+		if (anyTrades && sigIdx < rowsSig)
 		{
-			// Check if we have any additional signals
-			// We start at index 0 in order to ensure we don't throw an error if that index is the only signal
-			// We have a trade. 'i~=idxTrades(1)' so we skip the first entry
-			if (ii != idxTrades[0] && isMember(idxTrades,numTrades,ii))
+			// Initialize a ledger for open positions
+			deque<tradeEntry> openLedger;
+
+			// Put first trade on ledger
+			// price is 'sigIdx+1' because execution price lags signal by one observation
+			// We only need the integer portion of the first trade
+			openLedger.push_back(createLineEntry(sigIdx, int(sigInPtr[sigIdx]), dataInPtr[sigIdx+1]));
+
+			// Initialize position trackers
+			int netPO = 0, newPO = 0;
+
+			// ITERATE
+			// Start iterating at next observation
+			// Finish at observation before last in signal array
+			for (int ii = sigIdx+1; ii < rowsSig-1; ii++)
 			{
-				// Get net open position netPO
-				netPO = sumQty(openLedger);
-
-				if (netPO < 0 && trades[ii] < 0 || netPO > 0 && trades[ii] > 0)
+				if (sigInPtr[ii] != 0)
 				{
-					if (!fraction(trades[ii]))
-					{
-						// Trade is additive. Add to existing position --> openLedger
-						openLedger.push_back(createLineEntry(ii,trades[ii],dataPtr[ii]));
-					}
-					else
-					{
-						mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:AdvancedSignalError",
-							"Received an advanced signal instruction  (%f) with the same sign as the openPosition (%d). Aborting.", trades[ii], netPO);
-					}
-				}
+					// Get net open position netPO
+					netPO = sumQty(openLedger);
 
-				// Trade is an offsetting position
-				else	// Offset existing position
-				{
-					// Check if new signal is advanced (fractional) or standard
-					// 
-					if (fraction(trades[ii]))
+					// Check if additive or reductive
+					// Additive
+					if ((netPO <= 0 && sigInPtr[ii] <= -1) || (netPO >= 0 && sigInPtr[ii] >= 1))
 					{
-						// Liquidate any open position
-						while (openLedger.size() !=0)
+						// No special handling required for an advanced signal when it is additive
+						// We will add a check for the proper advanced fraction value or ease of extending
+						// the logic in the future
+						double advSig = sigInPtr[ii]-int(sigInPtr[ii]);
+						if (knownAdvSig(advSig))
 						{
-							cash[ii] = cash[ii] + ((dataPtr[ii] - openLedger.at(0).price) * openLedger.at(0).quantity * bigPoint) - (abs(openLedger.at(0).quantity) * cost);
-							openLedger.pop_front();
-						}
-
-						// New position should be the integer of the advanced signal
-						newPO = int(trades[ii]);
-
-						if (newPO != 0)
-						{
-							// Put new openPosition on the ledger if applicable (not 0)
-							openLedger.push_back(createLineEntry(ii,newPO,dataPtr[ii]));
-						}
-					}
-					// Standard
-					else
-					{
-						// Check if new trade is larger than existing position
-						if (abs(trades[ii]) >= abs(netPO))
-						{
-							// New trade is larger than or equal to existing position. Calculate cash on all ledger lines
-							while (openLedger.size() !=0)
-							{
-								cash[ii] = cash[ii] + ((dataPtr[ii] - openLedger.at(0).price) * openLedger.at(0).quantity * bigPoint) - (abs(openLedger.at(0).quantity) * cost);
-								openLedger.pop_front();
-							}
-							// Reduce new trades by previous position and create new entry if applicable
-							newPO = trades[ii] + netPO;		// variable to calculate new position size
-							if (newPO != 0)
-							{
-								openLedger.push_back(createLineEntry(ii,newPO,dataPtr[ii]));
-
-							}
+							// Trade is additive. Add or create existing position --> openLedger
+							openLedger.push_back(createLineEntry(ii, int(sigInPtr[ii]), dataInPtr[ii+1]));
 						}
 						else
 						{
-							// New trade is smaller than the current open position.
-							// How many do we need to reduce by?
-							needQty = trades[ii];
-							// Prepare to iterate until we are satisfied
-							while (needQty !=0)
+							// Unknown advanced signal.  Throw an error.
+							mexErrMsgIdAndTxt( "calcProfitLoss:AdvancedSignal:fractionUnknown",
+								"A signal contained an advanced fractional instruction %f that we could not interpret. Aborting.",sigInPtr[ii]);
+						}
+					}
+					// Reductive
+					else if ((netPO < 0 && sigInPtr[ii] > 0) || (netPO > 0 && sigInPtr[ii] < 0))
+					{
+						// Is this an advanced signal?
+						if(fraction(sigInPtr[ii]))
+						{
+							if(knownAdvSig(sigInPtr[ii]))
 							{
-								// Is the current line item quantity larger than what we need?
-								if (abs(openLedger.at(0).quantity) > needQty)
+								// Liquidate any open position
+								while (openLedger.size() !=0)
 								{
-									// If so we will P&L the quantity we need and reduce the open position size
-									cash[ii] = cash[ii] + ((dataPtr[ii] - openLedger.at(0).price) * -needQty * bigPoint) - (abs(needQty)*cost);
-									// Reduce the position size.  We are aggregating so we add (e.g. 5 Purchases + 4 Sales = 1 Long)
-									openLedger.at(0).quantity = openLedger.at(0).quantity + needQty;
-									// We are satisfied and don't need any more contracts
-									needQty = 0;
-								}
-								else
-									// Current line item quantity is equal to or smaller than what we need.  Process P&L and remove.
-								{
-									// P&L entire quantity
-									cash[ii] = cash[ii] + ((dataPtr[ii] - openLedger.at(0).price) * -openLedger.at(0).quantity * bigPoint) - (abs(openLedger.at(0).quantity)*cost);
-									// Reduce needed quantity by what we've been provided
-									needQty = needQty + openLedger.at(0).quantity;
-									// Remove the line item (FIFO)
+									// Aggregate cash for corresponding observations (signal + 1)
+									cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger[0].price) * openLedger[0].quantity * BIG_POINT) - (abs(openLedger[0].quantity)* COST);
 									openLedger.pop_front();
+								}
+
+								// New position should be the integer of the advanced signal
+								newPO = int(sigInPtr[ii]);
+
+								if (newPO != 0)
+								{
+									// Put new openPosition on the ledger if applicable (not 0)
+									openLedger.push_back(createLineEntry(ii, newPO, dataInPtr[ii+1]));
+								}
+							}
+							else
+							{
+								// Unknown advanced signal.  Throw an error.
+								mexErrMsgIdAndTxt( "calcProfitLoss:AdvancedSignal:fractionUnknown",
+									"A signal contained an advanced fractional instruction %f that we could not interpret. Aborting.",sigInPtr[ii]);
+							}
+							
+						}
+						// Simple signal.  It may not fully liquidate any open position and must be handled accordingly.
+						// We cannot simply empty the openLedger.
+						else
+						{
+							// Check if new trade is larger than existing position
+							if (abs(sigInPtr[ii]) >= abs(netPO))
+							{
+								// New trade is larger than or equal to existing position. Calculate cash on all ledger lines
+								while (openLedger.size() !=0)
+								{
+									// Aggregate cash for corresponding observations (signal + 1)
+									cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger[0].price) * openLedger[0].quantity * BIG_POINT) - (abs(openLedger[0].quantity)* COST);
+									openLedger.pop_front();
+								}
+
+								// Reduce new trades by previous position and create new entry if applicable
+								newPO = sigInPtr[ii] + netPO;		// variable to calculate new position size
+								if (newPO != 0)
+								{
+									openLedger.push_back(createLineEntry(ii,newPO,dataInPtr[ii+1]));
+								}
+							}
+							else
+							{
+								// New trade is smaller than the current open position.
+								// How many do we need to reduce by?
+								int needQty = sigInPtr[ii];
+								// Prepare to iterate until we are satisfied
+								while (needQty !=0)
+								{
+									// Is the current line item quantity larger than what we need?
+									if (abs(openLedger[0].quantity) > needQty)
+									{
+										// If so we will P&L the quantity we need and reduce the open position size
+										cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger[0].price) * -needQty * BIG_POINT) - (abs(needQty) * COST);
+										// Reduce the position size.  We are aggregating so we add (e.g. 5 Purchases + 4 Sales = 1 Long)
+										openLedger[0].quantity = openLedger[0].quantity + needQty;
+										// We are satisfied and don't need any more contracts
+										needQty = 0;
+									}
+									// Current line item quantity is equal to or smaller than what we need.  Process P&L and remove.
+									else
+									{
+										// P&L entire quantity
+										cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger[0].price) * -openLedger[0].quantity * BIG_POINT) - (abs(openLedger[0].quantity) * COST);
+										// Reduce needed quantity by what we've been provided
+										needQty = needQty + openLedger[0].quantity;
+										// Remove the line item (FIFO)
+										openLedger.pop_front();
+									}
 								}
 							}
 						}
 					}
 				}
-			}
-			// Calculate current openEQ if there are any positions
-			// Make sure we have an open position
-			if (openLedger.size() != 0)
-			{
-				// We will aggregate all line items
-				for (int j = 0; j<openLedger.size();j++)
+
+				// Calculate current openEQ if there are any positions
+				// Make sure we have an open position
+				if (openLedger.size() != 0)
 				{
-					openEQ[ii] = openEQ[ii] + ((dataPtr[ii+rowsData] - openLedger.at(j).price) * openLedger.at(j).quantity * bigPoint);
+					// We will aggregate all line items
+					for (int jj = 0; jj < openLedger.size(); jj++)
+					{
+						openEQIdx[ii+1] = openEQIdx[ii+1] + ((dataInPtr[ii+1+SHIFT_CLOSE] - openLedger[jj].price) * openLedger[jj].quantity * BIG_POINT);
+					}
 				}
+			} // end for
+
+			// destroy the deque
+			openLedger.~deque();
+
+			// These are for convenience and could be removed for optimization
+			// Calculate a cumulative sum of closed trades and open equity per observation
+			double runSum = 0;
+			for (int kk=0; kk < rowsData; kk++)
+			{
+				runSum = runSum + cashIdx[kk];
+				netLiqIdx[kk] = runSum + openEQIdx[kk];
+			}
+
+			// Calculate a return from day to day based on the change in value observation to observation
+			returnsIdx[0] = 0;
+			for (int ll=1; ll < rowsData; ll++)
+			{
+				returnsIdx[ll] = netLiqIdx[ll] - netLiqIdx[ll-1];
 			}
 		}
-		// destroy the deque
-		openLedger.~deque();
-
-		// destroy the dynamic array
-		delete [] idxTrades;
-		idxTrades = NULL;
-
-		// These are for convenience and could be removed for optimization
-		// Calculate a cumulative sum of closed trades and open equity per observation
-		double runSum = 0;
-		for (int ii=0; ii<rowsData; ii++)
+		// No trades or signal on the last observation. Return zeros.
+		else
 		{
-			runSum = runSum + cash[ii];
-			netLiq[ii] = runSum + openEQ[ii];
+			for (int mm=0; mm < rowsData; mm++)
+			{
+				cashIdx[mm] = 0;
+				openEQIdx[mm]=0;
+				netLiqIdx[mm]=0;
+				returnsIdx[mm]=0;
+			}
 		}
-
-		// Calculate a return from day to day based on the change in value oberservation to observation
-		returns[0] = 0;
-		for (int ii=1; ii<rowsData; ii++)
-		{
-			returns[ii] = netLiq[ii] - netLiq[ii-1];
-		}
-	}
-	else
-	{
-		// Nothing to do as the arrays are initialized with a zero value
-		// This is here for logical reference
-	}
-
-	// BE SURE TO destroy temporary arrays
-	delete [] trades;
-	trades = NULL;								// Best practice.  Null array pointer.
 
 	return;
 }
@@ -398,25 +414,6 @@ tradeEntry createLineEntry(int ID, int qty, double price)
 
 	return lineEntry;
 }
-
-// Method to recursively search array for membership. This function works properly.  DO NOT EDIT.
-int isMember(int arr[], int elements, int search)  
-{  
-	if (elements < 0)  
-	{
-		return 0;  
-	}
-	if (arr[elements] == search)  
-	{
-		return 1; 
-	}
-	else 
-	{
-		{
-			return isMember(arr, elements - 1, search);
-		}
-	}
-} 
 
 // Method to sum the quantity values in any struct of type tradeEntry
 int sumQty(const deque<tradeEntry>& x)
@@ -441,6 +438,20 @@ bool fraction(double num)
 	return true;
 }
 
+bool knownAdvSig(double advSig)
+{
+	// We can check for known advanced signals to help in debugging
+	// by registering them here.  This can be a searchable array when
+	// more than one advanced signal exists.
+	// For now we only need to check for |0.5|
+
+	if (abs(advSig - int(advSig)) == 0.5)
+	{
+		return true;
+	}
+	return false;
+}
+
 //
 //  -------------------------------------------------------------------------
 //                                  _    _ 
@@ -452,13 +463,13 @@ bool fraction(double num)
 //  -------------------------------------------------------------------------
 //        This code is distributed in the hope that it will be useful,
 //
-//                      	   WITHOUT ANY WARRANTY
+//                      	 WITHOUT ANY WARRANTY
 //
 //                  WITHOUT CLAIM AS TO MERCHANTABILITY
 //
 //                  OR FITNESS FOR A PARTICULAR PURPOSE
 //
-//                          expressed or implied.
+//                           expressed or implied.
 //
 //   Use of this code, pseudocode, algorithmic or trading logic contained
 //   herein, whether sound or faulty for any purpose is the sole
@@ -492,6 +503,6 @@ bool fraction(double num)
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4906.24976
+//   Revision:	4910.25042
 //   Copyright:	(c)2013
 //
