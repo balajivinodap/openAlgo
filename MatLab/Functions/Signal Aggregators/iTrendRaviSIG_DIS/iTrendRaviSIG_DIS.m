@@ -1,4 +1,4 @@
-function varargout = iTrendRaviSIG_DIS(price,raviF,raviS,raviD,raviM,raviE,raviThresh,scaling,cost,bigPoint)
+function varargout = iTrendRaviSIG_DIS(price,raviF,raviS,raviD,raviM,raviE,raviThresh,bigPoint,cost,scaling)
 %ITRENDRAVISIG_DIS iTrend signal generation with a RAVI based transformer
 %   iTrend is dominant cycle signal generate based on the work of John Ehlers
 %
@@ -36,7 +36,7 @@ if ~exist('bigPoint','var'), bigPoint = 1; end; % default bigPoint
 
 [fOpen,fClose] = OHLCSplitter(price);
 
-siTrend = iTrendSIG_DIS(price,scaling,cost,bigPoint);
+siTrend = iTrendSIG_DIS(price,bigPoint,cost,scaling);
 rav = ravi(price,raviF,raviS,raviD,raviM);
 
 s = siTrend;
@@ -107,7 +107,7 @@ if nargout == 0
     %layout = ['3';'2';'1';'3';'5'];
     layout = ['6     ';'2     ';'1 3 5 ';'7 9 11'];
     hSub = cellstr(layout);
-    iTrendSIG_DIS(price,scaling,cost,bigPoint,hSub);
+    iTrendSIG_DIS(price,bigPoint,cost,scaling,hSub);
     
     %layout = ['3';'2';'4'];
     layout = ['6  ';'2  ';'6 8'];
@@ -149,5 +149,58 @@ else
     end %for
 end% if
 
-end
+%%
+%   -------------------------------------------------------------------------
+%                                  _    _ 
+%         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _ 
+%        / _ \| '_ \ / _ \ '_ \  / _ \ | |/ _` |/ _ \ / _ \| '__/ _` |
+%       | (_) | |_) |  __/ | | |/ ___ \| | (_| | (_) | (_) | | | (_| |
+%        \___/| .__/ \___|_| |_/_/   \_\_|\__, |\___(_)___/|_|  \__, |
+%             |_|                         |___/                 |___/
+%   -------------------------------------------------------------------------
+%        This code is distributed in the hope that it will be useful,
+%
+%                      	   WITHOUT ANY WARRANTY
+%
+%                  WITHOUT CLAIM AS TO MERCHANTABILITY
+%
+%                  OR FITNESS FOR A PARTICULAR PURPOSE
+%
+%                          expressed or implied.
+%
+%   Use of this code, pseudocode, algorithmic or trading logic contained
+%   herein, whether sound or faulty for any purpose is the sole
+%   responsibility of the USER. Any such use of these algorithms, coding
+%   logic or concepts in whole or in part carry no covenant of correctness
+%   or recommended usage from the AUTHOR or any of the possible
+%   contributors listed or unlisted, known or unknown.
+%
+%   Any reference of this code or to this code including any variants from
+%   this code, or any other credits due this AUTHOR from this code shall be
+%   clearly and unambiguously cited and evident during any use, whether in
+%   whole or in part.
+%
+%   The public sharing of this code does not relinquish, reduce, restrict or
+%   encumber any rights the AUTHOR has in respect to claims of intellectual
+%   property.
+%
+%   IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY
+%   DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+%   DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+%   OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+%   HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+%   STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+%   ANY WAY OUT OF THE USE OF THIS SOFTWARE, CODE, OR CODE FRAGMENT(S), EVEN
+%   IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+%   -------------------------------------------------------------------------
+%
+%                             ALL RIGHTS RESERVED
+%
+%   -------------------------------------------------------------------------
+%
+%   Author:        Mark Tompkins
+%   Revision:      4906.24976
+%   Copyright:     (c)2013
+%
 

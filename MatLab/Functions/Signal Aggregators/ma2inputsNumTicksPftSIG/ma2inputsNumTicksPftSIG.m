@@ -1,6 +1,6 @@
 function [barsOut,sigOut,R,SH,LEAD,LAG] = ma2inputsNumTicksPftSIG(price,F,S,typeMA,...
                                              minTick,numTicks,openAvg,...
-                                             scaling,cost,bigPoint)
+                                             bigPoint,cost,scaling)
 %MA2INPUTSNUMTICKSPFTSIG returns a trading signal for a simple lead/lag indicator with achieved profits
 %   %ma2inputsNumTicksPftSIG returns a trading signal for a simple lead/lag indicator with achieved profits
 %   derived from 'ma2inputsSTA'

@@ -1,6 +1,6 @@
 function varargout = ma2inputsNumTicksPftSIG_DIS(price,F,S,typeMA,...
                                              minTick,numTicks,openAvg,...
-                                             scaling,cost,bigPoint,hSub)
+                                             bigPoint,cost,scaling,hSub)
 %MA2INPUTSNUMTICKSPFTSIG_DIS returns a trading signal for a simple lead/lag indicator with achieved profits
 %   %ma2inputsNumTicksPftSIG_DIS returns a trading signal for a simple lead/lag indicator with achieved 
 %   profits derived from 'ma2inputsSTA'
@@ -97,7 +97,7 @@ end; %if
 
 [barsOut,sigOut,R,SH,LEAD,LAG] = ma2inputsNumTicksPftSIG(price,F,S,typeMA,...
                                              minTick,numTicks,openAvg,...
-                                             scaling,cost,bigPoint);
+                                             bigPoint,cost,scaling);
 
 fClose = OHLCSplitter(barsOut);
 
@@ -157,6 +157,13 @@ end %if
 
 %%
 %   -------------------------------------------------------------------------
+%                                  _    _ 
+%         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _ 
+%        / _ \| '_ \ / _ \ '_ \  / _ \ | |/ _` |/ _ \ / _ \| '__/ _` |
+%       | (_) | |_) |  __/ | | |/ ___ \| | (_| | (_) | (_) | | | (_| |
+%        \___/| .__/ \___|_| |_/_/   \_\_|\__, |\___(_)___/|_|  \__, |
+%             |_|                         |___/                 |___/
+%   -------------------------------------------------------------------------
 %        This code is distributed in the hope that it will be useful,
 %
 %                      	   WITHOUT ANY WARRANTY
@@ -179,7 +186,7 @@ end %if
 %   clearly and unambiguously cited and evident during any use, whether in
 %   whole or in part.
 %
-%   The public sharing of this code does not reliquish, reduce, restrict or
+%   The public sharing of this code does not relinquish, reduce, restrict or
 %   encumber any rights the AUTHOR has in respect to claims of intellectual
 %   property.
 %
@@ -202,4 +209,5 @@ end %if
 %   Revision:      4906.24976
 %   Copyright:     (c)2013
 %
+
 

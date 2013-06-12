@@ -1,5 +1,6 @@
-function varargout = rsiRaviSIG_DIS(price,rsiM,rsiThresh,rsiType,raviF,raviS,raviD,raviM,raviE, ...
-    raviThresh, scaling,cost,bigPoint)
+function varargout = rsiRaviSIG_DIS(price,rsiM,rsiThresh,rsiType,...
+                                    raviF,raviS,raviD,raviM,raviE,raviThresh,...
+                                    bigPoint,cost,scaling)
 %RSIRAVISIG_DIS RSI signal generation with a RAVI based transformer
 %   RSI is an Overbought | Oversold indicator.  Trending markets that of Over-bought|sold can become
 %   significantly more Over-B|S.
@@ -47,7 +48,7 @@ end; %if
 
 [fOpen,fClose] = OHLCSplitter(price);
 
-[srsi,~,~,ri] = rsiSIG_mex(price,rsiM,rsiThresh,rsiType,scaling,cost,bigPoint);
+[srsi,~,~,ri] = rsiSIG_mex(price,rsiM,rsiThresh,rsiType,bigPoint,cost,scaling);
 
 rav = ravi(price,raviF,raviS,raviD,raviM);
 
@@ -107,7 +108,7 @@ if nargout == 0
     % http://www.mathworks.com/help/matlab/matlab_prog/cell-arrays-of-strings.html
     layout = ['3';'2';'1';'3';'5'];
     hSub = cellstr(layout);
-    rsiSIG_DIS(price,rsiM,rsiThresh,rsiType,scaling,cost,bigPoint,hSub);
+    rsiSIG_DIS(price,rsiM,rsiThresh,rsiType,bigPoint,cost,scaling,hSub);
     
     layout = ['3';'2';'4'];
     hSub = cellstr(layout);
@@ -148,6 +149,13 @@ end% if
 
 %%
 %   -------------------------------------------------------------------------
+%                                  _    _ 
+%         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _ 
+%        / _ \| '_ \ / _ \ '_ \  / _ \ | |/ _` |/ _ \ / _ \| '__/ _` |
+%       | (_) | |_) |  __/ | | |/ ___ \| | (_| | (_) | (_) | | | (_| |
+%        \___/| .__/ \___|_| |_/_/   \_\_|\__, |\___(_)___/|_|  \__, |
+%             |_|                         |___/                 |___/
+%   -------------------------------------------------------------------------
 %        This code is distributed in the hope that it will be useful,
 %
 %                      	   WITHOUT ANY WARRANTY
@@ -170,7 +178,7 @@ end% if
 %   clearly and unambiguously cited and evident during any use, whether in
 %   whole or in part.
 %
-%   The public sharing of this code does not reliquish, reduce, restrict or
+%   The public sharing of this code does not relinquish, reduce, restrict or
 %   encumber any rights the AUTHOR has in respect to claims of intellectual
 %   property.
 %
@@ -189,8 +197,9 @@ end% if
 %
 %   -------------------------------------------------------------------------
 %
-%   Author:	Mark Tompkins
-%   Revision:	4906.24976
-%   Copyright:	(c)2013
+%   Author:        Mark Tompkins
+%   Revision:      4906.24976
+%   Copyright:     (c)2013
 %
+
 

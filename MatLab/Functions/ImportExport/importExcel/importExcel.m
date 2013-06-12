@@ -25,12 +25,19 @@ if exist(fullfile(fpath,'BigPoint.txt'), 'file')
     bigPoint = load(fullfile(fpath,'BigPoint.txt'));
 else
     % File does not exist.  Advise user and continue.
-    bigPoint = 1;                               % Set bigPoint to 1 for later calculations
+    bigPoint = 1;           % Set bigPoint to 1 for later calculations
     warningMessage = sprintf('Warning: BigPoint.txt file does not exist in:\n%s\n\nP&L calculations will not reflect actual dollars.', fpath);
     uiwait(msgbox(warningMessage));
 end;
 
 %%
+%   -------------------------------------------------------------------------
+%                                  _    _ 
+%         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _ 
+%        / _ \| '_ \ / _ \ '_ \  / _ \ | |/ _` |/ _ \ / _ \| '__/ _` |
+%       | (_) | |_) |  __/ | | |/ ___ \| | (_| | (_) | (_) | | | (_| |
+%        \___/| .__/ \___|_| |_/_/   \_\_|\__, |\___(_)___/|_|  \__, |
+%             |_|                         |___/                 |___/
 %   -------------------------------------------------------------------------
 %        This code is distributed in the hope that it will be useful,
 %
@@ -54,7 +61,7 @@ end;
 %   clearly and unambiguously cited and evident during any use, whether in
 %   whole or in part.
 %
-%   The public sharing of this code does not reliquish, reduce, restrict or
+%   The public sharing of this code does not relinquish, reduce, restrict or
 %   encumber any rights the AUTHOR has in respect to claims of intellectual
 %   property.
 %
@@ -73,7 +80,8 @@ end;
 %
 %   -------------------------------------------------------------------------
 %
-%   Author:	Mark Tompkins
-%   Revision:	4906.24976
-%   Copyright:	(c)2013
+%   Author:        Mark Tompkins
+%   Revision:      4906.24976
+%   Copyright:     (c)2013
 %
+

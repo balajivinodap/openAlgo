@@ -1,4 +1,4 @@
-function varargout = maRaviSIG_DIS(price,maF,maS,typeMA,raviF,raviS,raviD,raviM,raviE,raviThresh,scaling,cost,bigPoint)
+function varargout = maRaviSIG_DIS(price,maF,maS,typeMA,raviF,raviS,raviD,raviM,raviE,raviThresh,bigPoint,cost,scaling)
 %MARAVISIG_DIS 2 inputs MA signal generation with a RAVI based transformer
 %   MA is a classic 2 input crossover signal generator
 %   RAVI is an indicator that indicates whether a market is in a ranging or a trending phase.
@@ -50,7 +50,7 @@ if ~exist('bigPoint','var'), bigPoint = 1; end; % default bigPoint
 
 [fOpen,fClose] = OHLCSplitter(price);
 
-[sma,~,~,lead,lag] = ma2inputsSIG_mex(price,maF,maS,typeMA,scaling,cost,bigPoint);
+[sma,~,~,lead,lag] = ma2inputsSIG_mex(price,maF,maS,typeMA,bigPoint,cost,scaling);
 rav = ravi(price,raviF,raviS,raviD,raviM);
 
 s = sma;
@@ -108,7 +108,7 @@ if nargout == 0
     % http://www.mathworks.com/help/matlab/matlab_prog/cell-arrays-of-strings.html
     layout = ['6     ';'2     ';'1 3 5 ';'7 9 11'];
     hSub = cellstr(layout);
-    ma2inputsSIG_DIS(price,maF,maS,typeMA,scaling,cost,bigPoint,hSub);
+    ma2inputsSIG_DIS(price,maF,maS,typeMA,bigPoint,cost,scaling,hSub);
     
     ax(1) = subplot(6,2,[2 4]);
     plot([price,lead,lag]);
@@ -156,6 +156,13 @@ end %if
 
 %%
 %   -------------------------------------------------------------------------
+%                                  _    _ 
+%         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _ 
+%        / _ \| '_ \ / _ \ '_ \  / _ \ | |/ _` |/ _ \ / _ \| '__/ _` |
+%       | (_) | |_) |  __/ | | |/ ___ \| | (_| | (_) | (_) | | | (_| |
+%        \___/| .__/ \___|_| |_/_/   \_\_|\__, |\___(_)___/|_|  \__, |
+%             |_|                         |___/                 |___/
+%   -------------------------------------------------------------------------
 %        This code is distributed in the hope that it will be useful,
 %
 %                      	   WITHOUT ANY WARRANTY
@@ -178,7 +185,7 @@ end %if
 %   clearly and unambiguously cited and evident during any use, whether in
 %   whole or in part.
 %
-%   The public sharing of this code does not reliquish, reduce, restrict or
+%   The public sharing of this code does not relinquish, reduce, restrict or
 %   encumber any rights the AUTHOR has in respect to claims of intellectual
 %   property.
 %
@@ -197,8 +204,9 @@ end %if
 %
 %   -------------------------------------------------------------------------
 %
-%   Author:	Mark Tompkins
-%   Revision:	4906.24976
-%   Copyright:	(c)2013
+%   Author:        Mark Tompkins
+%   Revision:      4906.24976
+%   Copyright:     (c)2013
 %
+
 

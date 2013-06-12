@@ -1,8 +1,16 @@
-function shMETS = maRaviPARMETS(x,data,scaling,cost,bigPoint)
-% define ma+rsi to accept vectorized inputs and return only sharpe ratio
-%% 
-% maRaviPARMETS(price,N,M,typeMA,Mrsi,thresh,typeRSI,scaling,cost,bigPoint)
+function shMETS = maRaviPARMETS(x,data,bigPoint,cost,scaling)
+% define ma+ravi to accept vectorized inputs and return only sharpe ratio
 %
+% Wrapper for ma2inputs with numTicksProfit to accept vectorized inputs and return only sharpe ratio
+% in order to facilitate embarrassingly parallel parametric sweeps.
+% PAR wrappers allow the parallel execution of parametric sweeps across HPC clusters
+% ordinarily using 'parfor' with MatLab code.  While it is tempting to more granularly
+% manage the process into a classically defined job with tasks (as used in Microsoft's HPC)
+% the overhead associated with this approach is most often burdensome.
+%
+% The wrapper will indicate if it is looking to maximize:
+%   Standard Sharpe     function(s)PAR
+%   METS Sharpe         function(s)PARMETS
 
 row = size(x,1);
 shTest = zeros(row,1);
@@ -37,9 +45,11 @@ parfor ii = 1:row
         shVal(ii) = NaN;
     else
         [~,~,shTest(ii)] =	maRaviSIG_DIS(vBarsTest,x(ii,1),x(ii,2),x(ii,3),x(ii,4),x(ii,5),x(ii,6),...
-                                                x(ii,7),x(ii,8),x(ii,9),scaling,cost,bigPoint); 
+                                                x(ii,7),x(ii,8),x(ii,9),...
+                                                bigPoint,cost,scaling); 
         [~,~,shVal(ii)] =	maRaviSIG_DIS(vBarsVal,x(ii,1),x(ii,2),x(ii,3),x(ii,4),x(ii,5),x(ii,6),...
-                                                x(ii,7),x(ii,8),x(ii,9),scaling,cost,bigPoint);  %#ok<PFBNS>
+                                                x(ii,7),x(ii,8),x(ii,9),...
+                                                bigPoint,cost,scaling);  %#ok<PFBNS>
     end
     ppm.increment(ii); %#ok<PFBNS>
 end

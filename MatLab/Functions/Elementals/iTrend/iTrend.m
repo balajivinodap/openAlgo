@@ -8,7 +8,7 @@ function [ tLine,instT ] = iTrend(price)
 %   [T,I] = ITREND(PRICE) returns the trendline T
 %           We are not entirely certain about I
 %
-%   PRICE is ordinarily (H+L)/2 but can be any simple array
+%   PRICE is ordinarily (H+L)/2 but can be any logical vector array such as (H+L+C)/3
 %
 
 %% Error check
@@ -102,6 +102,13 @@ instT(1:54)=price(1:54);
 
 %%
 %   -------------------------------------------------------------------------
+%                                  _    _ 
+%         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _ 
+%        / _ \| '_ \ / _ \ '_ \  / _ \ | |/ _` |/ _ \ / _ \| '__/ _` |
+%       | (_) | |_) |  __/ | | |/ ___ \| | (_| | (_) | (_) | | | (_| |
+%        \___/| .__/ \___|_| |_/_/   \_\_|\__, |\___(_)___/|_|  \__, |
+%             |_|                         |___/                 |___/
+%   -------------------------------------------------------------------------
 %        This code is distributed in the hope that it will be useful,
 %
 %                      	   WITHOUT ANY WARRANTY
@@ -124,7 +131,7 @@ instT(1:54)=price(1:54);
 %   clearly and unambiguously cited and evident during any use, whether in
 %   whole or in part.
 %
-%   The public sharing of this code does not reliquish, reduce, restrict or
+%   The public sharing of this code does not relinquish, reduce, restrict or
 %   encumber any rights the AUTHOR has in respect to claims of intellectual
 %   property.
 %
@@ -143,8 +150,9 @@ instT(1:54)=price(1:54);
 %
 %   -------------------------------------------------------------------------
 %
-%   Author:	Mark Tompkins
-%   Revision:	4906.24976
-%   Copyright:	(c)2013
+%   Author:        Mark Tompkins
+%   Revision:      4906.24976
+%   Copyright:     (c)2013
 %
+
 

@@ -1,10 +1,18 @@
-function shMETS = maRsiPARMETS(x,data,scaling,cost,bigPoint)
+function shMETS = maRsiPARMETS(x,data,bigPoint,cost,scaling)
 % define ma+rsi to accept vectorized inputs and return only sharpe ratio
 %%
 % marsiMETS(price,N,M,typeMA,Mrsi,thresh,typeRSI,scaling,cost,bigPoint)
 %
-% Author:           Mark Tompkins
-% Revision:			4902.23619
+% Wrapper for ma2inputs with numTicksProfit to accept vectorized inputs and return only sharpe ratio
+% in order to facilitate embarrassingly parallel parametric sweeps.
+% PAR wrappers allow the parallel execution of parametric sweeps across HPC clusters
+% ordinarily using 'parfor' with MatLab code.  While it is tempting to more granularly
+% manage the process into a classically defined job with tasks (as used in Microsoft's HPC)
+% the overhead associated with this approach is most often burdensome.
+%
+% The wrapper will indicate if it is looking to maximize:
+%   Standard Sharpe     function(s)PAR
+%   METS Sharpe         function(s)PARMETS
 
 row = size(x,1);
 shTest = zeros(row,1);
@@ -44,10 +52,10 @@ parfor ii = 1:row
         %                        price   N      M     typeMA   Mrsi    Mdet      thres   typeRSI
         [~,~,shTest(ii)] =	maRsiSIG(vBarsTest,x(ii,1),x(ii,2),x(ii,3),...
             [x(ii,4) x(ii,5)],x(ii,6),x(ii,7),x(ii,8),...
-            scaling,cost,bigPoint);
+            bigPoint,cost,scaling);
         [~,~,shVal(ii)] =	maRsiSIG(vBarsVal,x(ii,1),x(ii,2),x(ii,3),...
             [x(ii,4) x(ii,5)],x(ii,6),x(ii,7),x(ii,8),...
-            scaling,cost,bigPoint);  %#ok<PFBNS>
+            bigPoint,cost,scaling);  %#ok<PFBNS>
     end
     ppm.increment(ii); %#ok<PFBNS>
 end
@@ -62,6 +70,13 @@ end
 shMETS = ((shTest*2)+shVal)/3;
 
 %%
+%   -------------------------------------------------------------------------
+%                                  _    _ 
+%         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _ 
+%        / _ \| '_ \ / _ \ '_ \  / _ \ | |/ _` |/ _ \ / _ \| '__/ _` |
+%       | (_) | |_) |  __/ | | |/ ___ \| | (_| | (_) | (_) | | | (_| |
+%        \___/| .__/ \___|_| |_/_/   \_\_|\__, |\___(_)___/|_|  \__, |
+%             |_|                         |___/                 |___/
 %   -------------------------------------------------------------------------
 %        This code is distributed in the hope that it will be useful,
 %
@@ -85,7 +100,7 @@ shMETS = ((shTest*2)+shVal)/3;
 %   clearly and unambiguously cited and evident during any use, whether in
 %   whole or in part.
 %
-%   The public sharing of this code does not reliquish, reduce, restrict or
+%   The public sharing of this code does not relinquish, reduce, restrict or
 %   encumber any rights the AUTHOR has in respect to claims of intellectual
 %   property.
 %
@@ -104,7 +119,8 @@ shMETS = ((shTest*2)+shVal)/3;
 %
 %   -------------------------------------------------------------------------
 %
-%   Author:	Mark Tompkins
-%   Revision:	4906.24976
-%   Copyright:	(c)2013
+%   Author:        Mark Tompkins
+%   Revision:      4906.24976
+%   Copyright:     (c)2013
 %
+

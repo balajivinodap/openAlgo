@@ -1,4 +1,4 @@
-function varargout = wprSIG_DIS(price,N,thresh,scaling,cost,bigPoint,hSub)
+function varargout = wprSIG_DIS(price,N,thresh,bigPoint,cost,scaling,hSub)
 %WPRSIG_DIS WPR signal generator from 'willpctr.m' function by The MathWorks, Inc.
 % WPRSIG_DIS trading strategy.  Note that the trading signal is generated when the
 % WPR value is above/below the upper/lower threshold.
@@ -58,7 +58,7 @@ else
 end; %if
 
 %% williams %r
-[s,r,sh,w] = wprSIG_mex(price,N,thresh,scaling,cost,bigPoint);
+[s,r,sh,w] = wprSIG_mex(price,N,thresh,bigPoint,cost,scaling);
 
 %% Plot if requested
 if nargout == 0
@@ -128,6 +128,13 @@ end %if
 
 %%
 %   -------------------------------------------------------------------------
+%                                  _    _ 
+%         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _ 
+%        / _ \| '_ \ / _ \ '_ \  / _ \ | |/ _` |/ _ \ / _ \| '__/ _` |
+%       | (_) | |_) |  __/ | | |/ ___ \| | (_| | (_) | (_) | | | (_| |
+%        \___/| .__/ \___|_| |_/_/   \_\_|\__, |\___(_)___/|_|  \__, |
+%             |_|                         |___/                 |___/
+%   -------------------------------------------------------------------------
 %        This code is distributed in the hope that it will be useful,
 %
 %                      	   WITHOUT ANY WARRANTY
@@ -150,7 +157,7 @@ end %if
 %   clearly and unambiguously cited and evident during any use, whether in
 %   whole or in part.
 %
-%   The public sharing of this code does not reliquish, reduce, restrict or
+%   The public sharing of this code does not relinquish, reduce, restrict or
 %   encumber any rights the AUTHOR has in respect to claims of intellectual
 %   property.
 %
@@ -169,7 +176,8 @@ end %if
 %
 %   -------------------------------------------------------------------------
 %
-%   Author:	Mark Tompkins
-%   Revision:	4906.24976
-%   Copyright:	(c)2013
+%   Author:        Mark Tompkins
+%   Revision:      4906.24976
+%   Copyright:     (c)2013
 %
+

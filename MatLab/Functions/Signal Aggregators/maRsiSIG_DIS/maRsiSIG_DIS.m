@@ -1,4 +1,4 @@
-function varargout = maRsiSIG_DIS(price,N,M,typeMA,Mrsi,thresh,typeRSI,isSignal,scaling,cost,bigPoint)
+function varargout = maRsiSIG_DIS(price,N,M,typeMA,Mrsi,thresh,typeRSI,isSignal,bigPoint,cost,scaling)
 % MA+RSI in function call
 %%
 %
@@ -79,11 +79,11 @@ if nargout == 0
     % http://www.mathworks.com/help/matlab/matlab_prog/cell-arrays-of-strings.html
     layout = ['6         ';'3         ';'[1 4 7]   ';'[10 13 16]'];
     hSub = cellstr(layout);
-    ma2inputsSIG_DIS(price,N,M,typeMA,scaling,cost,bigPoint,hSub);
+    ma2inputsSIG_DIS(price,N,M,typeMA,bigPoint,cost,scaling,hSub);
     
     layout = ['6      ';'3      ';'[2 5]  ';'[8 11] ';'[14 17]'];
     hSub = cellstr(layout);
-    rsiSIG_DIS(price,Mrsi,thresh,typeRSI,scaling,cost,bigPoint,hSub);
+    rsiSIG_DIS(price,Mrsi,thresh,typeRSI,bigPoint,cost,scaling,hSub);
     
     % If we were given a negative value for the detrender change the information to something
     % intelligent, otherwise give the value.
@@ -147,6 +147,13 @@ end %if
 
 %%
 %   -------------------------------------------------------------------------
+%                                  _    _ 
+%         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _ 
+%        / _ \| '_ \ / _ \ '_ \  / _ \ | |/ _` |/ _ \ / _ \| '__/ _` |
+%       | (_) | |_) |  __/ | | |/ ___ \| | (_| | (_) | (_) | | | (_| |
+%        \___/| .__/ \___|_| |_/_/   \_\_|\__, |\___(_)___/|_|  \__, |
+%             |_|                         |___/                 |___/
+%   -------------------------------------------------------------------------
 %        This code is distributed in the hope that it will be useful,
 %
 %                      	   WITHOUT ANY WARRANTY
@@ -169,7 +176,7 @@ end %if
 %   clearly and unambiguously cited and evident during any use, whether in
 %   whole or in part.
 %
-%   The public sharing of this code does not reliquish, reduce, restrict or
+%   The public sharing of this code does not relinquish, reduce, restrict or
 %   encumber any rights the AUTHOR has in respect to claims of intellectual
 %   property.
 %
@@ -188,8 +195,9 @@ end %if
 %
 %   -------------------------------------------------------------------------
 %
-%   Author:	Mark Tompkins
-%   Revision:	4906.24976
-%   Copyright:	(c)2013
+%   Author:        Mark Tompkins
+%   Revision:      4906.24976
+%   Copyright:     (c)2013
 %
+
 

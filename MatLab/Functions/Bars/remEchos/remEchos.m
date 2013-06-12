@@ -2,7 +2,7 @@ function [cleanS] = remEchos( s )
 %REMECHOS Will remove echos froms a provided vector
 % The primary purpose of remEchos is to transform a STATE vector in to a SIGNAL vector.
 % For example, when attempting to generating signals from a lead / lag moving average STATE function
-% a logical output of whether a condition is true or not is provide.
+% a logical output of whether a condition is true or not is provided.
 %	Example (where s is a given STATE vector):
 %		s(lead>lag) =  1
 %		s(lead<=lag) = -1
@@ -11,6 +11,7 @@ function [cleanS] = remEchos( s )
 %		out	[1 0 0 0 0 0 -1  0  0  0  0 1 0 0 0]	<-- SIGNAL OUTPUT
 %	This output is now "actionable" as a SIGNAL
 %
+%   Note: This function can accept a vectorized matrix
 
 cleanS = s;
 [rows,cols] = size(cleanS);
@@ -36,6 +37,13 @@ end; %for
 
 %%
 %   -------------------------------------------------------------------------
+%                                  _    _ 
+%         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _ 
+%        / _ \| '_ \ / _ \ '_ \  / _ \ | |/ _` |/ _ \ / _ \| '__/ _` |
+%       | (_) | |_) |  __/ | | |/ ___ \| | (_| | (_) | (_) | | | (_| |
+%        \___/| .__/ \___|_| |_/_/   \_\_|\__, |\___(_)___/|_|  \__, |
+%             |_|                         |___/                 |___/
+%   -------------------------------------------------------------------------
 %        This code is distributed in the hope that it will be useful,
 %
 %                      	   WITHOUT ANY WARRANTY
@@ -58,7 +66,7 @@ end; %for
 %   clearly and unambiguously cited and evident during any use, whether in
 %   whole or in part.
 %
-%   The public sharing of this code does not reliquish, reduce, restrict or
+%   The public sharing of this code does not relinquish, reduce, restrict or
 %   encumber any rights the AUTHOR has in respect to claims of intellectual
 %   property.
 %
@@ -77,8 +85,9 @@ end; %for
 %
 %   -------------------------------------------------------------------------
 %
-%   Author:	Mark Tompkins
-%   Revision:	4906.24976
-%   Copyright:	(c)2013
+%   Author:        Mark Tompkins
+%   Revision:      4906.24976
+%   Copyright:     (c)2013
 %
+
 

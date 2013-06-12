@@ -1,8 +1,15 @@
-function shMETS = ma2inputsNumTicksPftPARMETS(x,data,minTick,scaling,cost,bigPoint)
+function shMETS = ma2inputsNumTicksPftPARMETS(x,data,minTick,bigPoint,cost,scaling)
 % Wrapper for ma2inputs with numTicksProfit to accept vectorized inputs and return only sharpe ratio
 % in order to facilitate embarrassingly parallel parametric sweeps.
-
-%%
+% PAR wrappers allow the parallel execution of parametric sweeps across HPC clusters
+% ordinarily using 'parfor' with MatLab code.  While it is tempting to more granularly
+% manage the process into a classically defined job with tasks (as used in Microsoft's HPC)
+% the overhead associated with this approach is most often burdensome.
+%
+% The wrapper will indicate if it is looking to maximize:
+%   Standard Sharpe     function(s)PAR
+%   METS Sharpe         function(s)PARMETS
+%
 %   Aggregating function:
 %   [barsOut,sigOut,R,SH,LEAD,LAG] = ma2inputsNumTicksPftSIG(price,F,S,typeMA,...
 %                                             minTick,numTicks,openAvg,...
@@ -42,10 +49,10 @@ parfor ii = 1:row
     else
         [~,~,~,shTest(ii)] =	ma2inputsNumTicksPftSIG_mex(vBarsTest,x(ii,1),x(ii,2),x(ii,3),...
             minTick,x(ii,4),x(ii,5),...
-            scaling,cost,bigPoint);
+            bigPoint,cost,scaling);
         [~,~,~,shVal(ii)] =	ma2inputsNumTicksPftSIG_mex(vBarsVal,x(ii,1),x(ii,2),x(ii,3),...
             minTick,x(ii,4),x(ii,5),...
-            scaling,cost,bigPoint); %#ok<*PFBNS>
+            bigPoint,cost,scaling); %#ok<*PFBNS>
     end
     ppm.increment(ii); %#ok<PFBNS>
 end

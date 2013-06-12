@@ -1,4 +1,4 @@
-function [SIG,R,SH,LEAD,LAG] = ma2inputsSIG(price,F,S,type,scaling,cost,bigPoint)
+function [SIG,R,SH,LEAD,LAG] = ma2inputsSIG(price,F,S,type,bigPoint,cost,scaling)
 %MA2INPUTSSIG returns a trading signal for a simple lead/lag indicator
 %   ma2inputsSIG returns a trading signal derived from 'ma2inputsSTA'
 %
@@ -97,6 +97,13 @@ end; %for
 
 %%
 %   -------------------------------------------------------------------------
+%                                  _    _ 
+%         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _ 
+%        / _ \| '_ \ / _ \ '_ \  / _ \ | |/ _` |/ _ \ / _ \| '__/ _` |
+%       | (_) | |_) |  __/ | | |/ ___ \| | (_| | (_) | (_) | | | (_| |
+%        \___/| .__/ \___|_| |_/_/   \_\_|\__, |\___(_)___/|_|  \__, |
+%             |_|                         |___/                 |___/
+%   -------------------------------------------------------------------------
 %        This code is distributed in the hope that it will be useful,
 %
 %                      	   WITHOUT ANY WARRANTY
@@ -119,7 +126,7 @@ end; %for
 %   clearly and unambiguously cited and evident during any use, whether in
 %   whole or in part.
 %
-%   The public sharing of this code does not reliquish, reduce, restrict or
+%   The public sharing of this code does not relinquish, reduce, restrict or
 %   encumber any rights the AUTHOR has in respect to claims of intellectual
 %   property.
 %
@@ -138,7 +145,8 @@ end; %for
 %
 %   -------------------------------------------------------------------------
 %
-%   Author:	Mark Tompkins
-%   Revision:	4906.24976
-%   Copyright:	(c)2013
+%   Author:        Mark Tompkins
+%   Revision:      4906.24976
+%   Copyright:     (c)2013
 %
+
