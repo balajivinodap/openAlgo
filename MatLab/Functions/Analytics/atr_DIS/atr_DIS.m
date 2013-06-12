@@ -27,7 +27,7 @@ elseif M < 1
     M = 20;
 end; %if
 
-[fClose] = OHLCSplitter(price);
+fClose = OHLCSplitter(price);
         
 %% Average true range
 atr = atr_mex(price, M);                     % '-1' calls to exponential calculation

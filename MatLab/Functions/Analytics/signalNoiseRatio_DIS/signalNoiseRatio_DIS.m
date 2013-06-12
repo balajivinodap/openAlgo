@@ -46,7 +46,7 @@ if ~exist('qMult','var'), qMult=.338; end;
 amp = snr_mex(price,iMult,qMult);
 
 %% Parse
-[fClose] = OHLCSplitter(price);
+fClose = OHLCSplitter(price);
 
 %% If no assignment to variable, show the averages in a chart
 if (nargout == 0) && (~exist('hSub','var'))% Plot

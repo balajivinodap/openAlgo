@@ -22,7 +22,7 @@ if ~exist('qMult','var'), qMult=.338; end;
 [~,fHigh,fLow,fClose] = OHLCSplitter(price);
 HighLow = (fHigh+fLow)/2;
 
-[tLine] = iTrend_v2MEX_mex(HighLow,iMult,qMult);
+tLine = iTrend_v2MEX_mex(HighLow,iMult,qMult);
 
 %% If no assignment to variable, show the averages in a chart
 if (nargout == 0) && (~exist('hSub','var'))% Plot

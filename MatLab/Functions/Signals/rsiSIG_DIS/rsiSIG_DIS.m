@@ -61,7 +61,7 @@ else
     M = 15*M(1);
 end
 
-[fClose] = OHLCSplitter(price);
+fClose = OHLCSplitter(price);
 [s,r,sh,ri,ma,thresh] = rsiSIG_mex(price,[N M],thresh,type,bigPoint,cost,scaling);
 
 %% Plot if requested

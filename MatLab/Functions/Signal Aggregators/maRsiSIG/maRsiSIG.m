@@ -25,9 +25,9 @@ end
 
 [fOpen,fClose] = OHLCSplitter(price);
 
-[sma] = ma2inputsSTA_mex(price,N,M,typeMA);
+sma = ma2inputsSTA_mex(price,N,M,typeMA);
 % NOTE: rsiSTA returns a 1 when oversold and -1 when overbought
-[srsi] = rsiSTA_mex(price,Mrsi,thresh,typeRSI);
+srsi = rsiSTA_mex(price,Mrsi,thresh,typeRSI);
 
 %%  The RSI is either used as a signal generator or a filter condition for another signal
 %   If we are using it to generate a signal, we should return only an actionable signal with no repeats
