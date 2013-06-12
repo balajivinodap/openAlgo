@@ -20,7 +20,7 @@ vBarsVal = data(testPts+1:end,:);
 
 %% Progress Bar
 try % Initialization
-    ppm = ParforProgressStarter2('Parametric Sweep: marsiPARMETS', row, 0.1);
+    ppm = ParforProgressStarter2('Parametric Sweep: ma2inputsNumTicksPftPARMETS', row, 0.1);
 catch me % make sure "ParforProgressStarter2" didn't get moved to a different directory
     if strcmp(me.message, 'Undefined function or method ''ParforProgressStarter2'' for input arguments of type ''char''.')
         error('ParforProgressStarter2 not in path.');

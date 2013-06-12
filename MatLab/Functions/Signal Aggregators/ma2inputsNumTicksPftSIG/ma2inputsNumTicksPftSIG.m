@@ -98,7 +98,7 @@ if(~isempty(find(SIG,1)))
     
     % Pass generated signal vector to profit taking routine
     [barsOut,sigOut] = numTicksProfit(price,SIG,minTick,numTicks,openAvg);
-
+    
     % Generate PNL
     [~,~,~,R] = calcProfitLoss(barsOut,sigOut,bigPoint,cost);
     

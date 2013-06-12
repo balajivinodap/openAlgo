@@ -110,12 +110,12 @@ if (nargout == 0) && (~exist('hSub','var'))% Plot
     axis (ax(1),'tight');
     grid on
     legend('Close','Location','NorthWest')
-    title(['MA w/ Profits, Annual Sharpe Ratio = ',num2str(SH,3),', # of Ticks = ',num2str(numTicks)])
+    title(['MA w/ Profits, Annual Sharpe Ratio = ',num2str(SH,3)])
     
     ax(2) = subplot(2,1,2);
     plot([sigOut,cumsum(R)]); grid on
     legend('Position','Cumulative Return','Location','North')
-    title(['Final Return = ',thousandSepCash(sum(R))])
+    title(['Lead:',num2str(F),'   Lag:',num2str(S),'   Pft Ticks:',num2str(numTicks),'      Final Return = ',thousandSepCash(sum(R))])
     linkaxes(ax,'x')
     
 elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
@@ -126,12 +126,12 @@ elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
     axis (ax(1),'tight');
     grid on
     legend('Close',['numTicks: ',num2str(numTicks)],'Location','NorthWest')
-    title(['MA w/ Profits, Annual Sharpe Ratio = ',num2str(SH,3),', # of Ticks = ',num2str(numTicks)])
+    title(['MA w/ Profits, Annual Sharpe Ratio = ',num2str(SH,3)])
     
     ax(2) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))), str2num(char(hSub(4)))); %#ok<ST2NM>
     plot([SIG,cumsum(R)]); grid on
     legend('Position','Cumulative Return','Location','North')
-    title(['Final Return = ',thousandSepCash(sum(R))])
+    title(['F:',num2str(F),'   S:',num2str(S),'   Ticks:',num2str(numTicks),'      Final Return = ',thousandSepCash(sum(R))])
     linkaxes(ax,'x')
 else
     for i = 1:nargout

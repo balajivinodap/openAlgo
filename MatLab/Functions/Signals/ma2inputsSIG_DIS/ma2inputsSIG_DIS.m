@@ -1,4 +1,4 @@
-function varargout = ma2inputsSIG_DIS(price,F,S,typeMA,scaling,cost,bigPoint,hSub)
+function varargout = ma2inputsSIG_DIS(price,F,S,typeMA,scaling,bigPoint,cost,hSub)
 %MA2INPUTSSIG_DIS returns a trading signal for a simple lead/lag indicator
 %   movAvg2inputs returns a trading signal for a simple lead/lag
 %   moving-average technical indicator.
@@ -83,7 +83,7 @@ if(~isempty(find(SIG,1)))
     
     % Generate PNL
     [~,~,~,returns] = calcProfitLoss([fOpen fClose],SIG,bigPoint,cost);
-    
+
     % Calculate sharpe ratio
     sharpeRatio = scaling*sharpe(returns,0);
 else
