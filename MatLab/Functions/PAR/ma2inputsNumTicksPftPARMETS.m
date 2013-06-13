@@ -43,7 +43,10 @@ end %try
 
 %% Parallel iterations
 parfor ii = 1:row
-    if x(ii,1) > x(ii,2)
+    % We will supress analysis when the averages are
+    % Equal         We can infer 'not to trade' if the optimized result is a negative
+    % Lag > Lead    Lag should in fact 'lag'.  This would be duplicative to analyze twice
+    if x(ii,1) >= x(ii,2)
         shTest(ii) = NaN;
         shVal(ii) = NaN;
     else

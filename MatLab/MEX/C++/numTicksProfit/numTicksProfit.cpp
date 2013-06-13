@@ -1,6 +1,4 @@
-// numTicksProfit.cpp : Defines the entry point for the console application.
-// http://www.kobashicomputing.com/node/177 for a reference to x64 bit
-//
+// numTicksProfit.cpp
 //
 // nlhs Number of output variables nargout 
 // plhs Array of mxArray pointers to the output variables varargout
@@ -97,9 +95,6 @@ typedef struct profitEntry
 	double profitPrice;							//	Profit price
 } profitEntry;
 
-typedef list<double> myDblList;					//typedef so we can use across all list<double>'s
-typedef myDblList::iterator myDblListIter;
-
 // Initialize ledgers for open positions and profits
 list<openEntry> openLedger;
 list<profitEntry> profitLedger;
@@ -138,8 +133,6 @@ int shiftOpen;									// used for readability
 int shiftHigh;
 int shiftLow;
 int shiftClose;
-
-
 
 void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				 int nrhs, const mxArray *prhs[]) /* Input variables */
@@ -392,17 +385,16 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			sigOutPtr = mxGetPr(sig_OUT);
 
 			// Temporary lists
-			myDblList signals;
-			myDblList vBars;
+			list<double> signals;
+			list<double> vBars;
 
 			// List iterators
-			myDblListIter signalsIter		= signals.begin();
-			myDblListIter vBarsIter			= vBars.begin();
-
-			myDblListIter vBarsOpenIter		= vBars.begin();
-			myDblListIter vBarsHighIter		= vBars.begin();
-			myDblListIter vBarsLowIter		= vBars.begin();
-			myDblListIter vBarsCloseIter	= vBars.begin();
+			list<double>::const_iterator signalsIter		= signals.begin();
+			list<double>::const_iterator vBarsIter			= vBars.begin();
+			list<double>::const_iterator vBarsOpenIter		= vBars.begin();
+			list<double>::const_iterator vBarsHighIter		= vBars.begin();
+			list<double>::const_iterator vBarsLowIter		= vBars.begin();
+			list<double>::const_iterator vBarsCloseIter		= vBars.begin();
 
 			// Preposition pointers
 			advance(vBarsHighIter, shiftHigh);
@@ -503,7 +495,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			bars_OUT = mxCreateSharedDataCopy(bars_IN);
 			sig_OUT = mxCreateSharedDataCopy(sig_IN);
 		}
-		// Processing all trades complete
 	}
 
 	return;
@@ -845,6 +836,6 @@ bool fraction(double num)
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4908.34322
+//   Revision:	4912.13718
 //   Copyright:	(c)2013
 //
