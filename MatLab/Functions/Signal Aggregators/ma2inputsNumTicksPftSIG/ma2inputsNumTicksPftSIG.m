@@ -96,6 +96,7 @@ if(~isempty(find(SIG,1)))
     % Clean up repeating information
     SIG = remEchos_mex(SIG);
     
+    
     % Pass generated signal vector to profit taking routine
     [barsOut,sigOut] = numTicksProfit(price,SIG,minTick,numTicks,openAvg);
     

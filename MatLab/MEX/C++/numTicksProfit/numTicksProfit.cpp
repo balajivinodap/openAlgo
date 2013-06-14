@@ -54,7 +54,7 @@ plhs[0] = getMexArray(v);
 
 
 #include "mex.h"
-#include <stdio.h>
+//#include <stdio.h>
 #include <list>
 #include <iterator>
 
@@ -111,6 +111,7 @@ void newMinMax(int ID);
 void shrinkProfitLedger();
 void newAvgChk(int ID);
 
+bool knownAdvSig(double advSig);
 bool fraction(double num);
 
 double sign(double num);
@@ -304,36 +305,31 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		for (int curBar=sigIndex + 1; curBar < rowsSig-1; curBar++)
 		{
 			// Check observation for signal
-
 			// Fractional signal on observation
 			if (fraction(sigInPtr[curBar]))
 			{
-				// Is there an openPosition to consider ?
-				if (openPosition != 0)
+				// Is fraction the same sign (additive in nature) ?
+				// Additive
+				if (sign(sigInPtr[curBar] == sign(openPosition)))
 				{
-					// Is fraction the same sign (additive in nature) ?
-					// Additive
-					if (sign(sigInPtr[curBar] == sign(openPosition)))
+					// Nothing to do with the current logic
+					// The only fraction currently in use is |0.5| to liquidate entire opposing openPosition
+				}
+				// Reductive (liquidate)
+				else
+				{
+					// Adding logic here for prevention of 'other' fractions or surprising inputs
+					if (knownAdvSig(sigInPtr[curBar]))
 					{
-						// Nothing to do with the current logic
-						// The only fraction currently in use is |0.5| to liquidate entire opposing openPosition
+						// Liquidate any open position
+						openLedger.clear();
+						openPosition = 0;
 					}
-					// Reductive (liquidate)
+					// Unknown advanced instruction
 					else
 					{
-						// Adding logic here for prevention of 'other' fractions or surprising inputs
-						if (abs((sigInPtr[curBar] - int(sigInPtr[curBar]))) == 0.5)
-						{
-							// Liquidate any open position
-							openLedger.clear();
-							openPosition = 0;
-						}
-						// Unknown advanced instruction
-						else
-						{
-							mexErrMsgIdAndTxt( "MATLAB:AdvancedSignal:fractionUnknown",
-								"A signal contained an advanced fractional instruction that we could not interpret. Aborting.");
-						}
+						mexErrMsgIdAndTxt( "MATLAB:AdvancedSignal:fractionUnknown",
+							"A signal contained an advanced fractional instruction that we could not interpret. Aborting.");
 					}
 				}
 			}
@@ -776,6 +772,22 @@ double sign(double num)
 	return num > 0 ? 1 : (num < 0 ? -1 : 0);
 }
 
+bool knownAdvSig(double advSig)
+{
+	// We can check for known advanced signals to help in debugging
+	// by registering them here.  This can be a searchable array when
+	// more than one advanced signal exists.
+	// For now we only need to check for |0.5|
+
+	double frac = abs(advSig - int(advSig));
+
+	if (frac == 0.5)		// Close any opposing open position
+	{
+		return true;
+	}
+	return false;
+}
+
 bool fraction(double num)
 {
 	if (int(num) == num)
@@ -836,6 +848,6 @@ bool fraction(double num)
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4912.13718
+//   Revision:	4912.35958
 //   Copyright:	(c)2013
 //
