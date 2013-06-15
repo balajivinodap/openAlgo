@@ -1,4 +1,4 @@
-// relStrIdx.cpp : Defines the entry point for the console application.
+// relStrIdx.cpp 
 //
 // Description available: http://en.wikipedia.org/wiki/Relative_strength_index
 //

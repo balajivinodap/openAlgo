@@ -1,4 +1,4 @@
-// calcProfitLoss.cpp : Defines the entry point for the console application.
+// calcProfitLoss.cpp 
 // http://www.kobashicomputing.com/node/177 for a reference to x64 bit
 //
 // nlhs Number of output variables nargout 
@@ -428,7 +428,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 /////////////
 //
-// METHODS
+// FUNCTIONS
 //
 /////////////
 

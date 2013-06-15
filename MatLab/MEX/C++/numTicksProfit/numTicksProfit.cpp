@@ -54,9 +54,9 @@ plhs[0] = getMexArray(v);
 
 
 #include "mex.h"
-//#include <stdio.h>
 #include <list>
 #include <iterator>
+#include "myMath.h"
 
 // Declare external reference to undocumented C function
 #ifdef __cplusplus
@@ -498,7 +498,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 /////////////
 //
-// METHODS
+// FUNCTIONS
 //
 /////////////
 
@@ -766,11 +766,11 @@ void shrinkProfitLedger()
 	}
 }
 
-// Get sign of signal
-double sign(double num)
-{
-	return num > 0 ? 1 : (num < 0 ? -1 : 0);
-}
+//// Get sign of signal
+//double sign(double num)
+//{
+//	return num > 0 ? 1 : (num < 0 ? -1 : 0);
+//}
 
 bool knownAdvSig(double advSig)
 {
@@ -788,14 +788,14 @@ bool knownAdvSig(double advSig)
 	return false;
 }
 
-bool fraction(double num)
-{
-	if (int(num) == num)
-	{
-		return false;
-	}
-	return true;
-}
+//bool fraction(double num)
+//{
+//	if (int(num) == num)
+//	{
+//		return false;
+//	}
+//	return true;
+//}
 
 //
 //  -------------------------------------------------------------------------
