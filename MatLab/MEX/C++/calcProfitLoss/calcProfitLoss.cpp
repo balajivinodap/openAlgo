@@ -61,8 +61,8 @@
 //
 
 #include "mex.h"
-#include <stdio.h>
 #include <deque>
+#include "myMath.h"
 
 // Declare external reference to undocumented C function
 #ifdef __cplusplus
@@ -184,6 +184,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		shifter = 3;
 	}
 
+	const int SHIFT_OPEN = 0;								// For readability
 	const int SHIFT_CLOSE = rowsData * shifter;
 
 	/* Create matrices for the return arguments */ 
@@ -236,7 +237,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		openLedger.push_back(createLineEntry(sigIdx, int(sigInPtr[sigIdx]), dataInPtr[sigIdx+1]));
 
 		// Initialize position trackers
-		int newPO = 0;
+		int openPosition = int(sigInPtr[sigIdx]);
 
 		// ITERATE
 		// Start iterating at next observation
@@ -245,29 +246,26 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		{
 			if (sigInPtr[ii] != 0)
 			{
-				// Get net open position netPO
-				int netPO = sumQty(openLedger);
-
-				// Check if additive or reductive
+				// Check if additive, reductive or reverse
 				// Additive
-				if ((netPO <= 0 && sigInPtr[ii] <= -1) || (netPO >= 0 && sigInPtr[ii] >= 1))
+				if ((openPosition <= 0 && sigInPtr[ii] <= -1) || (openPosition >= 0 && sigInPtr[ii] >= 1))
 				{
 					// No special handling required for an advanced signal when it is additive
 					// We will add a check for the proper advanced fraction value for ease of extending
 					// the logic in the future
 					if (fraction(sigInPtr[ii]))
 					{
-						double advSig = sigInPtr[ii]-int(sigInPtr[ii]);
-						if (knownAdvSig(advSig))
+						if (knownAdvSig(sigInPtr[ii]))
 						{
 							// Trade is additive. Add or create existing position --> openLedger
 							openLedger.push_back(createLineEntry(ii, int(sigInPtr[ii]), dataInPtr[ii+1]));
+							openPosition = openPosition + int(sigInPtr[ii]);
 						}
 						else
 						{
 							// Unknown advanced signal.  Throw an error.
 							mexErrMsgIdAndTxt( "calcProfitLoss:AdvancedSignal:fractionUnknown",
-								"A signal contained an advanced fractional instruction %f that we could not interpret. Aborting (268).",sigInPtr[ii]);
+								"A signal contained an advanced fractional instruction %f that we could not interpret. Aborting (269).",sigInPtr[ii]);
 						}
 					}
 					// Not an advanced signal
@@ -275,11 +273,11 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 					{
 						// Trade is additive. Add or create existing position --> openLedger
 						openLedger.push_back(createLineEntry(ii, int(sigInPtr[ii]), dataInPtr[ii+1]));
+						openPosition = openPosition + int(sigInPtr[ii]);
 					}
-
 				}
-				// Reductive
-				else if ((netPO < 0 && sigInPtr[ii] > 0) || (netPO > 0 && sigInPtr[ii] < 0))
+				// Reductive or Reverse
+				else if ((openPosition < 0 && sigInPtr[ii] > 0) || (openPosition > 0 && sigInPtr[ii] < 0))
 				{
 					// Is this an advanced signal?
 					if(fraction(sigInPtr[ii]))
@@ -287,7 +285,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 						if(knownAdvSig(sigInPtr[ii]))
 						{
 							// Liquidate any open position
-							while (openLedger.size() !=0)
+							while (!openLedger.empty())
 							{
 								// Aggregate cash for corresponding observations (signal + 1)
 								cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger.front().price) * openLedger.front().quantity * BIG_POINT) - 
@@ -296,13 +294,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 							}
 
 							// New position should be the integer of the advanced signal
-							newPO = int(sigInPtr[ii]);
-
-							if (newPO != 0)
-							{
-								// Put new openPosition on the ledger if applicable (not 0)
-								openLedger.push_back(createLineEntry(ii, newPO, dataInPtr[ii+1]));
-							}
+							openPosition = 0;
 						}
 						else
 						{
@@ -310,85 +302,97 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 							mexErrMsgIdAndTxt( "calcProfitLoss:AdvancedSignal:fractionUnknown",
 								"A signal contained an advanced fractional instruction %f that we could not interpret. Aborting.",sigInPtr[ii]);
 						}
-
 					}
-					// Simple signal.  It may not fully liquidate any open position and must be handled accordingly.
-					// We cannot simply empty the openLedger.
-					else
-					{
-						// Check if new trade is larger than existing position
-						if (abs(sigInPtr[ii]) >= abs(netPO))
-						{
-							// New trade is larger than or equal to existing position. Calculate cash on all ledger lines
-							while (openLedger.size() !=0)
-							{
-								// Aggregate cash for corresponding observations (signal + 1)
-								cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger.front().price) * openLedger.front().quantity * BIG_POINT) - 
-									(abs(openLedger.front().quantity)* COST);
-								openLedger.pop_front();
-							}
 
-							// Reduce new trades by previous position and create new entry if applicable
-							newPO = sigInPtr[ii] + netPO;		// variable to calculate new position size
-							if (newPO != 0)
-							{
-								openLedger.push_back(createLineEntry(ii,newPO,dataInPtr[ii+1]));
-							}
-						}
-						else
+					// Do we have a signal with an integer portion ?
+					if (abs(int(sigInPtr[ii])) >= 1)
+					{
+						// Signal is reductive
+						if ((int(sigInPtr[ii]) > 0 && openPosition < 0) || (int(sigInPtr[ii]) < 0 && openPosition > 0))					
 						{
-							// New trade is smaller than the current open position.
-							// How many do we need to reduce by?
-							int needQty = sigInPtr[ii];
-							// Prepare to iterate until we are satisfied
-							while (needQty !=0)
+							// Signal is effectively a reverse or liquidate
+							if (abs(int(sigInPtr[ii])) >= abs(openPosition))
 							{
-								// Is the current line item quantity larger than what we need?
-								if (abs(openLedger.front().quantity) > needQty)
+								// New trade is larger than or equal to existing position. Calculate cash on all ledger lines
+								while (!openLedger.empty())
 								{
-									// If so we will P&L the quantity we need and reduce the open position size
-									cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger.front().price) * -needQty * BIG_POINT) - 
-										(abs(needQty) * COST);
-									// Reduce the position size.  We are aggregating so we add (e.g. 5 Purchases + 4 Sales = 1 Long)
-									openLedger.front().quantity = openLedger.front().quantity + needQty;
-									// We are satisfied and don't need any more contracts
-									needQty = 0;
-								}
-								// Current line item quantity is equal to or smaller than what we need.  Process P&L and remove.
-								else
-								{
-									// P&L entire quantity
-									cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger.front().price) * -openLedger.front().quantity * BIG_POINT) - 
-										(abs(openLedger.front().quantity) * COST);
-									// Reduce needed quantity by what we've been provided
-									needQty = needQty + openLedger.front().quantity;
-									// Remove the line item (FIFO)
+									// Aggregate cash for corresponding observations (signal + 1)
+									cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger.front().price) * openLedger.front().quantity * BIG_POINT) - 
+										(abs(openLedger.front().quantity)* COST);
 									openLedger.pop_front();
 								}
+								
+								// update open position tracker
+								openPosition = int(sigInPtr[ii]) + openPosition;
+
+								// if there is a 'remainder', this is the new net open position
+								// put it on the openLedger
+								if (openPosition != 0)
+								{
+									openLedger.push_back(createLineEntry(ii,openPosition,dataInPtr[ii+1]));
+								}
+							}
+							// partial liquidation
+							else
+							{
+								// New trade is smaller than the current open position.
+								// How many do we need to reduce by?
+								int needQty = sigInPtr[ii];
+
+								// Prepare to iterate until we are satisfied
+								while (needQty !=0)
+								{
+									// Is the current line item quantity larger than what we need?
+									if (abs(openLedger.front().quantity) > needQty)
+									{
+										// If so we will P&L the quantity we need and reduce the open position size
+										cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger.front().price) * -needQty * BIG_POINT) - 
+											(abs(needQty) * COST);
+										// Reduce the position size.  We are aggregating so we add (e.g. 5 Purchases + 4 Sales = 1 Long)
+										openLedger.front().quantity = openLedger.front().quantity + needQty;
+										// We are satisfied and don't need any more contracts
+										needQty = 0;
+									}
+									// Current line item quantity is equal to or smaller than what we need.  Process P&L and remove.
+									else
+									{
+										// P&L entire quantity
+										cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger.front().price) * -openLedger.front().quantity * BIG_POINT) - 
+											(abs(openLedger.front().quantity) * COST);
+										// Reduce needed quantity by what we've been provided
+										needQty = needQty + openLedger.front().quantity;
+										// Remove the line item (FIFO)
+										openLedger.pop_front();
+									}
+								}
+								// update open position tracker
+								openPosition = openPosition + sigInPtr[ii];
 							}
 						}
+						// Signal is reverse
+						openLedger.push_back(createLineEntry(ii, int(sigInPtr[ii]), dataInPtr[ii+1]));
+						openPosition = openPosition + int(sigInPtr[ii]);
 					}
 				}
 			}
 
 			// Calculate current openEQ if there are any positions
-			// Make sure we have an open position
 			// !!!!!!!!!!!!!!!!!!!!!!
 			// !! IMPORTANT
 			// !!!!!!!!!!!!!!!!!!!!!!
-			// Because we are using serial and virtual bars for calculations, we have introduced some known issues
-			// One such issue is that a profit may occur within an observation High or Low.  To offset this we will
+			// Because we are using virtual bars for calculations, we have introduced a known issue
+			// that a profit may occur within an observation High or Low.  To offset this we will
 			// not create an openEQ value if the next bar is an offsetting quantity equal to the current openPosition
-			if (openLedger.size() != 0)
+			if (openPosition != 0)
 			{
-				if((sumQty(openLedger) != sigInPtr[ii+1] * -1) && (dataInPtr[ii+1] != dataInPtr[ii+1+SHIFT_CLOSE]))
-				{
-					// We will aggregate all line items
+				//if((sumQty(openLedger) != sigInPtr[ii+1] * -1) && (dataInPtr[ii + 1 + SHIFT_OPEN] != dataInPtr[ii + 1 + SHIFT_CLOSE]))
+				//{
+					//// We will aggregate all line items
 					for (int jj = 0; jj < openLedger.size(); jj++)
 					{
 						openEQIdx[ii+1] = openEQIdx[ii+1] + ((dataInPtr[ii+1+SHIFT_CLOSE] - openLedger[jj].price) * openLedger[jj].quantity * BIG_POINT);
 					}
-				}
+				//}
 			}
 		} // end for
 
@@ -428,7 +432,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 /////////////
 //
-// FUNCTIONS
+// FUNCTIONS & METHODS
 //
 /////////////
 
@@ -447,7 +451,6 @@ tradeEntry createLineEntry(int ID, int qty, double price)
 int sumQty(const deque<tradeEntry>& x)
 {
 	int sumOfQty = 0;  // the sum is accumulated here
-	// for (int i=0; i<x.size(); i++)
 	for (deque<tradeEntry>::const_iterator it=x.begin();it!=x.end();it++)
 	{
 		//sumOfQty += x[i].price;
@@ -455,15 +458,6 @@ int sumQty(const deque<tradeEntry>& x)
 	}
 
 	return sumOfQty;
-}
-
-bool fraction(double num)
-{
-	if (int(num) == num)
-	{
-		return false;
-	}
-	return true;
 }
 
 bool knownAdvSig(double advSig)
@@ -533,6 +527,6 @@ bool knownAdvSig(double advSig)
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4910.33132
+//   Revision:	4915.23045
 //   Copyright:	(c)2013
 //

@@ -1,8 +1,10 @@
 #ifndef MYMATH_H
 #define MYMATH_H
 
+// Return the sign of a given variable with zero returning zero
 double sign(double num);
 
+// Return true if given variable has a fractional component.
 bool fraction(double num);
 
 #endif MYMATH_H 

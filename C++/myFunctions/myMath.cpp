@@ -1,6 +1,6 @@
 
 
-// Determine if a given variable is an integer or fraction
+// Return true if given variable has a fractional component.
 bool fraction(double num)
 {
 	if (int(num) == num)
@@ -10,7 +10,8 @@ bool fraction(double num)
 	return true;
 }
 
-// Return the sign of a given real (double) number
+// Return the sign of a given variable with zero returning zero
+// e.g. sign(7) = 1, sign(-7) = -1, sign(0) = 0
 double sign(double num)
 {
 	return num > 0 ? 1 : (num < 0 ? -1 : 0);
