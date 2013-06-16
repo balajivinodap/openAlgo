@@ -7,7 +7,7 @@
 // prhs Array of mxArray pointers to the input variables varargin
 //
 // Matlab function:
-// [cash,openEQ,netLiq,returns] = calcProfitLoss_mex(data,sig,bigPoint,cost)
+// [cash,openEQ,netLiq,returns] = calcProfitLoss(data,sig,bigPoint,cost)
 // 
 // Inputs:
 //		data		A 2-D array of prices in the form of Open | Close
