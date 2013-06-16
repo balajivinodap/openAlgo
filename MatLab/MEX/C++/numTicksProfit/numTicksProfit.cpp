@@ -95,27 +95,24 @@ typedef struct profitEntry
 	double profitPrice;							//	Profit price
 } profitEntry;
 
-// Initialize ledgers for open positions and profits
-list<openEntry> openLedger;
-list<profitEntry> profitLedger;
 
 // Prototypes
 openEntry createOpenLedgerEntry(int ID, int qty, double price);
 profitEntry createProfitLedgerEntry(int ID, int qty, double price);
 
-void sameBarProfitCheck(int ID, int qty);
-void moveProfitLedger(int ID, int qty, double price);
-void moveOpenLedger(int ID, int qty);
-void checkMinMax(int ID);
-void newMinMax(int ID);
-void shrinkProfitLedger();
-void newAvgChk(int ID);
-
+bool isTrade(double isSig);
 bool knownAdvSig(double advSig);
-bool fraction(double num);
-
-double sign(double num);
-double getAvgPftPrice();
+int sumQty(const list<openEntry> &theList);
+double getAvgPftPrice(const list<openEntry> &openLedger);
+void shrinkProfitLedger(list<profitEntry> &profitLedger);
+void moveOpenLedger(list<openEntry> &openLedger, const int ID, int qty, int &openPosition);
+void moveProfitLedger(list<profitEntry> &profitLedger, const int ID, int qty, double price);
+void checkOpen(list<openEntry> &openLedger, list<profitEntry> &profitLedger, const int ID, int &openPosition);
+void newAvgChk(list<openEntry> &openLedger, list<profitEntry> &profitLedger, const int ID, int &openPosition, double &minMax);
+void newMinMax(list<openEntry> &openLedger,  list<profitEntry> &profitLedger, const int ID, int &openPosition, double &minMax);
+void checkMinMax(list<openEntry> &openLedger, list<profitEntry> &profitLedger, const int ID, int &openPosition, double &minMax);
+void chkOpenMethod(int &openPosition, const int curBar, double &minMax, list<openEntry> &openLedger, list<profitEntry> &profitLedger);
+void sameBarProfitCheck(list<openEntry> &openLedger, list<profitEntry> &profitLedger, const int ID, int qty, int &openPosition, double &minMax);
 
 // Macros
 #define isReal2DfullDouble(P) (!mxIsComplex(P) && mxGetNumberOfDimensions(P) == 2 && !mxIsSparse(P) && mxIsDouble(P))
@@ -124,16 +121,17 @@ double getAvgPftPrice();
 // Global Variables
 double PROFIT_TGT;								// Calculated profit target (for readability)
 double numTicks;								// Number of ticks (representing $ multiples) in which to take a profit
-double minTick;									// What a sigle tick increment is for a given contract
+double minTick;									// What a single tick increment is for a given contract
 double openAvg;									// Should we manage profit taking on a per contract basis or average the net position (0 = atomic | 1 = average)
-double minMax;									// Current minimum | maximum to optimize (minimize) checks
+
 double *barsInPtr;								// Pointer for the price matrix
 double *sigInPtr;								// Pointer for the signal array
-int openPosition = 0;							// Running net position (based solely on changes to openLedger)
 int shiftOpen;									// used for readability 
 int shiftHigh;
 int shiftLow;
 int shiftClose;
+
+
 
 void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				 int nrhs, const mxArray *prhs[]) /* Input variables */
@@ -248,22 +246,21 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	// START //
 	// Initialize variables
 	int	sigIndex;							// Iterator that will store the index of the referenced signal
-	int barIndex;							// Iterator that will store the index of the referenced bar
-	int anyTrades = 0;						// Variable that indicates if we have any trades
+	bool anyTrades = false;					// Trade logical
 
 	// Check that we have at least one signal (at least one trade)
-	for (sigIndex=0; sigIndex < rowsSig; sigIndex++)					// Remember C++ starts counting at '0'
+	for (sigIndex=0; sigIndex < int(rowsSig); sigIndex++)					// Remember C++ starts counting at '0'
 	{
-		if (abs(sigInPtr[sigIndex]) >=1)	// See if we have a signal
+		if (isTrade(sigInPtr[sigIndex]))	// See if we have a signal
 		{
-			anyTrades=1;					// Trade found
+			anyTrades = true;
 			break;							// Exit the for loop
 		}
 	}	
 
 	// Either return the input if not trades found, or start the check for profit targets reached per open position
 	// We have no trades
-	if (anyTrades == 0)						
+	if (!anyTrades)						
 	{
 		// http://www.mathworks.com/support/solutions/en/data/1-6NU359/index.html
 		// Return what we were given
@@ -273,14 +270,20 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	// We have trades
 	else									
 	{
+		double minMax;									// Current minimum | maximum to optimize (minimize) checks
+
 		/////////////
 		//
 		// FIRST SIGNAL PROCESSING
 		//
 		/////////////	
-		// sigIndex = first signal index
-		// Check for profit on same observation
-		sameBarProfitCheck(sigIndex, int(sigInPtr[sigIndex]));
+		
+		// Initialize ledgers for open positions and profits
+		list<openEntry> openLedger;
+		list<profitEntry> profitLedger;
+
+		// Put first detected trade on openLedger
+		openLedger.push_back(createOpenLedgerEntry(sigIndex, int(sigInPtr[sigIndex]), barsInPtr[sigIndex + 1 + shiftOpen]));
 
 		// Short signal.  Assign minMax to LOW
 		if (sigInPtr[sigIndex] < 0)		
@@ -292,6 +295,12 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		{
 			minMax = barsInPtr[sigIndex + 1 + shiftHigh];
 		}
+
+		// Check for profit on same observation
+		// 'minMax' has been updated so we can safely call 'sameBarProfitCheck'
+		int openPosition = int(sigInPtr[sigIndex]);
+		sameBarProfitCheck(openLedger, profitLedger, sigIndex, int(sigInPtr[sigIndex]), openPosition, minMax);
+
 		// FIRST BAR END
 
 		/////////////
@@ -302,10 +311,11 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 		// ITERATE REMAINING BARS
 		// sigIndex = first signal index
-		for (int curBar=sigIndex + 1; curBar < rowsSig-1; curBar++)
+		for (int curBar=sigIndex + 1; curBar < int(rowsSig)-1; curBar++)
 		{
-			// Check observation for signal
-			// Fractional signal on observation
+
+		// ORDER OF SIGNIFICANCE from a signal with an existing position
+			// REVERSE
 			if (fraction(sigInPtr[curBar]))
 			{
 				// Is fraction the same sign (additive in nature) ?
@@ -334,29 +344,84 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				}
 			}
 
+			// REDUCE or ADD
 			// Do we have a signal with an integer portion ?
 			if (abs(int(sigInPtr[curBar])) >= 1)
 			{
-				// Signal is additive
-				if ((sigInPtr[curBar] < 0 && openPosition <= 0) || (sigInPtr[curBar] > 0 && openPosition >= 0))					
-				{
-
-					sameBarProfitCheck(curBar, int(sigInPtr[curBar]));	
-				}
 				// Signal is reductive
-				else 
+				if ((int(sigInPtr[curBar]) > 0 && openPosition < 0) || (int(sigInPtr[curBar]) < 0 && openPosition > 0))					
 				{
-					openPosition = openPosition + int(sigInPtr[curBar]);
+					// Signal is effectively a reverse or liquidate
+					if (int(sigInPtr[curBar]) >= openPosition)
+					{
+						openPosition = int(sigInPtr[curBar]) + openPosition;
+						openLedger.clear();
+						if (openPosition != 0)
+						{
+							openLedger.push_back(createOpenLedgerEntry(curBar, openPosition, barsInPtr[curBar + 1 + shiftOpen]));
+						}
+					}
+					else
+					{
+						// How many do we need to reduce by?
+						int needQty = int(sigInPtr[curBar]);
+						// Prepare to iterate until we are satisfied
+						while (needQty !=0)
+						{
+							// Is the current line item quantity larger than what we need?
+							if (abs(openLedger.front().qtyOpen) > needQty)
+							{
+								// Reduce the position size.  We are aggregating so we add (e.g. 5 Purchases + 4 Sales = 1 Long)
+								openLedger.front().qtyOpen = openLedger.front().qtyOpen + needQty;
+								// We are satisfied and don't need any more contracts
+								needQty = 0;
+							}
+							// Current line item quantity is equal to or smaller than what we need.  Process P&L and remove.
+							else
+							{
+								// Reduce needed quantity by what we've been provided
+								needQty = needQty + openLedger.front().qtyOpen;
+								// Remove the line item (FIFO)
+								openLedger.pop_front();
+							}
+						}
+						openPosition = openPosition + int(sigInPtr[curBar]);
+					}
 				}
+				// Signal is additive
+				else
+				{
+					// Before adding, check if the open qualifies to liquidate any existing position
+					if (openPosition != 0)
+					{
+						chkOpenMethod(openPosition, curBar, minMax, openLedger, profitLedger);
+					}
+					
+					// Process addition
+					// Put trade on openLedger
+					openLedger.push_back(createOpenLedgerEntry(curBar, int(sigInPtr[curBar]), barsInPtr[curBar + 1 + shiftOpen]));
+					openPosition = openPosition + int(sigInPtr[curBar]);
+					sameBarProfitCheck(openLedger, profitLedger, curBar, int(sigInPtr[curBar]), openPosition, minMax);
+				}
+			}
+			// NONE
+			else
+			{
+				// We can just check against the open and leave the range check for all entries on the openLedger below
+				// Only check if necessary
+				if (openPosition !=0)
+				{
+					chkOpenMethod(openPosition, curBar, minMax, openLedger, profitLedger);
+				}
+				
 			}
 
 			// Check for extremes that result in a profit for any openPosition
 			if (openPosition != 0)
 			{
-				checkMinMax(curBar);
+				checkMinMax(openLedger, profitLedger, curBar, openPosition, minMax);
 			}
 		}
-
 
 		/////////////
 		//
@@ -365,7 +430,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		/////////////
 		if (!profitLedger.empty())
 		{
-			shrinkProfitLedger();
+			shrinkProfitLedger(profitLedger);
 			int numNewObsv = profitLedger.size();				// number of new signals and virtual profit bars to add
 
 			/* Create matrices for the return arguments */ 
@@ -403,7 +468,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				vBars.push_back(barsInPtr[iter]);
 			}
 
-			for (int iter = 0; iter < rowsSig; iter++)
+			for (int iter = 0; iter < int(rowsSig); iter++)
 			{
 				signals.push_back(sigInPtr[iter]);
 			}
@@ -491,6 +556,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			bars_OUT = mxCreateSharedDataCopy(bars_IN);
 			sig_OUT = mxCreateSharedDataCopy(sig_IN);
 		}
+		
 	}
 
 	return;
@@ -498,7 +564,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 /////////////
 //
-// FUNCTIONS
+// FUNCTIONS & METHODS
 //
 /////////////
 
@@ -525,36 +591,31 @@ profitEntry createProfitLedgerEntry(int ID, int qty, double price)
 {
 	profitEntry ProfitLedgerEntry;
 	ProfitLedgerEntry.barIndex = ID;
-	ProfitLedgerEntry.qtyProfit = qty * -1;		// Reverse the given signal to offset position
+	ProfitLedgerEntry.qtyProfit = qty;												// Quantity already transformed at calling function
 	ProfitLedgerEntry.profitPrice = price;
 
 	return ProfitLedgerEntry;
 }
 
-void moveProfitLedger(int ID, int qty, double price)
+void moveProfitLedger(list<profitEntry> &profitLedger, const int ID, int qty, double price)
 {
 	// We take the price of the next observation for the generated signal
-	profitLedger.push_back(createProfitLedgerEntry(ID, qty, price));	
-
-	// Should only reduce an openPosition if one exists
-	// sameBarProfitCheck may move an entry directly to profitLedger without
-	// the value of openPosition being modified
-	if (openPosition != 0) 
-	{
-		openPosition = openPosition - qty;
-	}
+	// We reverse the quantity to reflect closing of the positions
+	profitLedger.push_back(createProfitLedgerEntry(ID, qty * -1, price));	
 }
 
-void moveOpenLedger(int ID, int qty)
+void moveOpenLedger(list<openEntry> &openLedger, const int ID, int qty, int &openPosition)
 {
 	// We take the price of the next observation for the generated signal
 	openLedger.push_back(createOpenLedgerEntry(ID, qty, barsInPtr[ID + 1 + shiftOpen]));
-	openPosition = openPosition + qty;
+	openPosition = openPosition - qty;
 }
 
 // sameBarProfitCheck uses the Signal index and will look at the corresponding
-// 'next' observation for price data.
-void sameBarProfitCheck(int ID, int qty)
+// 'next' observation for price data. It is important to note that this is referencing
+// the last entry on the openLedger.  Additionally, minMax needs to have been updated
+// prior to calling this function.
+void sameBarProfitCheck(list<openEntry> &openLedger, list<profitEntry> &profitLedger, const int ID, int qty, int &openPosition, double &minMax)
 {
 	if (openAvg == 0)
 	{
@@ -562,51 +623,38 @@ void sameBarProfitCheck(int ID, int qty)
 		// Short signal - check LOW
 		if ((qty < 0) && (barsInPtr[ID + 1 + shiftLow] < barsInPtr[ID + 1 + shiftOpen] - PROFIT_TGT))
 		{
-			// We have a profit on the same observation.  Put an entry in the profit ledger
-			moveProfitLedger(ID, qty, barsInPtr[ID + 1 + shiftOpen] - PROFIT_TGT);
+			// We have a profit on the same observation.  Move the entry in the profit ledger
+			moveProfitLedger(profitLedger, ID, qty, barsInPtr[ID + 1 + shiftOpen] - PROFIT_TGT);
+			openPosition = openPosition - qty;
+			openLedger.pop_back();
 		}
 		// Long signal - check HIGH
 		else if ((qty > 0) && (barsInPtr[ID + 1 + shiftHigh] > barsInPtr[ID + 1 + shiftOpen] + PROFIT_TGT))	
 		{
-			// We have a profit on the same observation.  Put an entry in the profit ledger
-			moveProfitLedger(ID, qty, barsInPtr[ID + 1 + shiftOpen] + PROFIT_TGT);		
+			// We have a profit on the same observation.  Put entry in the profit ledger
+			moveProfitLedger(profitLedger, ID, qty, barsInPtr[ID + 1 + shiftOpen] + PROFIT_TGT);
+			openPosition = openPosition - qty;
+			openLedger.pop_back();
 		} 
-		// Signal is not liquidated on same bar. Move it to the open ledger.
 		else
 		{
-			// Put trade on openLedger with calculated profit price
-			moveOpenLedger(ID, qty);
-			newMinMax(ID);
+			openPosition = openPosition + qty;
 		}
 	}
 	else
 	{
-		// Put trade on openLedger with calculated profit price
-		// This can be done in a seemingly 'reverse' order because the impact of the new entry must be calculated
-		// It is not considered a 'one-off' or individual trade unless it is the only position.
 
-		moveOpenLedger(ID, qty);
-
-		minMax = barsInPtr[ID + 1 + shiftOpen];
-
-		newMinMax(ID);
+		// Check same bar using new average
+		// Requires minMax already updated !!
+		newAvgChk(openLedger, profitLedger, ID, openPosition, minMax);
 
 	}
 }
 
-void newMinMax(int ID)
+// A new High | Low has occurred and we have determined that we have an openPosition
+// Check if profit targets have been reached
+void newMinMax(list<openEntry> &openLedger,  list<profitEntry> &profitLedger, const int ID, int &openPosition, double &minMax)
 {
-	// Short.  Update minMax to new lower price
-	if (openPosition < 0)						
-	{
-		minMax = barsInPtr[ID + 1 + shiftLow];
-	}
-	// Long.  Update minMax to new high price
-	else if (openPosition > 0)					
-	{
-		minMax = barsInPtr[ID + 1 + shiftHigh];
-	}
-
 	if (!openLedger.empty())
 	{
 		if (openAvg == 0)
@@ -619,15 +667,7 @@ void newMinMax(int ID)
 				{
 					if (minMax <= iter->profitPrice)
 					{
-						if (barsInPtr[ID + 1 + shiftOpen] <= iter->profitPrice)
-						{
-							// Open satisfies profit threshold
-							moveProfitLedger(ID, iter->qtyOpen, barsInPtr[ID + 1 + shiftOpen]);
-						}
-						else
-						{
-							moveProfitLedger(ID, iter->qtyOpen, iter->profitPrice);
-						}
+						moveProfitLedger(profitLedger, ID, iter->qtyOpen, iter->profitPrice);
 						openLedger.erase(iter);
 					}
 				}
@@ -636,46 +676,34 @@ void newMinMax(int ID)
 				{
 					if (minMax >= iter->profitPrice)
 					{
-						if (barsInPtr[ID + 1 + shiftOpen] >= iter->profitPrice)
-						{
-							// Open satisfies profit threshold
-							moveProfitLedger(ID, iter->qtyOpen, barsInPtr[ID + 1 + shiftOpen]);
-						}
-						else
-						{
-							moveProfitLedger(ID, iter->qtyOpen, iter->profitPrice);
-						}
+						moveProfitLedger(profitLedger, ID, iter->qtyOpen, iter->profitPrice);
 						openLedger.erase(iter);
 					}
 				}
 			}
+			openPosition = sumQty(openLedger);
 		}
 		// Using the average price approach 
 		else
 		{
-			newAvgChk(ID);
+			newAvgChk(openLedger, profitLedger, ID, openPosition, minMax);
 		}
 	}
 }
 
-void newAvgChk(int ID)
+void newAvgChk(list<openEntry> &openLedger, list<profitEntry> &profitLedger, const int ID, int &openPosition, double &minMax)
 {
-	double profitPrice = getAvgPftPrice();
+	double profitPrice = getAvgPftPrice(openLedger);
 
 	if (openPosition < 0)				// Short. Check minMax <= profitPrice
 	{
 		if (minMax <= profitPrice)
 		{
-			if (barsInPtr[ID + 1 + shiftOpen] <= profitPrice)
+			while (!openLedger.empty())
 			{
-				// Open satisfies profit threshold
-				moveProfitLedger(ID, openPosition, barsInPtr[ID + 1 + shiftOpen]);
+				moveProfitLedger(profitLedger, openLedger.front().sigIndex, openLedger.front().qtyOpen, profitPrice);
+				profitLedger.pop_front();
 			}
-			else
-			{
-				moveProfitLedger(ID, openPosition, profitPrice);
-			}
-			openLedger.clear();
 			openPosition = 0;
 		}
 	}
@@ -683,22 +711,17 @@ void newAvgChk(int ID)
 	{
 		if (minMax >= profitPrice)
 		{
-			if (barsInPtr[ID + 1 + shiftOpen] >= profitPrice)
+			while (!openLedger.empty())
 			{
-				// Open satisfies profit threshold
-				moveProfitLedger(ID, openPosition, barsInPtr[ID + 1 + shiftOpen]);
+				moveProfitLedger(profitLedger, openLedger.front().sigIndex, openLedger.front().qtyOpen, profitPrice);
+				profitLedger.pop_front();
 			}
-			else
-			{
-				moveProfitLedger(ID, openPosition, profitPrice);
-			}
-			openLedger.clear();
 			openPosition = 0;
 		}
 	}
 }
 
-double getAvgPftPrice()
+double getAvgPftPrice(const list<openEntry> &openLedger)
 {
 	int netQty = 0;
 	double wghtPrices = 0;
@@ -707,7 +730,7 @@ double getAvgPftPrice()
 	double profitPrice = 0;
 
 
-	list<openEntry>::iterator iter;
+	list<openEntry>::const_iterator iter;
 	for (iter = openLedger.begin(); iter != openLedger.end(); iter++)
 	{
 		netQty = netQty + iter->qtyOpen;
@@ -717,7 +740,7 @@ double getAvgPftPrice()
 	wghtAvg = sumWghts / abs(netQty);
 
 	// Short objective
-	if (openPosition < 0)
+	if (netQty < 0)
 	{
 		profitPrice = wghtAvg - PROFIT_TGT;
 	}
@@ -730,25 +753,90 @@ double getAvgPftPrice()
 	return profitPrice;
 }
 
-void checkMinMax(int ID)
+void checkOpen(list<openEntry> &openLedger, list<profitEntry> &profitLedger, const int ID, int &openPosition)
+{
+	if (openAvg == 0)
+	{
+		for (list<openEntry>::iterator iter = openLedger.begin(); iter != openLedger.end(); iter++)
+		{
+			// Short
+			if (openPosition < 0)
+			{
+				if (barsInPtr[ID + 1 + shiftOpen] <= iter->profitPrice)
+				{
+					// Open satisfies profit threshold
+					moveProfitLedger(profitLedger, ID, iter->qtyOpen, barsInPtr[ID + 1 + shiftOpen]);
+					openLedger.erase(iter);
+					openPosition = sumQty(openLedger);
+				}
+			}
+			// Long
+			else
+			{
+				if (barsInPtr[ID + 1 + shiftOpen] >= iter->profitPrice)
+				{
+					// Open satisfies profit threshold
+					moveProfitLedger(profitLedger, ID, iter->qtyOpen, barsInPtr[ID + 1 + shiftOpen]);
+					openLedger.erase(iter);
+					openPosition = sumQty(openLedger);
+				}
+			}
+		}
+	}
+	else
+	{
+		double profitPrice = getAvgPftPrice(openLedger);
+
+		if (openPosition < 0)
+		{
+			if (barsInPtr[ID + 1 + shiftOpen] <= profitPrice)
+			{
+				// Open satisfies profit threshold
+				while (!openLedger.empty())
+				{
+					moveProfitLedger(profitLedger, openLedger.front().sigIndex, openLedger.front().qtyOpen, barsInPtr[ID + 1 + shiftOpen]);
+					profitLedger.pop_front();
+				}
+				openPosition = 0;
+			}
+		}
+		else
+		{
+			if (barsInPtr[ID + 1 + shiftOpen] >= profitPrice)
+			{
+				// Open satisfies profit threshold
+				while (!openLedger.empty())
+				{
+					moveProfitLedger(profitLedger, openLedger.front().sigIndex, openLedger.front().qtyOpen, barsInPtr[ID + 1 + shiftOpen]);
+					profitLedger.pop_front();
+				}
+			}
+			openPosition = 0;
+		}
+	}
+};
+
+void checkMinMax(list<openEntry> &openLedger, list<profitEntry> &profitLedger, const int ID, int &openPosition, double &minMax)
 {
 	if (openPosition < 0)								// Short.  Check minMax to LOW
 	{
 		if (barsInPtr[ID + 1 + shiftLow] < minMax)		//New minMax
 		{
-			newMinMax(ID);
+			minMax = barsInPtr[ID + 1 + shiftLow];
+			newMinMax(openLedger, profitLedger, ID, openPosition, minMax);
 		}
 	}
 	else if (openPosition > 0)							// Long.  Check minMax to HIGH
 	{
 		if (barsInPtr[ID + 1 + shiftHigh] > minMax)		//New minMax
 		{
-			newMinMax(ID);
+			minMax = barsInPtr[ID + 1 + shiftHigh];
+			newMinMax(openLedger, profitLedger, ID, openPosition, minMax);
 		}			
 	}
 }
 
-void shrinkProfitLedger()
+void shrinkProfitLedger(list<profitEntry> &profitLedger)
 {
 	list<profitEntry>::iterator iterMain, iterPlusOne;
 
@@ -766,11 +854,14 @@ void shrinkProfitLedger()
 	}
 }
 
-//// Get sign of signal
-//double sign(double num)
-//{
-//	return num > 0 ? 1 : (num < 0 ? -1 : 0);
-//}
+bool isTrade(double isSig)
+{
+	if (abs(isSig)>=1)
+	{
+		return true;
+	}
+	return false;
+}
 
 bool knownAdvSig(double advSig)
 {
@@ -788,14 +879,39 @@ bool knownAdvSig(double advSig)
 	return false;
 }
 
-//bool fraction(double num)
-//{
-//	if (int(num) == num)
-//	{
-//		return false;
-//	}
-//	return true;
-//}
+// Method to sum the quantity values in any struct of type tradeEntry
+int sumQty(const list<openEntry>& theList)
+{
+	int sumOfQty = 0;  // the sum is accumulated here
+	// for (int i=0; i<x.size(); i++)
+	for (list<openEntry>::const_iterator it=theList.begin(); it!=theList.end(); it++)
+	{
+		sumOfQty += it->qtyOpen;
+	}
+
+	return sumOfQty;
+}
+
+void chkOpenMethod(int &openPosition, const int curBar, double &minMax, list<openEntry> &openLedger, list<profitEntry> &profitLedger )
+{
+	if (openPosition < 0)
+	{
+		// We can add a check to reduce calls to the function unless necessary
+		if(barsInPtr[curBar + 1 + shiftOpen] < minMax)
+		{
+			checkOpen(openLedger, profitLedger, curBar, openPosition);
+			minMax = barsInPtr[curBar + 1 + shiftOpen];
+		}
+	}
+	else if (openPosition > 0)
+	{
+		if(barsInPtr[curBar + 1 + shiftOpen] > minMax)
+		{
+			checkOpen(openLedger, profitLedger, curBar, openPosition);
+			minMax = barsInPtr[curBar + 1 + shiftOpen];
+		}
+	}	
+}
 
 //
 //  -------------------------------------------------------------------------
@@ -848,6 +964,6 @@ bool knownAdvSig(double advSig)
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4912.35958
+//   Revision:	4914.39102
 //   Copyright:	(c)2013
 //
