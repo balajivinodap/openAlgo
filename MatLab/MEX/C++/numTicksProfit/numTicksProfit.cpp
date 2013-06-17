@@ -105,7 +105,7 @@ bool knownAdvSig(double advSig);
 int sumQty(const list<openEntry> &theList);
 double getAvgPftPrice(const list<openEntry> &openLedger);
 void shrinkProfitLedger(list<profitEntry> &profitLedger);
-void moveOpenLedger(list<openEntry> &openLedger, const int ID, int qty, int &openPosition);
+//void moveOpenLedger(list<openEntry> &openLedger, const int ID, int qty, int &openPosition);
 void moveProfitLedger(list<profitEntry> &profitLedger, const int ID, int qty, double price);
 void checkOpen(list<openEntry> &openLedger, list<profitEntry> &profitLedger, const int ID, int &openPosition);
 void newAvgChk(list<openEntry> &openLedger, list<profitEntry> &profitLedger, const int ID, int &openPosition, double &minMax);
@@ -604,12 +604,12 @@ void moveProfitLedger(list<profitEntry> &profitLedger, const int ID, int qty, do
 	profitLedger.push_back(createProfitLedgerEntry(ID, qty * -1, price));	
 }
 
-void moveOpenLedger(list<openEntry> &openLedger, const int ID, int qty, int &openPosition)
-{
-	// We take the price of the next observation for the generated signal
-	openLedger.push_back(createOpenLedgerEntry(ID, qty, barsInPtr[ID + 1 + shiftOpen]));
-	openPosition = openPosition - qty;
-}
+//void moveOpenLedger(list<openEntry> &openLedger, const int ID, int qty, int &openPosition)
+//{
+//	// We take the price of the next observation for the generated signal
+//	openLedger.push_back(createOpenLedgerEntry(ID, qty, barsInPtr[ID + 1 + shiftOpen]));
+//	openPosition = openPosition - qty;
+//}
 
 // sameBarProfitCheck uses the Signal index and will look at the corresponding
 // 'next' observation for price data. It is important to note that this is referencing

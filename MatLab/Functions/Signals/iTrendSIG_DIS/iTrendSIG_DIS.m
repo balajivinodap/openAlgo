@@ -1,5 +1,5 @@
 function [ varargout ] = iTrendSIG_DIS(price,bigPoint,cost,scaling,hSub)
-%ITRENDSIGDIS An indicator based on the work of John Elhers
+%ITRENDSIG_DIS An indicator based on the work of John Elhers
 %   instantaneousTrend returns a trading signal for a given iTrend and moving average crossover
 %
 %   Input 'price' should be of an O | H | L | C form as we use the average of the Open & Close
@@ -11,7 +11,7 @@ function [ varargout ] = iTrendSIG_DIS(price,bigPoint,cost,scaling,hSub)
 %   S = ITRENDSIGDIS(PRICE,I,T) returns a trading signal for a I-period iTrend and
 %   a T-period simple moving average.
 %
-%   [S,R,SH,ITREND,MA] = ITRENDSIGDIS(...)
+%   [S,R,SH,ITREND,MA] = ITRENDSIG_DIS(...)
 %           S       derived trading signal
 %           R       absolute return in R
 %           SH      derived Sharpe based on R
@@ -30,36 +30,43 @@ if ~exist('scaling','var'), scaling = 1; end;
 if ~exist('cost','var'), cost = 0; end;         % default cost
 if ~exist('bigPoint','var'), bigPoint = 1; end; % default bigPoint
 
-%% Parse
-[fOpen,fHigh,fLow,fClose] = OHLCSplitter(price);
-HighLow = (fHigh+fLow)/2;
-
 %% iTrend signal generation using dominant cycle crossing
 if nargin > 0
     %% Preallocate
-    returns = zeros(rows,1);                                 %#ok<NASGU>
-    s = zeros(rows,1);
+    rows = size(price,1);
+    fOpen = zeros(rows,1);               	%#ok<NASGU>
+    fClose = zeros(rows,1); 				%#ok<NASGU>
+    R = zeros(rows,1);						
+    SIG = zeros(rows,1);					
+    TLINE = zeros(rows,1);                	%#ok<NASGU>
+    ITREND = zeros(rows,1);               	%#ok<NASGU>
+
+%% Parse
+[fOpen,fHigh, fLow, fClose] = OHLCSplitter(price);
+highsLows = (fHigh + fLow) / 2;
+    %% iTrend signal generation using dominant cycle crossing
+    [STA, TLINE, ITREND] = iTrendSTA_mex(highsLows);
     
-    [tLine,instT] = iTrend_mex(HighLow);
+    % Convert state to signal
+    SIG(STA < 0) = -1.5;
+    SIG(STA > 0) =  1.5;
     
-    s(instT>tLine) = 	1.5;
-    s(instT<tLine) =   -1.5;
-    
+  
     % Clear erroneous signals calculated prior to enough data
-    s(1:54) = 0;
+    SIG(1:54) = 0;
     
-    % Set the first position to 1 lot
-    % Make sure we have at least one trade first
-    if ~isempty(find(s,1))
-        % We have to remove Echos while they are all 2's
-        % Clean up repeating information
-        s = remEchos_mex(s);
-        
-        [~,~,~,returns] = calcProfitLoss([fOpen fClose],s,bigPoint,cost);
-        sharpeRatio=scaling*sharpe(returns,0);
+    if(~isempty(find(SIG,1)))
+        % Clean up repeating information for PNL
+        SIG = remEchos_mex(SIG);
+
+        % Generate PNL
+        [~,~,~,R] = calcProfitLoss([fOpen fClose],SIG,bigPoint,cost);
+
+        % Calculate sharpe ratio
+        SH=scaling*sharpe(R,0);
     else
-        returns = 0;
-        sharpeRatio= 0;
+        % No signals - no sharpe.
+        SH= 0;
     end; %if
     
     %% If no assignment to variable, show the averages in a chart
@@ -67,48 +74,48 @@ if nargin > 0
         
         % Plot results
         ax(1) = subplot(2,1,1);
-        plot([fClose,tLine,instT]);
+        plot([fClose,TLINE,ITREND]);
         axis (ax(1),'tight');
         grid on
-        legend('Close','iTrend','instT','Location','NorthWest')
-        title(['iTrend Results, Annual Sharpe Ratio = ',num2str(sharpeRatio,3)])
+        legend('Close','tLine','iTrend','Location','NorthWest')
+        title(['iTrend Results, Annual Sharpe Ratio = ',num2str(SH,3)])
         
         ax(2) = subplot(2,1,2);
-        plot([s,cumsum(returns)]); grid on
+        plot([SIG,cumsum(R)]); grid on
         legend('Position','Cumulative Return','Location','North')
-        title(['Final Return = ',thousandSepCash(sum(returns))])
+        title(['Final Return = ',thousandSepCash(sum(R))])
         linkaxes(ax,'x')
         
     elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
         % We pass hSub as a string so we can have asymmetrical graphs
         % The call to char() parses the passed cell array
         ax(1) = subplot(str2num(char(hSub(1))), str2num(char(hSub(2))), str2num(char(hSub(3)))); %#ok<ST2NM>
-        plot([fClose,tLine,instT]);
+        plot([fClose,TLINE,ITREND]);
         axis (ax(1),'tight');
         grid on
-        legend('Close','iTrend','instT','Location','NorthWest')
-        title(['iTrend Results, Annual Sharpe Ratio = ',num2str(sharpeRatio,3)])
+        legend('Close','tLine','iTrend','Location','NorthWest')
+        title(['iTrend Results, Annual Sharpe Ratio = ',num2str(SH,3)])
         
         ax(2) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))), str2num(char(hSub(4)))); %#ok<ST2NM>
-        plot([s,cumsum(returns)]); grid on
+        plot([SIG,cumsum(R)]); grid on
         legend('Position','Cumulative Return','Location','North')
-        title(['Final Return = ',thousandSepCash(sum(returns))])
+        title(['Final Return = ',thousandSepCash(sum(R))])
         linkaxes(ax,'x')
     else
         for i = 1:nargout
             switch i
                 case 1
-                    varargout{1} = s;
+                    varargout{1} = SIG;
                 case 2
-                    varargout{2} = returns;
+                    varargout{2} = R;
                 case 3
-                    varargout{3} = sharpeRatio;
+                    varargout{3} = SH;
                 case 4
-                    varargout{4} = tLine;
+                    varargout{4} = TLINE;
                 case 5
-                    varargout{5} = instT;
+                    varargout{5} = ITREND;
                 otherwise
-                    warning('ITREND2INPUTS:OutputArg',...
+                    warning('ITRENDSIG_DIS:OutputArg',...
                         'Too many output arguments requested, ignoring last ones');
             end %switch
         end %for
@@ -167,7 +174,7 @@ end; %if
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4906.24976
+%   Revision:      4916.33715
 %   Copyright:     (c)2013
 %
 

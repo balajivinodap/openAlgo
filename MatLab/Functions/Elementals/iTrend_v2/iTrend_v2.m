@@ -1,4 +1,4 @@
-function [ tLine ] = iTrend_v2(price,iMult,qMult)
+function [ tLine] = iTrend_v2(price,iMult,qMult)
 %ITREND_v2 An elemental calculation of the instantaneous trend
 %   ITREND_v2 returns the instantaneous trend as a simple average over the dominant cycle
 %   This is based on the work of John Ehlers

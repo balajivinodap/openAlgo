@@ -38,7 +38,6 @@ function [SIG,R,SH,LEAD,LAG] = ma2inputsSIG(price,F,S,type,bigPoint,cost,scaling
 %% MEX code to be skipped
 coder.extrinsic('sharpe','calcProfitLoss','remEchos_mex','ma2inputsSTA_mex','OHLCSplitter')
 
-%% Process input args
 % Preallocate so we can MEX
 rows = size(price,1);
 fOpen = zeros(rows,1);                                      %#ok<NASGU>
@@ -49,9 +48,10 @@ LEAD = zeros(rows,1);                                       %#ok<NASGU>
 LAG = zeros(rows,1);                                        %#ok<NASGU>
 R = zeros(rows,1);
 
+%% Process input args
 [fOpen,fClose] = OHLCSplitter(price);
 
-%% Input with error check
+%% Error check
 if (F > S)
     error('METS:ma2inputsSIG:invalidInputs', ...
         'LEAD input > LAG input. Catch this before submitting to ''ma2inputsSIG''');
@@ -90,9 +90,9 @@ end; %if
 % Correct calculations prior to enough bars for lead & lag
 for ii = 1:S-1
     if (ii < F)
-        LEAD(ii) = fClose(ii);                 % Reset the moving average calculation to equal the Close
+        LEAD(ii) = fClose(ii);	% Reset the moving average calculation to equal the Close
     end;
-    LAG(ii) = fClose(ii);                  % Also reset the slower average
+    LAG(ii) = fClose(ii);		% Also reset the slower average
 end; %for
 
 %%
