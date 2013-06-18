@@ -1,4 +1,4 @@
-function [ varargout ] = iTrend_v2METS(price,iMult,qMult,hSub)
+function [ varargout ] = iTrend_v2DIS(price,iMult,qMult,hSub)
 %ITREND_v2METS An indicator based on the work of John Elhers
 %   instantaneousTrend returns a trading signal for a given iTrend and MA cross as well as a
 %   technical indicator.
@@ -7,6 +7,23 @@ function [ varargout ] = iTrend_v2METS(price,iMult,qMult,hSub)
 %
 %   [ITREND] = ITREND_v2METS(...) returns the Instantaneous Trend
 %
+%   Input 'price' should be of an O | H | L | C form as we use the average
+%   of the Open & Close when passed to iTrend.m
+%
+%   INPUTS:     price       	An array of price in the form [O | H | L | C]
+%               iMult
+%               qMult
+%				hSub			An embedded variable passed from 'DIS' files for poisitioning graphical feedback
+%
+%	OUTPUTS:	iTrend			Instantaneous trend
+%
+%   [iTrend] = ITREND_V2DIS(PRICE)       returns an instantaneous trend and
+%                                               an accompanying trendline as simple
+%                                               average over the measured dominant
+%                                               cycle period based upon a 14-period iTrend.
+%
+%   [tLine, iTrend] = ITRENDSIGDIS(PRICE,hSub)  includes the hSub variable for asymetrical
+%                                               graphic output
 
 %% Error check
 rows = size(price,1);
@@ -22,7 +39,7 @@ if ~exist('qMult','var'), qMult=.338; end;
 [~,fHigh,fLow,fClose] = OHLCSplitter(price);
 HighLow = (fHigh+fLow)/2;
 
-tLine = iTrend_v2MEX_mex(HighLow,iMult,qMult);
+tLine = iTrend_v2_mex(HighLow,iMult,qMult);
 
 %% If no assignment to variable, show the averages in a chart
 if (nargout == 0) && (~exist('hSub','var'))% Plot

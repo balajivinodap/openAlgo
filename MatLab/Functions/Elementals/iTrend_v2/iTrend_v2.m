@@ -3,11 +3,16 @@ function [ tLine] = iTrend_v2(price,iMult,qMult)
 %   ITREND_v2 returns the instantaneous trend as a simple average over the dominant cycle
 %   This is based on the work of John Ehlers
 %
+%	Input 'price' should be an M x 1 array of prices ordinarily transformed e.g. (H + L)/2,
+%	but can be any logical vector array such as (H+L+C)/3
+%
+%   INPUTS:     price		An M x 1array of pre-transformed price
+%
+%	OUTPUTS		tLine		Vector output of simple average over the measured dominant cycle period
+%
 %   T = ITREND_V2(PRICE) returns the trendline over the dominant cycle
 %
 %   [T] = ITREND_V2(PRICE) returns the trendline T
-%
-%   PRICE is ordinarily (H+L)/2 but can be any simple array
 %
 
 %% MEX code to be skipped
@@ -19,11 +24,6 @@ rows = size(price,1);
 if rows < 55
     error('iTrend_v2:dataSizeFailure','iTrend_v2 requires a minimum of 55 observations. Exiting.');
 end;
-
-%% Defaults
-
-if ~exist('iMult','var'), iMult = .635; end;
-if ~exist('qMult','var'), qMult = .338; end;
 
 %% Preallocation
 deltaPhase = zeros(rows,1);
@@ -143,7 +143,7 @@ tLine(1:40)=price(1:40);
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4906.24976
+%   Revision:      4917.14889
 %   Copyright:     (c)2013
 %
 

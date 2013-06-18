@@ -7,8 +7,13 @@ function atr = atr(price,M)
 %	The primary modifier of the data is smoothed by an exponential average of elemental
 %	bar components High, Low, and Close.
 %
-%   atr = ATR(PRICE,M) 		returns the average true range using a a specified
-%					 		lookback of 'M' observations when M is an integer > 0
+%   INPUTS:     price       	An array of any [C] or [O | C] or [O | H | L | C]
+%				M				Exponential moving average lookback period (default 20)
+%
+%	OUTPUTS:	ATR				Average true range vector
+%
+%   atr = ATR(PRICE,M) 			returns the average true range using a a specified
+%					 			lookback of 'M' observations when M is an integer > 0
 %
 
 %% MEX code to be skipped
@@ -96,7 +101,7 @@ atr = movAvg_mex(tr,M,M,-1);                        % '-1' calls to exponential 
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4906.24976
+%   Revision:      4917.14572
 %   Copyright:     (c)2013
 %
 

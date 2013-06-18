@@ -1,14 +1,19 @@
-function [ tLine,instT ] = iTrend(price)
+function [ tLine,iTrend ] = iTrend(price)
 %ITREND An elemental calculation of the instantaneous trend
 %   ITREND returns the instantaneous trend as a simple average over the dominant cycle
-%   This is based on the work of John Ehlers
+%   This is based on the work of John Ehlers.
+%
+%	Input 'price' should be an M x 1 array of prices ordinarily transformed e.g. (H + L)/2,
+%	but can be any logical vector array such as (H+L+C)/3
+%
+%   INPUTS:     price		An M x 1array of pre-transformed price
+%
+%	OUTPUTS		tLine		Vector output of the dominant cycle
+%				iTrend		Vector output of the instantaneous trend
 %
 %   T = ITREND(PRICE) returns the trendline over the dominant cycle
 %
 %   [T,I] = ITREND(PRICE) returns the trendline T
-%           We are not entirely certain about I
-%
-%   PRICE is ordinarily (H+L)/2 but can be any logical vector array such as (H+L+C)/3
 %
 
 %% Error check
@@ -22,7 +27,7 @@ end;
 deltaPhase = zeros(rows,1);
 inPhase = zeros(rows,1);
 instPeriod = zeros(rows,1);
-instT = zeros(rows,1);
+iTrend = zeros(rows,1);
 period = zeros(rows,1);
 phase = zeros(rows,1);
 quad = zeros(rows,1);
@@ -88,17 +93,17 @@ for ii = 41:rows
         tLine(ii) = tLine(ii) + price(ii-jj);
     end; %for jj
     if period(ii) > 0, tLine(ii) = tLine(ii) / (period(ii)+2); end;
-    instT(ii) = (.33 * (price(ii) + (.5 * (price(ii)-price(ii-3))))) + ...
-        (.67 * instT(ii-1));
+    iTrend(ii) = (.33 * (price(ii) + (.5 * (price(ii)-price(ii-3))))) + ...
+        (.67 * iTrend(ii-1));
     if rows < 26
         tLine(ii) = price(ii);
-        instT(ii) = price(ii);
+        iTrend(ii) = price(ii);
     end; %if
     
 end; %for ii
 
 tLine(1:40)=price(1:40);
-instT(1:54)=price(1:54);
+iTrend(1:54)=price(1:54);
 
 %%
 %   -------------------------------------------------------------------------
@@ -151,7 +156,7 @@ instT(1:54)=price(1:54);
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4906.24976
+%   Revision:      4917.14811
 %   Copyright:     (c)2013
 %
 

@@ -7,6 +7,12 @@ function varargout = atr_DIS(price,M,hSub)
 %	The primary modifier of the data is smoothed by an exponential average of elemental
 %	bar components High, Low, and Close.
 %
+%   INPUTS:     price       	n array of any [C] or [O | C] or [O | H | L | C]
+%				M				Exponential moving average lookback period (default 20)
+%				hSub			An embedded variable passed from 'DIS' files for poisitioning graphical feedback
+%
+%	OUTPUTS:	ATR				Average true range vector
+%
 %   atr_DIS = ATR(PRICE)        returns the average true range using a default lookback
 %                               of 20 observations
 %   
@@ -128,6 +134,6 @@ end
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4906.24976
+%   Revision:      4917.13438
 %   Copyright:     (c)2013
 %

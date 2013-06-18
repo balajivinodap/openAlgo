@@ -58,7 +58,8 @@ if isa(data,'double')
         error('VIRTUALBARS:InputArgs','Input needs to be in the format of ''O | C'' or ''O | H | L | C''');
     end; %if
 else
-    error('VIRTUALBARS:InputArgs','We need a 2N or 4N double array as input.  Datasets (or unexpected data) are not supportedin MEX.');
+    error('VIRTUALBARS:InputArgs',...
+		'We need a 2N or 4N double array as input.  Datasets (or unexpected data) are not supportedin MEX.');
 end; %if
 
 %%

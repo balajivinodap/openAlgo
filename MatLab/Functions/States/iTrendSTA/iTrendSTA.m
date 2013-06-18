@@ -2,18 +2,16 @@ function [STA,TLINE,ITREND] = iTrendSTA(price)
 %ITRENDSTA returns a logical STATE for the instantaneous trend based on the work by John Ehlers
 %   iTrendSTA returns a logical STATE for a given iTrend and dominant cycle crossover
 %
-%   STA = ITRENDSTA(PRICE) returns a STATE based upon provided price vector
-%
 %   INPUTS:     Input 'price' should be an M x 1 array of prices ordinarily transformed e.g. (H + L)/2
 %
-%   OUTPUT:
-%       STA values are ITREND referenced where:
-%           1    ITREND > TLINE
-%           0    ITREND = TLINE
-%          -1    ITREND < TLINE
+%   OUTPUT: 	STA values are ITREND referenced where:
+%           		1    ITREND > TLINE
+%           		0    ITREND = TLINE
+%          		   -1    ITREND < TLINE
 %
-%   NOTE:
-%       As this file is designed to be MEX'd all inputs are required.
+%   STA = ITRENDSTA(PRICE) returns a STATE based upon provided price vector
+%
+%   NOTE: As this file is designed to be MEX'd all inputs are required.
 %
 
 %% MEX code to be skipped

@@ -5,12 +5,18 @@ function [ varargout ] = iTrend_DIS(price,hSub)
 %   Input 'price' should be of an O | H | L | C form as we use the average
 %   of the Open & Close when passed to iTrend.m
 %
-%   [iTrend, instT] = ITRENDSIGDIS(PRICE)       returns an instantaneous trend and
+%   INPUTS:     price       	An array of price in the form [O | H | L | C]
+%				hSub			An embedded variable passed from 'DIS' files for poisitioning graphical feedback
+%
+%	OUTPUTS:	tLine			Dominant cycle trendline
+%				iTrend			Instantaneous trend
+%
+%   [tLine, iTrend] = ITRENDSIGDIS(PRICE)       returns an instantaneous trend and
 %                                               an accompanying trendline as simple
 %                                               average over the measured dominant
 %                                               cycle period based upon a 14-period iTrend.
 %
-%   [iTrend, instT] = ITRENDSIGDIS(PRICE,hSub)  includes the hSub variable for asymetrical
+%   [tLine, iTrend] = ITRENDSIGDIS(PRICE,hSub)  includes the hSub variable for asymetrical
 %                                               graphic output
 
 %% Error check
@@ -116,7 +122,7 @@ end; %if
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4906.24976
+%   Revision:      4917.13545
 %   Copyright:     (c)2013
 %
 

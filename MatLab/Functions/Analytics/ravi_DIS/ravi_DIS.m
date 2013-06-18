@@ -33,7 +33,7 @@ if size(price,2) < 4
             'We call ATR to normalize price data therefore we need O | H | L | C as price input. Exiting.');
 end; %if
 
-ind=ravi(price,lead,lag,D,M);
+ind=ravi_mex(price,lead,lag,D,M);
 
 % Determine divisor for measuring the rate of change
 if D == 0
@@ -141,7 +141,7 @@ end; %if
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4906.24976
+%   Revision:      4917.14168
 %   Copyright:     (c)2013
 %
 

@@ -18,7 +18,7 @@ function [varargout] = signalNoiseRatio_DIS(price,iMult,qMult,hSub)
 % to Noise (SNR) condition.  We want the signal amplitude to be at least twice the noise amplitude (6 dB SNR) to have
 % a reasonable chance to make a profit from our analysis"
 %
-%	DIS		This function calls the elemental function 'snr.m' for calculationand can provide a graphical response.
+%	DIS		This function calls the elemental function 'snr.m' for calculation and can provide a graphical response.
 %
 %	INPUTS
 %		PRICE	The 'snr.m' function expects O | H | L | C as price input. It must have a minimum of 8 observations.

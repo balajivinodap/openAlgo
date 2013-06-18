@@ -6,15 +6,18 @@ function [ ind ] = ravi(price,lead,lag,D,M)
 %	3% is claimed to be a measurement of when the market is in a trending phase.  Values less
 %	than 3% are a ranging phase.
 %
-%	PRICE:	We call ATR to normalize price data in the ravi function so we need O | H | L | C as price input.
-%	LEAD:	Observation period for the fast period harmonic mean used to calculate Ravi measurement
-%	LAG:	Observation period for the slow period harmonic mean used to calculate Ravi measurement
-%	D:		Detrender option:
-%				0	-	Ravi (default)
-%				1	-	ATR
-%	M:		Mean ravi shift used to calibrate the returned vector.
-%				e.g.	M = 10 	the mean of the RAVI vector is set to 10%
-%	hSub:	String used to manipulate the graphing of the Ravi vector
+%   We call ATR to normalize price data in the ravi function so we need O | H | L | C as price input.
+%
+%   INPUTS:     price       	An array of price in the form [O | H | L | C]     
+%               lead            Lookback the fast period harmonic mean used to calculate Ravi 
+%               lag             Lookback the slow period harmonic mean used to calculate Ravi 
+%               D               Detrender option:
+%                                   0	-	Ravi (default)
+%                                   1	-	ATR
+%               M               Mean ravi shift used to calibrate the returned vector.
+%                               	e.g.	M = 10 	the mean of the RAVI vector is set to 10%
+%
+%	OUTPUTS:	ind				RAVI vector
 %
 %	RAVI(PRICE)				Returns a graph of the 'ravi.m' function with default values.
 %	RAVI(PRICE,...)			Returns a graph of the 'ravi.m' function with declared values.
@@ -25,6 +28,17 @@ function [ ind ] = ravi(price,lead,lag,D,M)
 %								D		0
 %								M		20
 %
+
+%% MEX code to be skipped
+coder.extrinsic('exist','slidefun','atr_mex');
+
+%% Preallocate
+rows = size(price,1);
+raviF = zeros(rows,1);                          %#ok<NASGU>
+raviS = zeros(rows,1);                          %#ok<NASGU>
+ind = zeros(rows,1);                            %#ok<NASGU>
+indAvg = zeros(rows,1);                        	%#ok<NASGU>
+
 
 if size(price,2) < 4
     error('RAVI:tooFewInputs', ...
@@ -54,7 +68,7 @@ raviS = slidefun('harmmean',lag,fClose,'backward');
 if D == 0
     ind = (abs(raviF-raviS)./raviS);
 elseif D == 1
-    ind = (abs(raviF-raviS)./atr(price));
+    ind = (abs(raviF-raviS)./atr_mex(price));
 else
     error('RAVI:inputArg','Unknown input in value ''D''. Aborting.');
 end; %if
@@ -119,7 +133,7 @@ ind = ind * norm;
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4906.24976
+%   Revision:      4917.14168
 %   Copyright:     (c)2013
 %
 
