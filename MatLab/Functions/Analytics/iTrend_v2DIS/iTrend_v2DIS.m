@@ -1,11 +1,11 @@
 function [ varargout ] = iTrend_v2DIS(price,iMult,qMult,hSub)
-%ITREND_v2METS An indicator based on the work of John Elhers
+%ITREND_v2DIS An indicator based on the work of John Elhers
 %   instantaneousTrend returns a trading signal for a given iTrend and MA cross as well as a
 %   technical indicator.
 %
-%   T = ITREND_v2METS(PRICE) returns the instantaneous trend
+%   T = ITREND_v2DIS(PRICE) returns the instantaneous trend
 %
-%   [ITREND] = ITREND_v2METS(...) returns the Instantaneous Trend
+%   [ITREND] = ITREND_v2DIS(...) returns the Instantaneous Trend
 %
 %   Input 'price' should be of an O | H | L | C form as we use the average
 %   of the Open & Close when passed to iTrend.m
@@ -28,7 +28,7 @@ function [ varargout ] = iTrend_v2DIS(price,iMult,qMult,hSub)
 %% Error check
 rows = size(price,1);
 if rows < 41
-    error('ITREND_v2METS:dataSizeFailure','iTrend_v2METS requires a minimum of 41 observations. Exiting.');
+    error('ITREND_v2DIS:dataSizeFailure','iTrend_v2DIS requires a minimum of 41 observations. Exiting.');
 end;
 
 %% Defaults
@@ -63,7 +63,7 @@ else
             case 1
                 varargout{1} = tLine;
             otherwise
-                warning('ITREND_v2METS:OutputArg',...
+                warning('ITREND_v2DIS:OutputArg',...
                     'Too many output arguments requested, ignoring last ones');
         end %switch
     end %for
