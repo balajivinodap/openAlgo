@@ -27,6 +27,9 @@ function [sta,lBand,mAvg,uBand] = bollBandSTA(price,period,maType,devUp,devDwn)
 %				mBand		Midline average         (MA)
 %               uBand       Upper Bollinger band    (MA + Kstd)
 
+%% MEX code to be skipped
+coder.extrinsic('bollBand_mex');
+
 %% Preallocation
 rows = size(price,1);
 lBand = nan(rows,1);                    %#ok<NASGU>
