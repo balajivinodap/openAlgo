@@ -89,7 +89,7 @@ if nargin > 0
         axis (ax(1),'tight');
         grid on
         legend('Close',['Upper ',num2str(devUp),'\sigma'],['Midline ',num2str(period),' Type ',num2str(maType)],['Lower ',num2str(devDwn),'\sigma'],'Location','NorthWest')
-        title('Bollinger Band')
+        title(['Bollinger Band, Annual Sharpe Ratio = ',num2str(SH,3)])
         
         ax(2) = subplot(2,1,2);
         plot([SIG,cumsum(R)]); grid on
@@ -105,7 +105,7 @@ if nargin > 0
         axis (ax(1),'tight');
         grid on
         legend('Close',['Upper ',num2str(devUp),'\sigma'],['Midline ',num2str(period),' Type ',num2str(maType)],['Lower ',num2str(devDwn),'\sigma'],'Location','NorthWest')
-        title('Bollinger Band')
+        title(['Bollinger Band, Annual Sharpe Ratio = ',num2str(SH,3)]')
         
         ax(2) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))), str2num(char(hSub(4)))); %#ok<ST2NM>
         plot([SIG,cumsum(R)]); grid on
