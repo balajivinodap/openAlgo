@@ -88,7 +88,9 @@ if nargin > 0
         plot([fClose,UBAND,MOV,LBAND]);
         axis (ax(1),'tight');
         grid on
-        legend('Close',['Upper ',num2str(devUp),'\sigma'],['Midline ',num2str(period),' Type ',num2str(maType)],['Lower ',num2str(devDwn),'\sigma'],'Location','NorthWest')
+        legend('Close',['Upper ',num2str(devUp),'\sigma'],...
+                       ['Lower ',num2str(devDwn),'\sigma'],'Location','NorthWest',...
+                       ['Midline ',num2str(period),' Type ',num2str(maType)])
         title(['Bollinger Band, Annual Sharpe Ratio = ',num2str(SH,3)])
         
         ax(2) = subplot(2,1,2);
@@ -104,7 +106,9 @@ if nargin > 0
         plot([fClose,UBAND,MOV,LBAND]);
         axis (ax(1),'tight');
         grid on
-        legend('Close',['Upper ',num2str(devUp),'\sigma'],['Midline ',num2str(period),' Type ',num2str(maType)],['Lower ',num2str(devDwn),'\sigma'],'Location','NorthWest')
+        legend('Close',['Upper ',num2str(devUp),'\sigma'],...
+                       ['Lower ',num2str(devDwn),'\sigma'],'Location','NorthWest',...
+                       ['Midline ',num2str(period),' Type ',num2str(maType)])
         title(['Bollinger Band, Annual Sharpe Ratio = ',num2str(SH,3)]')
         
         ax(2) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))), str2num(char(hSub(4)))); %#ok<ST2NM>
