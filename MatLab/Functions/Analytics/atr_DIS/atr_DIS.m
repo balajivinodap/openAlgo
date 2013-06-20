@@ -51,7 +51,7 @@ if nargout == 0 && (~exist('hSub','var'))% Plot
     plot(atr)
     grid on
     legend('ATR Bars ',num2str(M),'Location', 'Best')
-    title('AVerage True Range')
+    title('Average True Range')
     linkaxes(ax,'x')
     
 elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
@@ -68,7 +68,7 @@ elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
     plot(atr)
     grid on
     legend('ATR Bars ',num2str(M),'Location', 'Best')
-    title('AVerage True Range')
+    title('Average True Range')
     linkaxes(ax,'x')
 else
     %% Return values

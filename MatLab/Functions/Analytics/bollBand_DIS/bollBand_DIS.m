@@ -1,12 +1,10 @@
-function [lBand, mAvg, uBand] = bollBand(price, period, maType, devUp, devDwn)
-%BOLLBAND An elemental calculation of the bollinger band
-%   BOLLBAND (Bollinger Bands) are a technical analysis tool invented by John Bollinger in the 1980s,
+function varargout = bollBand_DIS(price,period,maType,devUp,devDwn,hSub)
+%BOLLBAND_DIS Bollinger Bands
+%   bollBand_DIS (Bollinger Bands) are a technical analysis tool invented by John Bollinger in the 1980s,
 %   and a term trademarked by him in 2011. Having evolved from the concept of trading bands,
 %   Bollinger Bands and the related indicators %b and bandwidth can be used to measure the
 %   "highness" or "lowness" of the price relative to previous trades.
 %   Bollinger Bands are a volatility indicator similar to the Keltner channel. ~Wikipedia
-%
-%	Input 'price' should be an M x 1 array of prices ordinarily 'Close'
 %
 %   Available average types are:
 %       -5  Triangle (Double smoothed similar to Hull)
@@ -17,44 +15,74 @@ function [lBand, mAvg, uBand] = bollBand(price, period, maType, devUp, devDwn)
 %        0  Simple
 %       >0  Weighted e.g. 0.5 Square root weighted, 1 = linear, 2 = square weighted
 %
-%   INPUTS:     price		An M x 1 array of price
+%   INPUTS:     price		An array of price
 %               period      Lookback period (default 20)
 %               maType
 %               devUp       Number of upward standard deviations (default 2)
 %               devDwn      Number of downward standard deviations (default -2)
+%               hSub			An embedded variable passed from 'DIS' files for poisitioning graphical feedback
 %
-%	OUTPUTS		lBand		Lower Bollinger band    (MA - K)
+%	OUTPUTS		lBand		Lower Bollinger band    (MA - Kstd)
 %				mBand		Midline average         (MA)
-%               uBand       Upper Bollinger band    (MA + K)
+%               uBand       Upper Bollinger band    (MA + Kstd)
 
-%% MEX code to be skipped
-coder.extrinsic('movAvg_mex','slidefun');
-
-%% Error check
-rows = size(price,1);
-
-if (devDwn < 0)
-    devDwn = devDwn * -1;
+%% Defaults
+if ~exist('period','var')
+    period = 20;
 end; %if
 
-%% Preallocation
-lBand = nan(rows,1);                    %#ok<NASGU>
-mAvg = nan(rows,1);                     %#ok<NASGU>
-uBand = nan(rows,1);                    %#ok<NASGU>
-stdAdj = zeros(rows,1);             	%#ok<NASGU>
+if ~exist('maType','var')
+    maType = 0;
+end; %if
 
-stdAdj = slidefun('std',period,price,'backward');
+if ~exist('devUp','var')
+    devUp = 2;
+end; %if
 
-% Determine midline
-mAvg = movAvg_mex(price, period, period, maType);
+if ~exist('devDwn','var')
+    devDwn = 2;
+end;
 
-% Restore nans
-mAvg(1:period) = NaN;
+fClose = OHLCSplitter(price);
 
-% Calculate bands
-lBand = mAvg - (devDwn * stdAdj);
-uBand = mAvg + (devUp * stdAdj);
+%% Bollinger Band
+[lBand, mAvg, uBand] = bollBand_mex(fClose, period, maType, devUp, devDwn);
 
+%% Plot if requested
+%% If no assignment to variable, show the averages in a chart
+if (nargout == 0) && (~exist('hSub','var'))% Plot
+    
+    % Plot results
+    %ax(1) = subplot(2,1,1);
+    plot([fClose,uBand,mAvg,lBand]);
+    %axis (ax(1),'tight');
+    grid on
+    legend('Close',['Upper ',num2str(devUp),'\sigma'],['Midline ',num2str(period),' Type ',num2str(maType)],['Lower ',num2str(devDwn),'\sigma'],'Location','NorthWest')
+    title('Bollinger Band')
+    
+elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
+    % We pass hSub as a string so we can have asymmetrical graphs
+    % The call to char() parses the passed cell array
+    ax(1) = subplot(str2num(char(hSub(1))), str2num(char(hSub(2))), str2num(char(hSub(3)))); %#ok<ST2NM>
+    plot([fClose,uBand,lBand]);
+    axis (ax(1),'tight');
+    grid on
+    legend('Close',['uBand ',num2str(devUp)],['lBand ',num2str(devDwn)],'Location','NorthWest')
+    title('Bollinger Band')
+else
+    for i = 1:nargout
+        switch i
+            case 1
+                varargout{1} = lBand;
+            case 2
+                varargout{2} = mAvg;
+            case 3
+                varargout{3} = uBand;
+            otherwise
+                warning('BOLLBAND_DIS:OutputArg','Too many output arguments requested, ignoring last ones');
+        end %switch
+    end %for
+end %if
 end
 
 %%
@@ -108,6 +136,6 @@ end
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4919.19705
+%   Revision:      4919.21996
 %   Copyright:     (c)2013
 %
