@@ -3,7 +3,6 @@ function varargout = iTrendRaviSIG_DIS(price,raviF,raviS,raviD,raviM,raviE,raviT
 %   iTrend is dominant cycle signal generate based on the work of John Ehlers
 %
 %   RAVI is an indicator that shows whether a market is in a ranging or a trending phase.
-%   
 %
 %   This produces a logically valid signal output
 %
@@ -20,7 +19,7 @@ function varargout = iTrendRaviSIG_DIS(price,raviF,raviS,raviD,raviM,raviE,raviT
 %                   We are uncertain of a good raviThresh reading.  We need to sweep for this and update
 %                   with our findings.  Recommended sweep is similar to RSI percentage [10:5:40]
 %
-%% NEED TO ADD ERROR CHECKING OF INPUTS
+
 %% Defaults
 if ~exist('raviF','var'), raviF = 5; end;
 if ~exist('raviS','var'), raviS = 65; end;
@@ -40,8 +39,6 @@ R = zeros(rows,1);
 [fOpen,fHigh,fLow,fClose] = OHLCSplitter(price);
 highLow = (fHigh + fLow) / 2;
 
-%siTrend = iTrendSIG_DIS(price,bigPoint,cost,scaling);
-
 iSTA = iTrendSTA_mex(highLow);
 
 % Convert state to signal
@@ -56,13 +53,13 @@ rav = ravi_mex(price,raviF,raviS,raviD,raviM);
 % Effect 0: Remove the signal in trending markets;
 if raviE == 0
     % Index period where market is in a trending phase
-    indRavi = rav > raviThresh == 1;   
+    indRavi = rav > raviThresh == 1;
     % Remove these signals
     SIG(indRavi) = 0;
-% Effect 1: This was a reverse but has since been changed to undefined
+    % Effect 1: This was a reverse but has since been changed to undefined
 elseif raviE == 1
     % Index period where market is in a ranging phase
-    indRavi = rav < raviThresh == 1;   
+    indRavi = rav < raviThresh == 1;
     % Remove these signals
     SIG(indRavi) = 0;
 elseif raviE == 2
@@ -83,10 +80,10 @@ if ~isempty(find(SIG,1))
     SIG = remEchos_mex(SIG);
     
     [~,~,~,R] = calcProfitLoss([fOpen fClose],SIG,bigPoint,cost);
-
+    
     SH = scaling*sharpe(R,0);
 else
-	% No signal no sharpe.
+    % No signal no sharpe.
     SH = 0;
 end; %if
 
@@ -95,20 +92,17 @@ if nargout == 0
     % Center plot window basis monitor (single monitor calculation)
     scrsz = get(0,'ScreenSize');
     figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
-
+    
     % Each element must be the same length - nonsense - thanks MatLab
     % http://www.mathworks.com/help/matlab/matlab_prog/cell-arrays-of-strings.html
-    %layout = ['3';'2';'1';'3';'5'];
     layout = ['6     ';'2     ';'1 3 5 ';'7 9 11'];
     hSub = cellstr(layout);
     iTrendSIG_DIS(price,bigPoint,cost,scaling,hSub);
     
-    %layout = ['3';'2';'4'];
     layout = ['6  ';'2  ';'6 8'];
     hSub = cellstr(layout);
     ravi_DIS(price,raviF,raviS,raviD,raviM,hSub);
     
-    %ax(1) = subplot(3,2,2);
     ax(1) = subplot(6,2,[2 4]);
     plot(fClose);
     axis (ax(1),'tight');
@@ -116,8 +110,7 @@ if nargout == 0
     legend('Price','Location', 'NorthWest')
     title(['iTrend & RAVI, Sharpe Ratio = ',num2str(SH,3)])
     set(gca,'xticklabel',{})
-   
-    %ax(2) = subplot(3,2,6);
+    
     ax(2) = subplot(6,2,[10 12]);
     plot([SIG,cumsum(R)]), grid on
     legend('Position','Cumulative Return','Location','North')
@@ -128,7 +121,7 @@ else
     for ii = 1:nargout
         switch ii
             case 1
-                varargout{1} = SIG; % signal 
+                varargout{1} = SIG; % signal
             case 2
                 varargout{2} = R; % return (pnl)
             case 3
@@ -146,8 +139,8 @@ end% if
 
 %%
 %   -------------------------------------------------------------------------
-%                                  _    _ 
-%         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _ 
+%                                  _    _
+%         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _
 %        / _ \| '_ \ / _ \ '_ \  / _ \ | |/ _` |/ _ \ / _ \| '__/ _` |
 %       | (_) | |_) |  __/ | | |/ ___ \| | (_| | (_) | (_) | | | (_| |
 %        \___/| .__/ \___|_| |_/_/   \_\_|\__, |\___(_)___/|_|  \__, |
