@@ -1,5 +1,5 @@
-function varargout = maSnrSIG_DIS(price,maF,maS,typeMA,snrThresh,snrEffect,bigPoint,cost,scaling)
-%MASNRSIG_DIS 2 inputs MA signal generation with a Signal To Noise Ratio based filter
+function [SIG, R, SH, SNR, LEAD, LAG] = maSnrSIG(price,maF,maS,typeMA,snrThresh,snrEffect,bigPoint,cost,scaling)
+%MASNRSIG 2 inputs MA signal generation with a Signal To Noise Ratio based filter
 %   MA is a classic 2 input crossover signal generator
 %   SNR is an indicator that measures the dominant cycle's signal to noise ratio.
 %       The SNR is measured in decibels and uses a logarithmic scale
@@ -24,75 +24,58 @@ function varargout = maSnrSIG_DIS(price,maF,maS,typeMA,snrThresh,snrEffect,bigPo
 %                       Effect 1:   Reverse signals that are generated when SNR is less than the threshold
 %
 
-%% Defaults
-if ~exist('maF','var'), maF = 12; end;
-if ~exist('maS','var'), maS = 26; end;
-if ~exist('typeMA','var'), typeMA=0; end;
-if ~exist('snrThresh','var'), snrThresh = 6; end;
-if ~exist('snrEffect','var'), snrEffect = 0; end;
-if ~exist('scaling','var'), scaling = 1; end;
-if ~exist('cost','var'), cost = 0; end;         % default cost
-if ~exist('bigPoint','var'), bigPoint = 1; end; % default bigPoint
+%% MEX code to be skipped
+coder.extrinsic('sharpe','calcProfitLoss','remEchos_mex','ma2inputsSIG_mex','OHLCSplitter','snr_mex')
+
+% Preallocate so we can MEX
+rows = size(price,1);
+fOpen = zeros(rows,1);                  %#ok<NASGU>
+fClose = zeros(rows,1);                 %#ok<NASGU>
+LAG = zeros(rows,1);                    %#ok<NASGU>
+SIG = zeros(rows,1);                    %#ok<NASGU>
+SNR = zeros(rows,1);                   	%#ok<NASGU>
+LEAD = zeros(rows,1);                   %#ok<NASGU>
+R = zeros(rows,1);
+SH = zeros(rows,1);                     %#ok<NASGU>
 
 %% Parse
-fClose = OHLCSplitter(price);
+[fOpen,fClose] = OHLCSplitter(price);
 
-[SIG, R, SH, SNR, LEAD, LAG] = maSnrSIG_mex(price,maF,maS,typeMA,snrThresh,snrEffect,bigPoint,cost,scaling);
+%% Generate signal
+[SIG,~,~,LEAD,LAG] = ma2inputsSIG_mex(price,maF,maS,typeMA,bigPoint,cost,scaling);
 
-if nargout == 0
-	% Center plot window basis monitor (single monitor calculation)
-    scrsz = get(0,'ScreenSize');
-    figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
-    
-    % Each element must be the same length - nonsense - thanks MatLab
-    % http://www.mathworks.com/help/matlab/matlab_prog/cell-arrays-of-strings.html
-    layout = ['6     ';'2     ';'1 3 5 ';'7 9 11'];
-    hSub = cellstr(layout);
-    ma2inputsSIG_DIS(price,maF,maS,typeMA,bigPoint,cost,scaling,hSub);
-    
-    ax(1) = subplot(6,2,[2 4]);
-    plot([fClose,LEAD,LAG]);
-    axis (ax(1),'tight');
-    grid on
-    legend('Price',['Lead ',num2str(maF)],['Lag ',num2str(maS)],'Location', 'NorthWest')
-    title(['MA+SNR Results, Sharpe Ratio = ',num2str(SH,3)])
-    set(gca,'xticklabel',{})
-    
-    ax(2) = subplot(6,2,[6 8]);
-    plot([SNR,snrThresh*ones(size(SNR))])
-    grid on
-    legend(['SNR Thresh ',num2str(snrThresh),'db'],'Location', 'North')
-    title('SNR')
-    set(gca,'xticklabel',{})
-    
-    ax(3) = subplot(6,2,[10 12]);
-    plot([SIG,cumsum(R)]), grid on
-    legend('Position','Cumulative Return','Location', 'North')
-    title(['Final Return = ',thousandSepCash(sum(R))])
-    
-    linkaxes(ax,'x')
+%% Measure SNR
+% Defaults: iMult = .635, qMult = .338
+SNR = snr_mex(price,.635,.338);
+
+% Drop signals less than the SNR threshhold
+if snrEffect == 0
+    % Remove these signals
+    SIG(SNR < snrThresh) = 0;
+    % Reverse signals less than the SNR threshhold
+elseif snrEffect == 1
+    % Reverse these signals
+    for ii = 1:rows
+        if SNR(ii) < snrThresh
+            SIG(ii) = SIG(ii) * -1;
+        end; %if
+    end; %for
 else
-    %% Return values
-    for ii = 1:nargout
-        switch ii
-            case 1
-                varargout{1} = SIG; % signal
-            case 2
-                varargout{2} = R; % return (pnl)
-            case 3
-                varargout{3} = SH; % sharpe ratio
-            case 4
-                varargout{4} = SNR; % ravi signal
-            case 5
-                varargout{5} = LEAD; % moving average lead
-            case 6
-                varargout{5} = LAG; % moving average lag
-            otherwise
-                warning('MASNR:OutputArg',...
-                    'Too many output arguments requested, ignoring last ones');
-        end %switch
-    end %for
+    error('MASNR:inputArgs','Cannot interpret an input of snrThresh = %d',snrThresh);
 end; %if
+
+% Drop any repeats
+SIG = remEchos_mex(SIG);
+
+% Make sure we have at least one trade first
+if ~isempty(find(SIG,1))
+    [~,~,~,R] = calcProfitLoss([fOpen fClose],SIG,bigPoint,cost);
+    SH = scaling*sharpe(R,0);
+else
+    % No signal so no return or sharpe.
+    SH = 0;
+end; %if
+
 
 %%
 %   -------------------------------------------------------------------------
@@ -145,7 +128,7 @@ end; %if
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4906.24976
+%   Revision:      4920.26064
 %   Copyright:     (c)2013
 %
 
