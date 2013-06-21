@@ -60,9 +60,6 @@ else
     error('MASNR:inputArgs','Cannot interpret an input of snrThresh = %d',snrThresh);
 end; %if
 
-% Normalize signals to +/-1.5
-s = s * 1.5;
-
 % Drop any repeats
 s = remEchos_mex(s);
 
@@ -77,9 +74,10 @@ else
 end; %if
 
 if nargout == 0
+	% Center plot window basis monitor (single monitor calculation)
+    scrsz = get(0,'ScreenSize');
+    figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
     
-    figure()
-    % Not using MEX so we get a graphical response
     % Each element must be the same length - nonsense - thanks MatLab
     % http://www.mathworks.com/help/matlab/matlab_prog/cell-arrays-of-strings.html
     layout = ['6     ';'2     ';'1 3 5 ';'7 9 11'];
@@ -92,12 +90,14 @@ if nargout == 0
     grid on
     legend('Price',['Lead ',num2str(maF)],['Lag ',num2str(maS)],'Location', 'NorthWest')
     title(['MA+SNR Results, Sharpe Ratio = ',num2str(sh,3)])
+    set(gca,'xticklabel',{})
     
     ax(2) = subplot(6,2,[6 8]);
     plot([snr,snrThresh*ones(size(snr))])
     grid on
     legend(['SNR Thresh ',num2str(snrThresh),'db'],'Location', 'North')
     title('SNR')
+    set(gca,'xticklabel',{})
     
     ax(3) = subplot(6,2,[10 12]);
     plot([s,cumsum(r)]), grid on

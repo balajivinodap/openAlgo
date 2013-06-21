@@ -66,6 +66,10 @@ fClose = OHLCSplitter(price);
 
 %% Plot if requested
 if nargout == 0 && (~exist('hSub','var'))% Plot
+	% Center plot window basis monitor (single monitor calculation)
+    scrsz = get(0,'ScreenSize');
+    figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
+    
     ax(1) = subplot(3,1,1);
     if M == 0
         ma = price;
@@ -104,6 +108,7 @@ elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
     grid on
     legend('Price',['Detrender ',num2str(M)],'Location', 'NorthWest')
     title(['RSI Results, Sharpe Ratio = ',num2str(sh,3)])
+    set(gca,'xticklabel',{})
     
     ax(2) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))),str2num(char(hSub(4)))); %#ok<ST2NM>
     ylim([0 100])
@@ -114,6 +119,7 @@ elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
     legend(['RSI Bars ',num2str(N)],['RSI Upper ',num2str(thresh(2)),'%'],...
         ['RSI Lower ',num2str(thresh(1)),'%'],'Location', 'North')
     title('RSI')
+    set(gca,'xticklabel',{})
     
     ax(3) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))),str2num(char(hSub(5)))); %#ok<ST2NM>
     plot([s,cumsum(r)]), grid on

@@ -24,21 +24,10 @@ if nargin == 2
 end; %if
 
 %% Process input args
-if ~exist('typeMA', 'var')
-    typeMA = 0;
-end; %if
-
-if ~exist('scaling','var')
-    scaling = 1;
-end; %if
-
-if ~exist('cost', 'var')
-    cost = 0;
-end; %if
-
-if ~exist('bigPoint', 'var')
-    bigPoint = 1;
-end; %if
+if ~exist('typeMA', 'var'), typeMA = 0; end; %if
+if ~exist('scaling','var'), scaling = 1; end; %if
+if ~exist('cost', 'var'), cost = 0; end; %if
+if ~exist('bigPoint', 'var'), bigPoint = 1; end; %if
 
 if nargin < 2
     % default values - often used in MACD
@@ -101,6 +90,9 @@ end; %for
 
 %% If no assignment to variable, show the averages in a chart
 if (nargout == 0) && (~exist('hSub','var'))% Plot
+	% Center plot window basis monitor (single monitor calculation)
+    scrsz = get(0,'ScreenSize');
+    figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
     
     % Plot results
     ax(1) = subplot(2,1,1);
@@ -125,6 +117,7 @@ elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
     grid on
     legend('Close',['Lead ',num2str(F)],['Lag ',num2str(S)],'Location','NorthWest')
     title(['Lead/Lag MA Results, Annual Sharpe Ratio = ',num2str(sharpeRatio,3)])
+    set(gca,'xticklabel',{})
     
     ax(2) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))), str2num(char(hSub(4)))); %#ok<ST2NM>
     plot([SIG,cumsum(returns)]); grid on

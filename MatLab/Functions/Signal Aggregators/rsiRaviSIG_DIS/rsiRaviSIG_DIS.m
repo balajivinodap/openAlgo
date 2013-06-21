@@ -38,6 +38,7 @@ if ~exist('raviS','var'), raviS = 65; end;
 if ~exist('raviD','var'), raviD = 0; end;
 if ~exist('raviM','var'), raviM = 20; end;
 if ~exist('raviE','var'), raviE = 0; end;
+if ~exist('raviThresh','var'), raviThresh = 10; end;
 if ~exist('scaling','var'), scaling = 1; end;
 if ~exist('cost','var'), cost = 0; end;         % default cost
 if ~exist('bigPoint','var'), bigPoint = 1; end; % default bigPoint
@@ -48,11 +49,9 @@ end; %if
 
 [fOpen,fClose] = OHLCSplitter(price);
 
-[srsi,~,~,ri] = rsiSIG_mex(price,rsiM,rsiThresh,rsiType,bigPoint,cost,scaling);
+[SIG,~,~,ri] = rsiSIG_mex(price,rsiM,rsiThresh,rsiType,bigPoint,cost,scaling);
 
-rav = ravi(price,raviF,raviS,raviD,raviM);
-
-s = srsi;
+rav = ravi_mex(price,raviF,raviS,raviD,raviM);
 
 % RAVI is used to filter signals that are not considered trending.
 % These would be signals that occur when RAVI < raviThresh
@@ -64,34 +63,31 @@ if raviE == 0
     % Index period where market is in a trending phase
     indRavi = rav > raviThresh == 1;
     % Remove these signals
-    s(indRavi) = 0;
+    SIG(indRavi) = 0;
     % Effect 1: This was a reverse but has since been changed to undefined
 elseif raviE == 1
     % Index period where market is in a ranging phase
     indRavi = rav < raviThresh == 1;
     % Remove these signals
-    s(indRavi) = 0;
+    SIG(indRavi) = 0;
 elseif raviE == 2
     % Index period where market is in a trending phase
     indRavi = rav > raviThresh == 1;
     % Reverse thse signals
-    s(indRavi) = s(indRavi) * -1;
+    SIG(indRavi) = SIG(indRavi) * -1;
 elseif raviE == 3
     % Index period where market is in a ranging phase
     indRavi = rav < raviThresh == 1;
-    s(indRavi) = s(indRavi) * -1;
+    SIG(indRavi) = SIG(indRavi) * -1;
 else
     error('RSIRAVI:inputArge','Cannot interpret an input of raviE = %d',raviE);
 end;
 
-% Normalize signals to +/-1.5
-s = s * 1.5;
-
 % Drop any repeats
-s = remEchos_mex(s);
+SIG = remEchos_mex(SIG);
 
-if ~isempty(find(s,1))
-    [~,~,~,r] = calcProfitLoss([fOpen fClose],s,bigPoint,cost);
+if ~isempty(find(SIG,1))
+    [~,~,~,r] = calcProfitLoss([fOpen fClose],SIG,bigPoint,cost);
     sh = scaling*sharpe(r,0);
 else
     % No signal so no return or sharpe.
@@ -122,7 +118,7 @@ if nargout == 0
     title(['RSI & RAVI, Sharpe Ratio = ',num2str(sh,3)])
     
     ax(2) = subplot(3,2,6);
-    plot([s,cumsum(r)]), grid on
+    plot([SIG,cumsum(r)]), grid on
     legend('Position','Cumulative Return','Location','North')
     title(['Final Return = ',thousandSepCash(sum(r))])
     linkaxes(ax,'x')
@@ -131,7 +127,7 @@ else
     for i = 1:nargout
         switch i
             case 1
-                varargout{1} = s; % signal
+                varargout{1} = SIG; % signal
             case 2
                 varargout{2} = r; % return (pnl)
             case 3

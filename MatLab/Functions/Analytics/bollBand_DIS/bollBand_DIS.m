@@ -1,6 +1,6 @@
 function varargout = bollBand_DIS(price,period,maType,devUp,devDwn,hSub)
 %BOLLBAND_DIS Bollinger Bands
-%   bollBand_DIS (Bollinger Bands) are a technical analysis tool invented by John Bollinger in the 1980s,
+%   BOLLBAND_DIS (Bollinger Bands) are a technical analysis tool invented by John Bollinger in the 1980s,
 %   and a term trademarked by him in 2011. Having evolved from the concept of trading bands,
 %   Bollinger Bands and the related indicators %b and bandwidth can be used to measure the
 %   "highness" or "lowness" of the price relative to previous trades.
@@ -20,28 +20,17 @@ function varargout = bollBand_DIS(price,period,maType,devUp,devDwn,hSub)
 %               maType
 %               devUp       Number of upward standard deviations (default 2)
 %               devDwn      Number of downward standard deviations (default -2)
-%               hSub			An embedded variable passed from 'DIS' files for poisitioning graphical feedback
+%               hSub		An embedded variable passed from 'DIS' files for poisitioning graphical feedback
 %
 %	OUTPUTS		lBand		Lower Bollinger band    (MA - Kstd)
 %				mBand		Midline average         (MA)
 %               uBand       Upper Bollinger band    (MA + Kstd)
 
 %% Defaults
-if ~exist('period','var')
-    period = 20;
-end; %if
-
-if ~exist('maType','var')
-    maType = 0;
-end; %if
-
-if ~exist('devUp','var')
-    devUp = 2;
-end; %if
-
-if ~exist('devDwn','var')
-    devDwn = 2;
-end;
+if ~exist('period','var'),period = 20; end; %if
+if ~exist('maType','var'),maType = 0; end; %if
+if ~exist('devUp','var'),devUp = 2; end; %if
+if ~exist('devDwn','var'),devDwn = 2; end;
 
 fClose = OHLCSplitter(price);
 
@@ -51,13 +40,15 @@ fClose = OHLCSplitter(price);
 %% Plot if requested
 %% If no assignment to variable, show the averages in a chart
 if (nargout == 0) && (~exist('hSub','var'))% Plot
+	% Center plot window basis monitor (single monitor calculation)
+    scrsz = get(0,'ScreenSize');
+    figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
     
     % Plot results
-    %ax(1) = subplot(2,1,1);
     plot([fClose,uBand,mAvg,lBand]);
-    %axis (ax(1),'tight');
     grid on
-    legend('Close',['Upper ',num2str(devUp),'\sigma'],['Midline ',num2str(period),' Type ',num2str(maType)],['Lower ',num2str(devDwn),'\sigma'],'Location','NorthWest')
+    legend('Close',['Upper ',num2str(devUp),'\sigma'],['Midline ',num2str(period),' Type ',num2str(maType)],...
+	['Lower ',num2str(devDwn),'\sigma'],'Location','NorthWest')
     title('Bollinger Band')
     
 elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
@@ -67,11 +58,12 @@ elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
     plot([fClose,uBand,mAvg,lBand]);
     axis (ax(1),'tight');
     grid on
-    legend('Close',['Upper ',num2str(devUp),'\sigma'],['Midline ',num2str(period),' Type ',num2str(maType)],['Lower ',num2str(devDwn),'\sigma'],'Location','NorthWest')
+    legend('Close',['Upper ',num2str(devUp),'\sigma'],['Midline ',num2str(period),' Type ',num2str(maType)],...
+	['Lower ',num2str(devDwn),'\sigma'],'Location','NorthWest')
     title('Bollinger Band')
 else
-    for i = 1:nargout
-        switch i
+    for ii = 1:nargout
+        switch ii
             case 1
                 varargout{1} = lBand;
             case 2

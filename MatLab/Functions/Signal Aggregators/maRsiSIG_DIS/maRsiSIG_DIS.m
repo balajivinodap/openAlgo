@@ -73,8 +73,10 @@ else
 end; %if
 
 if nargout == 0
-    figure()
-    % Not using MEX so we get a graphical response
+	% Center plot window basis monitor (single monitor calculation)
+    scrsz = get(0,'ScreenSize');
+    figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
+
     % Each element must be the same length - nonsense - thanks MatLab
     % http://www.mathworks.com/help/matlab/matlab_prog/cell-arrays-of-strings.html
     layout = ['6         ';'3         ';'[1 4 7]   ';'[10 13 16]'];
@@ -103,6 +105,7 @@ if nargout == 0
     legend('Price',['Lead ',num2str(N)],['Lag ',num2str(M)],...
         ['RSI Detrend ',detrendStr],'Location', 'NorthWest')
     title(['MA+RSI Results, Sharpe Ratio = ',num2str(sh,3)])
+    set(gca,'xticklabel',{})
     
     ax(2) = subplot(6,3,[9 12]);
     ylim([0 100])
@@ -112,6 +115,7 @@ if nargout == 0
     legend(['RSI Bars ',num2str(Mrsi(1))],['RSI Upper ',num2str(thresh(2)),'%'],...
         ['RSI Lower ',num2str(thresh(1)),'%'],'Location', 'North')
     title('RSI')
+    set(gca,'xticklabel',{})
     
     ax(3) = subplot(6,3,[15 18]);
     plot([s,cumsum(r)]), grid on

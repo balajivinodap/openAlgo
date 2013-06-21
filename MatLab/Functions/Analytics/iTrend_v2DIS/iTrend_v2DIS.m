@@ -5,24 +5,24 @@ function [ varargout ] = iTrend_v2DIS(price,iMult,qMult,hSub)
 %
 %   T = ITREND_v2DIS(PRICE) returns the instantaneous trend
 %
-%   [ITREND] = ITREND_v2DIS(...) returns the Instantaneous Trend
+%   [TLINE] = ITREND_v2DIS(...) returns the Instantaneous Trend
 %
 %   Input 'price' should be of an O | H | L | C form as we use the average
-%   of the Open & Close when passed to iTrend.m
+%   of the Open & Close when passed to iTrend_v2DISK.m
 %
 %   INPUTS:     price       	An array of price in the form [O | H | L | C]
 %               iMult
 %               qMult
 %				hSub			An embedded variable passed from 'DIS' files for poisitioning graphical feedback
 %
-%	OUTPUTS:	iTrend			Instantaneous trend
+%	OUTPUTS:	tLine			Instantaneous trend
 %
-%   [iTrend] = ITREND_V2DIS(PRICE)       returns an instantaneous trend and
+%   [tLine] = ITREND_V2DIS(PRICE)       returns an instantaneous trend and
 %                                               an accompanying trendline as simple
 %                                               average over the measured dominant
 %                                               cycle period based upon a 14-period iTrend.
 %
-%   [tLine, iTrend] = ITRENDSIGDIS(PRICE,hSub)  includes the hSub variable for asymetrical
+%   [tLine] = ITRENDSIGDIS(PRICE,hSub)  includes the hSub variable for asymetrical
 %                                               graphic output
 
 %% Error check
@@ -43,6 +43,10 @@ tLine = iTrend_v2_mex(HighLow,iMult,qMult);
 
 %% If no assignment to variable, show the averages in a chart
 if (nargout == 0) && (~exist('hSub','var'))% Plot
+	% Center plot window basis monitor (single monitor calculation)
+    scrsz = get(0,'ScreenSize');
+    figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
+    
     % Plot results
     plot([fClose,tLine]);
     grid on
@@ -58,8 +62,8 @@ elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
     legend('Close','iTrend','Location','NorthWest')
     title('Instantaneous Trend')
 else
-    for i = 1:nargout
-        switch i
+    for ii = 1:nargout
+        switch ii
             case 1
                 varargout{1} = tLine;
             otherwise

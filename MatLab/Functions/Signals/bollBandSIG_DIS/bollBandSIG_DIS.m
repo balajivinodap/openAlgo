@@ -82,7 +82,10 @@ end; %if
 if nargin > 0
     %% If no assignment to variable, show the averages in a chart
     if (nargout == 0) && (~exist('hSub','var'))% Plot
-        
+    	% Center plot window basis monitor (single monitor calculation)
+        scrsz = get(0,'ScreenSize');
+        figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
+    
         % Plot results
         ax(1) = subplot(2,1,1);
         plot([fClose,UBAND,MOV,LBAND]);
@@ -117,8 +120,8 @@ if nargin > 0
         title(['Final Return = ',thousandSepCash(sum(R))])
         linkaxes(ax,'x')
     else
-        for i = 1:nargout
-            switch i
+        for ii = 1:nargout
+            switch ii
                 case 1
                     varargout{1} = SIG;
                 case 2

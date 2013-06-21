@@ -36,10 +36,14 @@ end; %if
 fClose = OHLCSplitter(price);
         
 %% Average true range
-atr = atr_mex(price, M);                     % '-1' calls to exponential calculation
+atr = atr_mex(price, M);                     	% '-1' calls to exponential calculation
         
 %% Plot if requested
-if nargout == 0 && (~exist('hSub','var'))% Plot
+if nargout == 0 && (~exist('hSub','var'))		% Plot
+	% Center plot window basis monitor (single monitor calculation)
+    scrsz = get(0,'ScreenSize');
+    figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
+    
     ax(1) = subplot(2,1,1);
     plot(fClose);
     axis (ax(1),'tight');
@@ -63,6 +67,7 @@ elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
     grid on
     legend('Price','Location', 'NorthWest')
     title('Price')
+    set(gca,'xticklabel',{})
     
     ax(2) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))),str2num(char(hSub(4)))); %#ok<ST2NM>
     plot(atr)

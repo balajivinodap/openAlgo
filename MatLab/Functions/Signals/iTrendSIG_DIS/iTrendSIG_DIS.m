@@ -71,6 +71,9 @@ highsLows = (fHigh + fLow) / 2;
     
     %% If no assignment to variable, show the averages in a chart
     if (nargout == 0) && (~exist('hSub','var'))% Plot
+        % Center plot window basis monitor (single monitor calculation)
+        scrsz = get(0,'ScreenSize');
+        figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
         
         % Plot results
         ax(1) = subplot(2,1,1);
@@ -95,6 +98,7 @@ highsLows = (fHigh + fLow) / 2;
         grid on
         legend('Close','tLine','iTrend','Location','NorthWest')
         title(['iTrend Results, Annual Sharpe Ratio = ',num2str(SH,3)])
+        set(gca,'xticklabel',{})
         
         ax(2) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))), str2num(char(hSub(4)))); %#ok<ST2NM>
         plot([SIG,cumsum(R)]); grid on

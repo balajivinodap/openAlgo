@@ -39,7 +39,6 @@ raviS = zeros(rows,1);                          %#ok<NASGU>
 ind = zeros(rows,1);                            %#ok<NASGU>
 indAvg = zeros(rows,1);                        	%#ok<NASGU>
 
-
 if size(price,2) < 4
     error('RAVI:tooFewInputs', ...
         'We call ATR to normalize price data therefore we need O | H | L | C as price input. Exiting.');
@@ -47,11 +46,7 @@ end; %if
 
 fClose = OHLCSplitter(price);
 
-if ~exist('lead','var'), lead = 5; end; % Default lead value
-if ~exist('lag','var'), lag = 65; end; % Default lag value
-if ~exist('D','var'), D = 0; end; % Default divisor selection
-if ~exist('M','var'), M = 20; end; % Percentage to shift the mean ravi to.
-
+% Removed 'exist' checks for mex
 if M < 1
     error('RAVI:inputArgs','Lookback M must be a postive integer. Aborting');
 end; %if

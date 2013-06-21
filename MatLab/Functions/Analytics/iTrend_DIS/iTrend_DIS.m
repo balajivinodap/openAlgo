@@ -27,41 +27,42 @@ end;
 
 %% Parse
 [~,fHigh,fLow,fClose] = OHLCSplitter(price);
-HighLow = (fHigh+fLow)/2;
+HighLow = (fHigh+fLow) / 2;
 
 
 %% iTrend signal generation using dominant cycle crossing
 if nargin > 0
-    %% Preallocate
-    
-    [tLine,instT] = iTrend_mex(HighLow);
+    [tLine,iTrend] = iTrend_mex(HighLow);
     
     %% If no assignment to variable, show the averages in a chart
     if (nargout == 0) && (~exist('hSub','var'))% Plot
-        
+    	% Center plot window basis monitor (single monitor calculation)
+        scrsz = get(0,'ScreenSize');
+        figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
+    
         % Plot results
-        plot([fClose,tLine,instT]);
+        plot([fClose,tLine,iTrend]);
         grid on
-        legend('Close','tLine','instT','Location','NorthWest')
+        legend('Close','tLine','iTrend','Location','NorthWest')
         title('Instantaneous Trend')
         
     elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
         % We pass hSub as a string so we can have asymmetrical graphs
         % The call to char() parses the passed cell array
         ax(1) = subplot(str2num(char(hSub(1))), str2num(char(hSub(2))), str2num(char(hSub(3)))); %#ok<ST2NM>
-        plot([fClose,tLine,instT]);
+        plot([fClose,tLine,iTrend]);
         axis (ax(1),'tight');
         grid on
-        legend('Close','tLine','instT','Location','NorthWest')
+        legend('Close','tLine','iTrend','Location','NorthWest')
         title('Instantaneous Trend')
         
     else
-        for i = 1:nargout
-            switch i
+        for ii = 1:nargout
+            switch ii
                 case 1
                     varargout{1} = tLine;
                 case 2
-                    varargout{2} = instT;
+                    varargout{2} = iTrend;
                 otherwise
                     warning('ITREND_DIS:OutputArg',...
                         'Too many output arguments requested, ignoring last ones');

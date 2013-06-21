@@ -62,6 +62,10 @@ end; %if
 
 %% Plot if requested
 if nargout == 0
+	% Center plot window basis monitor (single monitor calculation)
+    scrsz = get(0,'ScreenSize');
+    figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
+    
     ax(1) = subplot(3,1,1);
     plot(fClose), grid on
     axis (ax(1),'tight');

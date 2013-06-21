@@ -33,7 +33,10 @@ if size(price,2) < 4
             'We call ATR to normalize price data therefore we need O | H | L | C as price input. Exiting.');
 end; %if
 
-ind=ravi_mex(price,lead,lag,D,M);
+if ~exist('lead','var'), lead = 5; end;
+if ~exist('lag','var'), lag = 65; end;
+if ~exist('D','var'), D = 0; end;
+if ~exist('M','var'), M = 20; end;
 
 % Determine divisor for measuring the rate of change
 if D == 0
@@ -44,15 +47,22 @@ else
     error('ravi_DIS:inputArg','Unknown input in value ''D''. Aborting.');
 end;
 
+%% Parse
+[fClose] = OHLCSplitter(price);
+
+ind=ravi_mex(price,lead,lag,D,M);
+
 %% Plot if requested
 if nargout == 0 && (~exist('hSub','var'))% Plot
+ 	% Center plot window basis monitor (single monitor calculation)
+    scrsz = get(0,'ScreenSize');
+    figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
     
     ax(1) = subplot(2,1,1);
     plot(fClose);
     axis (ax(1),'tight');
     grid on
     title('Price')
-    
     plotTitle = strcat('Normalized RAVI - Using  ',div);
     
     ax(2) = subplot(2,1,2);
@@ -60,7 +70,7 @@ if nargout == 0 && (~exist('hSub','var'))% Plot
     axis manual;
     hold on
     plot(ind);
-    axis (ax(1),'tight');
+    axis (ax(2),'tight');
     grid on
     title(plotTitle)
     linkaxes(ax,'x')
@@ -78,6 +88,7 @@ elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
     hold on
     grid on
     title(plotTitle)
+    set(gca,'xticklabel',{})
 else    
     for ii = 1:nargout
         switch ii

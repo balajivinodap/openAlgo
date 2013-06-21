@@ -47,21 +47,10 @@ if nargin == 2
 end; %if
 
 %% Process input args
-if ~exist('typeMA', 'var')
-    typeMA = 0;
-end; %if
-
-if ~exist('scaling','var')
-    scaling = 1;
-end; %if
-
-if ~exist('cost', 'var')
-    cost = 0;
-end; %if
-
-if ~exist('bigPoint', 'var')
-    bigPoint = 1;
-end; %if
+if ~exist('typeMA', 'var'), typeMA = 0; end; %if
+if ~exist('scaling','var'), scaling = 1; end; %if
+if ~exist('cost', 'var'), cost = 0; end; %if
+if ~exist('bigPoint', 'var'), bigPoint = 1; end; %if
 
 if nargin < 2
     % default values - often used in MACD
@@ -103,6 +92,9 @@ fClose = OHLCSplitter(barsOut);
 
 %% If no assignment to variable, show the averages in a chart
 if (nargout == 0) && (~exist('hSub','var'))% Plot
+	% Center plot window basis monitor (single monitor calculation)
+    scrsz = get(0,'ScreenSize');
+    figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
     
     % Plot results
     ax(1) = subplot(2,1,1);
