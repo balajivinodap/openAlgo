@@ -1,27 +1,23 @@
-function [SIG, R, SH, iSTA, RAV] = iTrendRaviSIG(price,raviF,raviS,raviD,raviM,raviE,raviThresh,bigPoint,cost,scaling)
-%ITRENDRAVISIG_DIS iTrend signal generation with a RAVI based transformer
-%   iTrend is dominant cycle signal generate based on the work of John Ehlers
+function [SIG, R, SH, TLINE, MA] = iTrendMaSIG(price,M,typeMA,bigPoint,cost,scaling)
+%ITRENDMASIG An indicator based on the work of John Elhers
+%   ITRENDMASIG returns a trading signal for a given iTrend and MA cross as well as a
+%   technical indicator.
 %
-%   RAVI is an indicator that shows whether a market is in a ranging or a trending phase.
+%   SIG = ITRENDMASIG(PRICE) returns a trading signal based upon a 14-period
+%   iTrend and a Closing price (~ 1 day average).
+%   SIG is the trading signal of values -2, 0, 2 where -2 denotes
+%   a sell (short reverse), 0 is neutral, and 2 is buy (long reverse).
 %
-%   This produces a logically valid signal output
+%   SIG = ITRENDMASIG(PRICE,I,T) returns a trading signal for a I-period iTrend and
+%   a T-period simple moving average.
 %
-%   raviF:          RAVI lead moving average period (default = 5)
-%   raviS:          RAVI lag moving average period  (default = 65)
-%   raviD:          RAVI denominator (0: MA (default)   1: ATR)
-%   raviM:          RAVI mean shift (default = 20)
-%   raviE:          RAVI effects
-%                       Effect 0: Remove the signal in trending markets (default = 0)
-%                       Effect 1: Remove the signal in ranging markets
-%                       Effect 2: Reverse the signal in trending markets
-%                       Effect 3: Reverse the signal in ranging markets
-%   raviThresh:     RAVI threshold where the market changes from Ranging to Trending (default UNKNOWN)
-%                   We are uncertain of a good raviThresh reading.  We need to sweep for this and update
-%                   with our findings.  Recommended sweep is similar to RSI percentage [10:5:40]
+%   [SIG,R,SH,ITREND,MA] = ITRENDMASIG(...) returns the trading signal S, the
+%   absolute return in R, the Sharpe Ratio in SH calcualted using R, and
+%   the ITREND or MA series.
 %
 
 %% MEX code to be skipped
-coder.extrinsic('sharpe','calcProfitLoss','remEchos_mex','ravi_mex','OHLCSplitter','iTrendSTA_mex')
+coder.extrinsic('sharpe','calcProfitLoss','remEchos_mex','iTrend_mex','OHLCSplitter','movAvg_mex')
 
 % Preallocate so we can MEX
 rows = size(price,1);
@@ -30,63 +26,51 @@ fHigh = zeros(rows,1);                  %#ok<NASGU>
 fLow = zeros(rows,1);                   %#ok<NASGU>
 fClose = zeros(rows,1);                 %#ok<NASGU>
 highLow = zeros(rows,1);                %#ok<NASGU>
-indRavi = zeros(rows,1);                %#ok<NASGU>
-iSTA = zeros(rows,1);                   %#ok<NASGU>
 SIG = zeros(rows,1);
-RAV = zeros(rows,1);                    %#ok<NASGU>
+MA = zeros(rows,1);                    %#ok<NASGU>
+TLINE = zeros(rows,1);                  %#ok<NASGU>
 R = zeros(rows,1);
+SH = zeros(rows,1);                     %#ok<NASGU>
 
-[fOpen,fHigh,fLow,fClose] = OHLCSplitter(price);
-highLow = (fHigh + fLow) / 2;
-
-iSTA = iTrendSTA_mex(highLow);
-
-% Convert state to signal
-SIG(iSTA < 0) = -1.5;
-SIG(iSTA > 0) =  1.5;
-
-RAV = ravi_mex(price,raviF,raviS,raviD,raviM);
-
-% RAVI is used to filter signals that are not considered trending.
-% These would be signals that occur when RAVI < raviThresh
-% Effect 0: Remove the signal in trending markets;
-if raviE == 0
-    % Remove these signals
-    for ii=1:rows
-        if RAV(ii) > raviThresh, SIG(ii) = 0; end; %if
-    end; %for
-% Effect 1: This was a reverse but has since been changed to undefined
-elseif raviE == 1
-    % Remove these signals
-    for ii=1:rows
-        if RAV(ii) < raviThresh, SIG(ii) = 0; end; %if
-    end; %for
-elseif raviE == 2
-    % Index period where market is in a trending phase
-    % Reverse thse signals
-    for ii=1:rows
-        if RAV(ii) > raviThresh, SIG(ii) = SIG(ii) * -1; end; %if
-    end; %for
-elseif raviE == 3
-    % Index period where market is in a ranging phase
-    for ii=1:rows
-        if RAV(ii) < raviThresh, SIG(ii) = SIG(ii) * -1; end; %if
-    end; %for
-else
-    error('RSIRAVI:inputArge','Cannot interpret an input of raviE = %d',raviE);
+if rows < 55
+    error('iTrendMA:dataSizeFailure',...
+        'iTrendMA requires a minimum of 55 observations. Exiting.');
 end;
 
+
+%% Parse
+[fOpen,fHigh,fLow,fClose] = OHLCSplitter(price);
+HighLow = (fHigh+fLow)/2;
+
+%% iTrend signal generation using dominant cycle crossing
+[TLINE] = iTrend_mex(HighLow);
+[MA] = movAvg_mex(fClose,M,M,typeMA);
+
+MA(1:M)=fClose(1:M);
+
+% Create logical STATE conditions
+SIG(MA > TLINE) = 1;
+SIG(MA < TLINE) = -1;
+
+% Convert to SIGNAL
+SIG = SIG * 1.5;
+
+% Clear erroneous signals calculated prior to enough data
+% This is specific to iTrend calculations because of the nature of
+% cyclical analysis
+SIG(1:54) = 0;
+
+% Remove echos
+SIG = remEchos_mex(SIG);
+% Set the first position to 1 lot
+% Make sure we have at least one trade first
 if ~isempty(find(SIG,1))
-    % Drop any repeats
-    SIG = remEchos_mex(SIG);
-    
     [~,~,~,R] = calcProfitLoss([fOpen fClose],SIG,bigPoint,cost);
-    
     SH = scaling*sharpe(R,0);
 else
-    % No signal no sharpe.
     SH = 0;
 end; %if
+
 
 %%
 %   -------------------------------------------------------------------------
@@ -139,7 +123,8 @@ end; %if
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4920.23073
+%   Revision:      4920.23703
 %   Copyright:     (c)2013
 %
+
 

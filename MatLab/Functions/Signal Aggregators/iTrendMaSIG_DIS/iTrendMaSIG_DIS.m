@@ -31,43 +31,13 @@ if ~exist('cost','var'), cost = 0; end;         % default cost
 if ~exist('bigPoint','var'), bigPoint = 1; end; % default bigPoint
 
 %% Parse
-[fOpen,fHigh,fLow,fClose] = OHLCSplitter(price);
-HighLow = (fHigh+fLow)/2;
+fClose = OHLCSplitter(price);
 
+[SIG, R, SH, TLINE, MA] = iTrendMaSIG_mex(price,M,typeMA,bigPoint,cost,scaling);
 
 %% iTrend signal generation using dominant cycle crossing
 if nargin > 0
-    %% Preallocate
-    returns = zeros(rows,1);                                 
-    s = zeros(rows,1);
-    
-    [tLine] = iTrend_mex(HighLow);
-    [ma] = movAvg_mex(fClose,M,M,typeMA);
-    
-    ma(1:M)=fClose(1:M);
-    
-    % Create logical STATE conditions
-    s(ma>tLine) = 1;
-    s(ma<tLine) = -1;
-    
-    % Convert to SIGNAL
-    s = s * 1.5;
-    
-    % Clear erroneous signals calculated prior to enough data
-    % This is specific to iTrend calculations because of the nature of
-    % cyclical analysis
-    s(1:54) = 0;
-    
-    % Remove echos
-    s = remEchos_mex(s);
-    % Set the first position to 1 lot
-    % Make sure we have at least one trade first
-    if ~isempty(find(s,1))
-        [~,~,~,returns] = calcProfitLoss([fOpen fClose],s,bigPoint,cost);
-        sharpeRatio=scaling*sharpe(returns,0);
-    else
-        sharpeRatio= 0;
-    end; %if
+
     
     %% If no assignment to variable, show the averages in a chart
     if (nargout == 0) && (~exist('hSub','var'))% Plot     
@@ -77,46 +47,46 @@ if nargin > 0
     
         % Plot results
         ax(1) = subplot(2,1,1);
-        plot([fClose,tLine,ma]);
+        plot([fClose,TLINE,MA]);
         axis (ax(1),'tight');
         grid on
         legend('Close','iTrend',['MA ',num2str(M)],'Location','NorthWest')
-        title(['iTrend Results, Annual Sharpe Ratio = ',num2str(sharpeRatio,3)])
+        title(['iTrend Results, Annual Sharpe Ratio = ',num2str(SH,3)])
         
         ax(2) = subplot(2,1,2);
-        plot([s,cumsum(returns)]); grid on
+        plot([SIG,cumsum(R)]); grid on
         legend('Position','Cumulative Return','Location','North')
-        title(['Final Return = ',thousandSepCash(sum(returns))])
+        title(['Final Return = ',thousandSepCash(sum(R))])
         linkaxes(ax,'x')
         
     elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
         % We pass hSub as a string so we can have asymmetrical graphs
         % The call to char() parses the passed cell array
         ax(1) = subplot(str2num(char(hSub(1))), str2num(char(hSub(2))), str2num(char(hSub(3)))); %#ok<ST2NM>
-        plot([fClose,tLine,ma]);
+        plot([fClose,TLINE,MA]);
         axis (ax(1),'tight');
         grid on
         legend('Close','iTrend',['MA ',num2str(M)],'Location','NorthWest')
-        title(['iTrend Results, Annual Sharpe Ratio = ',num2str(sharpeRatio,3)])
+        title(['iTrend Results, Annual Sharpe Ratio = ',num2str(SH,3)])
         
         ax(2) = subplot(str2num(char(hSub(1))),str2num(char(hSub(2))), str2num(char(hSub(4)))); %#ok<ST2NM>
-        plot([s,cumsum(returns)]); grid on
+        plot([SIG,cumsum(R)]); grid on
         legend('Position','Cumulative Return','Location','North')
-        title(['Final Return = ',thousandSepCash(sum(returns))])
+        title(['Final Return = ',thousandSepCash(sum(R))])
         linkaxes(ax,'x')
     else
         for i = 1:nargout
             switch i
                 case 1
-                    varargout{1} = s;
+                    varargout{1} = SIG;
                 case 2
-                    varargout{2} = returns;
+                    varargout{2} = R;
                 case 3
-                    varargout{3} = sharpeRatio;
+                    varargout{3} = SH;
                 case 4
-                    varargout{4} = tLine;
+                    varargout{4} = TLINE;
                 case 5
-                    varargout{5} = ma;
+                    varargout{5} = MA;
                 otherwise
                     warning('ITRENDMA:OutputArg',...
                         'Too many output arguments requested, ignoring last ones');
