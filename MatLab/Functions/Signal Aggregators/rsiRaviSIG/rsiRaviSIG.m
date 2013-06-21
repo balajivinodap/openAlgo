@@ -1,7 +1,7 @@
-function varargout = rsiRaviSIG_DIS(price,rsiM,rsiThresh,rsiType,...
+function [SIG, R, SH, RI, RAV] = rsiRaviSIG(price,rsiM,rsiThresh,rsiType,...
                                     raviF,raviS,raviD,raviM,raviE,raviThresh,...
                                     bigPoint,cost,scaling)
-%RSIRAVISIG_DIS RSI signal generation with a RAVI based transformer
+%RSIRAVISIG RSI signal generation with a RAVI based transformer
 %   RSI is an Overbought | Oversold indicator.  Trending markets that of Over-bought|sold can become
 %   significantly more Over-B|S.
 %   RAVI is an indicator that shows whether a market is in a ranging or a trending phase.
@@ -28,80 +28,71 @@ function varargout = rsiRaviSIG_DIS(price,rsiM,rsiThresh,rsiType,...
 %                   with our findings.  Recommended sweep is similar to RSI percentage [10:5:40]
 %
 
-%% NEED TO ADD ERROR CHECKING OF INPUTS
-%% Defaults
-if ~exist('rsiM','var'), rsiM = [14 0]; end;
-if ~exist('rsiThresh','var'), rsiThresh = 65; end;
-if ~exist('rsiType','var'), rsiType = 0; end;
-if ~exist('raviF','var'), raviF = 5; end;
-if ~exist('raviS','var'), raviS = 65; end;
-if ~exist('raviD','var'), raviD = 0; end;
-if ~exist('raviM','var'), raviM = 20; end;
-if ~exist('raviE','var'), raviE = 0; end;
-if ~exist('raviThresh','var'), raviThresh = 10; end;
-if ~exist('scaling','var'), scaling = 1; end;
-if ~exist('cost','var'), cost = 0; end;         % default cost
-if ~exist('bigPoint','var'), bigPoint = 1; end; % default bigPoint
+%% MEX code to be skipped
+coder.extrinsic('sharpe','calcProfitLoss','remEchos_mex','rsiSIG_mex','OHLCSplitter','ravi_mex')
+
+% Preallocate so we can MEX
+rows = size(price,1);
+fOpen = zeros(rows,1);                  %#ok<NASGU>
+fClose = zeros(rows,1);                 %#ok<NASGU>
+SIG = zeros(rows,1);                    %#ok<NASGU>
+RI = zeros(rows,1);                   	%#ok<NASGU>
+RAV = zeros(rows,1);                    %#ok<NASGU>
+R = zeros(rows,1);
+SH = zeros(rows,1);                     %#ok<NASGU>
 
 if length(rsiM) == 1
     rsiM = [15*rsiM rsiM];
 end; %if
 
-fClose = OHLCSplitter(price);
+[fOpen,fClose] = OHLCSplitter(price);
 
-[SIG, R, SH, RI, RAV] = rsiRaviSIG_mex(price,rsiM,rsiThresh,rsiType,...
-                                    raviF,raviS,raviD,raviM,raviE,raviThresh,...
-                                    bigPoint,cost,scaling);
+[SIG,~,~,RI] = rsiSIG_mex(price,rsiM,rsiThresh,rsiType,bigPoint,cost,scaling);
 
-%% Plot if requested
-if nargout == 0
-    
-    % Center plot window basis monitor (single monitor calculation)
-    scrsz = get(0,'ScreenSize');
-    figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
-    
-    % Each element must be the same length - nonsense - thanks MatLab
-    % http://www.mathworks.com/help/matlab/matlab_prog/cell-arrays-of-strings.html
-    layout = ['3';'2';'1';'3';'5'];
-    hSub = cellstr(layout);
-    rsiSIG_DIS(price,rsiM,rsiThresh,rsiType,bigPoint,cost,scaling,hSub);
-    
-    layout = ['3';'2';'4'];
-    hSub = cellstr(layout);
-    ravi_DIS(price,raviF,raviS,raviD,raviM,hSub);
-    
-    ax(1) = subplot(3,2,2);
-    plot(fClose);
-    axis (ax(1),'tight');
-    grid on
-    legend('Price','Location', 'NorthWest')
-    title(['RSI & RAVI, Sharpe Ratio = ',num2str(SH,3)])
-    
-    ax(2) = subplot(3,2,6);
-    plot([SIG,cumsum(R)]), grid on
-    legend('Position','Cumulative Return','Location','North')
-    title(['Final Return = ',thousandSepCash(sum(R))])
-    linkaxes(ax,'x')
+RAV = ravi_mex(price,raviF,raviS,raviD,raviM);
+
+% RAVI is used to filter signals that are not considered trending.
+% These would be signals that occur when RAVI < raviThresh
+% Effect 0: Remove the signal in trending markets
+% Effect 1: Remove the signal in ranging markets
+% Effect 2: Reverse the signal in trending markets
+% Effect 3: Reverse the signal in ranging markets
+if raviE == 0
+    % Remove these signals
+    SIG(RAV > raviThresh) = 0;
+    % Effect 1: This was a reverse but has since been changed to undefined
+elseif raviE == 1
+    % Remove these signals
+    SIG(RAV < raviThresh) = 0;
+elseif raviE == 2
+    for ii = 1:rows
+        % Reverse thse signals
+        if RAV(ii) > raviThresh
+            SIG(ii) = SIG(ii) * -1;
+        end; %if
+    end; %for
+elseif raviE == 3
+    % Reverse thse signals
+    for ii = 1:rows
+        % Reverse thse signals
+        if RAV(ii) < raviThresh
+            SIG(ii) = SIG(ii) * -1;
+        end; %if
+    end; %for
 else
-    %% Return values
-    for i = 1:nargout
-        switch i
-            case 1
-                varargout{1} = SIG; % signal
-            case 2
-                varargout{2} = R; % return (pnl)
-            case 3
-                varargout{3} = SH; % sharpe ratio
-            case 4
-                varargout{4} = RI; % rsi signal
-            case 5
-                varargout{5} = RAV; % RAVI
-            otherwise
-                warning('RSIRAVI:OutputArg',...
-                    'Too many output arguments requested, ignoring last ones');
-        end %switch
-    end %for
-end% if
+    error('RSIRAVISIG:inputArge','Cannot interpret an input of raviE = %d',raviE);
+end;
+
+% Drop any repeats
+SIG = remEchos_mex(SIG);
+
+if ~isempty(find(SIG,1))
+    [~,~,~,R] = calcProfitLoss([fOpen fClose],SIG,bigPoint,cost);
+    SH = scaling*sharpe(R,0);
+else
+    % No signal so no return or sharpe.
+    SH = 0;
+end; %if
 
 %%
 %   -------------------------------------------------------------------------
@@ -154,7 +145,7 @@ end% if
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4906.24976
+%   Revision:      4920.27213
 %   Copyright:     (c)2013
 %
 

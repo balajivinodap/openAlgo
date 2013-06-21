@@ -125,8 +125,8 @@ elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
     title(['Final Return = ',thousandSepCash(sum(returns))])
     linkaxes(ax,'x')
 else
-    for i = 1:nargout
-        switch i
+    for ii = 1:nargout
+        switch ii
             case 1
                 varargout{1} = SIG;
             case 2
