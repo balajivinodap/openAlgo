@@ -1,4 +1,4 @@
-function varargout = iTrendRaviSIG_DIS(price,raviF,raviS,raviD,raviM,raviE,raviThresh,bigPoint,cost,scaling)
+function [SIG, R, SH, iSTA, RAV] = iTrendRaviSIG(price,raviF,raviS,raviD,raviM,raviE,raviThresh,bigPoint,cost,scaling)
 %ITRENDRAVISIG_DIS iTrend signal generation with a RAVI based transformer
 %   iTrend is dominant cycle signal generate based on the work of John Ehlers
 %
@@ -20,70 +20,73 @@ function varargout = iTrendRaviSIG_DIS(price,raviF,raviS,raviD,raviM,raviE,raviT
 %                   with our findings.  Recommended sweep is similar to RSI percentage [10:5:40]
 %
 
-%% Defaults
-if ~exist('raviF','var'), raviF = 5; end;
-if ~exist('raviS','var'), raviS = 65; end;
-if ~exist('raviD','var'), raviD = 0; end;
-if ~exist('raviM','var'), raviM = 20; end;
-if ~exist('raviE','var'), raviE = 0; end;
-if ~exist('raviThresh','var'), raviThresh = 10; end;
-if ~exist('scaling','var'), scaling = 1; end;
-if ~exist('cost','var'), cost = 0; end;         % default cost
-if ~exist('bigPoint','var'), bigPoint = 1; end; % default bigPoint
+%% MEX code to be skipped
+coder.extrinsic('sharpe','calcProfitLoss','remEchos_mex','ravi_mex','OHLCSplitter','iTrendSTA_mex')
 
-fClose = OHLCSplitter(price);
-[SIG, R, SH] = iTrendRaviSIG_mex(price,raviF,raviS,raviD,raviM,raviE,raviThresh,bigPoint,cost,scaling);
+% Preallocate so we can MEX
+rows = size(price,1);
+fOpen = zeros(rows,1);                  %#ok<NASGU>
+fHigh = zeros(rows,1);                  %#ok<NASGU>
+fLow = zeros(rows,1);                   %#ok<NASGU>
+fClose = zeros(rows,1);                 %#ok<NASGU>
+highLow = zeros(rows,1);                %#ok<NASGU>
+indRavi = zeros(rows,1);                %#ok<NASGU>
+iSTA = zeros(rows,1);                   %#ok<NASGU>
+SIG = zeros(rows,1);
+RAV = zeros(rows,1);                    %#ok<NASGU>
+R = zeros(rows,1);
 
+[fOpen,fHigh,fLow,fClose] = OHLCSplitter(price);
+highLow = (fHigh + fLow) / 2;
 
-%% Plot if requested
-if nargout == 0
-    % Center plot window basis monitor (single monitor calculation)
-    scrsz = get(0,'ScreenSize');
-    figure('Position',[scrsz(3)*.15 scrsz(4)*.15 scrsz(3)*.7 scrsz(4)*.7])
-    
-    % Each element must be the same length - nonsense - thanks MatLab
-    % http://www.mathworks.com/help/matlab/matlab_prog/cell-arrays-of-strings.html
-    layout = ['6     ';'2     ';'1 3 5 ';'7 9 11'];
-    hSub = cellstr(layout);
-    iTrendSIG_DIS(price,bigPoint,cost,scaling,hSub);
-    
-    layout = ['6  ';'2  ';'6 8'];
-    hSub = cellstr(layout);
-    ravi_DIS(price,raviF,raviS,raviD,raviM,hSub);
-    
-    ax(1) = subplot(6,2,[2 4]);
-    plot(fClose);
-    axis (ax(1),'tight');
-    grid on
-    legend('Price','Location', 'NorthWest')
-    title(['iTrend & RAVI, Sharpe Ratio = ',num2str(SH,3)])
-    set(gca,'xticklabel',{})
-    
-    ax(2) = subplot(6,2,[10 12]);
-    plot([SIG,cumsum(R)]), grid on
-    legend('Position','Cumulative Return','Location','North')
-    title(['Final Return = ',thousandSepCash(sum(R))])
-    linkaxes(ax,'x')
+iSTA = iTrendSTA_mex(highLow);
+
+% Convert state to signal
+SIG(iSTA < 0) = -1.5;
+SIG(iSTA > 0) =  1.5;
+
+RAV = ravi_mex(price,raviF,raviS,raviD,raviM);
+
+% RAVI is used to filter signals that are not considered trending.
+% These would be signals that occur when RAVI < raviThresh
+% Effect 0: Remove the signal in trending markets;
+if raviE == 0
+    % Remove these signals
+    for ii=1:rows
+        if RAV(ii) > raviThresh, SIG(ii) = 0; end; %if
+    end; %for
+% Effect 1: This was a reverse but has since been changed to undefined
+elseif raviE == 1
+    % Remove these signals
+    for ii=1:rows
+        if RAV(ii) < raviThresh, SIG(ii) = 0; end; %if
+    end; %for
+elseif raviE == 2
+    % Index period where market is in a trending phase
+    % Reverse thse signals
+    for ii=1:rows
+        if RAV(ii) > raviThresh, SIG(ii) = SIG(ii) * -1; end; %if
+    end; %for
+elseif raviE == 3
+    % Index period where market is in a ranging phase
+    for ii=1:rows
+        if RAV(ii) < raviThresh, SIG(ii) = SIG(ii) * -1; end; %if
+    end; %for
 else
-    %% Return values
-    for ii = 1:nargout
-        switch ii
-            case 1
-                varargout{1} = SIG; % signal
-            case 2
-                varargout{2} = R; % return (pnl)
-            case 3
-                varargout{3} = SH; % sharpe ratio
-            case 4
-                varargout{4} = iSTA; % iTrend state
-            case 5
-                varargout{5} = rav; % RAVI
-            otherwise
-                warning('RSIRAVI:OutputArg',...
-                    'Too many output arguments requested, ignoring last ones');
-        end %switch
-    end %for
-end% if
+    error('RSIRAVI:inputArge','Cannot interpret an input of raviE = %d',raviE);
+end;
+
+if ~isempty(find(SIG,1))
+    % Drop any repeats
+    SIG = remEchos_mex(SIG);
+    
+    [~,~,~,R] = calcProfitLoss([fOpen fClose],SIG,bigPoint,cost);
+    
+    SH = scaling*sharpe(R,0);
+else
+    % No signal no sharpe.
+    SH = 0;
+end; %if
 
 %%
 %   -------------------------------------------------------------------------

@@ -1,4 +1,4 @@
-function [SIG,R,SH,LBAND,MOV,UBAND] = bollBandSIG_DIS(price,period,maType,devUp,devDwn,bigPoint,cost,scaling, hSub)
+function [varargout] = bollBandSIG_DIS(price,period,maType,devUp,devDwn,bigPoint,cost,scaling, hSub)
 %BOLLBANDSIG_DIS Returns a trading signal based on the state of price versus upper and lower Bollinger Bands
 %   BOLLBANDSIG_DIS returns a trading signal when price crosses from the outside the Bollinger Bands back into
 %   the neutral value
@@ -30,54 +30,19 @@ function [SIG,R,SH,LBAND,MOV,UBAND] = bollBandSIG_DIS(price,period,maType,devUp,
 %               MOV         Midline average         (MA)
 %               UBAND       Upper Bollinger band    (MA + Kstd)
 
-%% MEX code to be skipped
-coder.extrinsic('sharpe','calcProfitLoss','remEchos_mex','bollBandSTA_mex','OHLCSplitter')
-
-% Preallocate so we can MEX
-rows = size(price,1);
-fOpen = zeros(rows,1);               	%#ok<NASGU>
-fClose = zeros(rows,1); 				%#ok<NASGU>
-R = zeros(rows,1);
-SIG = zeros(rows,1);
-STA = zeros(rows,1);					%#ok<NASGU>
-LBAND = zeros(rows,1);                  %#ok<NASGU>
-MOV = zeros(rows,1);                    %#ok<NASGU>
-UBAND = zeros(rows,1);               	%#ok<NASGU>
-
-%% Error check
-if rows < period
-    error('bollBandSIG_DIS:dataSizeFailure',...
-        'bollBandSIG_DIS number of observations less than lookback period. Exiting.');
-end;
+%% Defaults
+if ~exist('period','var'), period = 20; end;
+if ~exist('maType','var'), maType = 0; end;
+if ~exist('devUp','var'), devUp = 2; end;
+if ~exist('devDwn','var'), devDwn = -2; end;
+if ~exist('bigPoint','var'), bigPoint = 1; end; 
+if ~exist('cost','var'), cost = 0; end;         
+if ~exist('scaling','var'), scaling = 1; end;
 
 %% Parse
-[fOpen,fClose] = OHLCSplitter(price);
+fClose = OHLCSplitter(price);
 
-[STA,LBAND,MOV,UBAND]  = bollBandSTA_mex(fClose,period,maType,devUp,devDwn);
-
-% Convert state to signal
-for ii=2:rows
-    if (STA(ii-1) == 1 && STA(ii) == 0)
-        SIG(ii) = -1.5;
-    end; %if
-    if (STA(ii-1) == -1 && STA(ii) == 0)
-        SIG(ii) = 1.5;
-    end; %if
-end; %for
-
-if(~isempty(find(SIG,1)))
-    % Clean up repeating information for PNL
-    SIG = remEchos_mex(SIG);
-    
-    % Generate PNL
-    [~,~,~,R] = calcProfitLoss([fOpen fClose],SIG,bigPoint,cost);
-    
-    % Calculate sharpe ratio
-    SH=scaling*sharpe(R,0);
-else
-    % No signals - no sharpe.
-    SH= 0;
-end; %if
+[SIG,R,SH,LBAND,MOV,UBAND] = bollBandSIG_mex(price,period,maType,devUp,devDwn,bigPoint,cost,scaling);
 
 if nargin > 0
     %% If no assignment to variable, show the averages in a chart
