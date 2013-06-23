@@ -67,3 +67,11 @@ http://bit.ly/1aFkKzu
 --------------------------------------------------------
 
 --------------------------------------------------------
+MATLAB: mx_concatenate.c									
+concatenate two MX arrays in a MEX-file to emulate the HORZCAT functionality of MATLAB.
+
+Mathworks
+http://bit.ly/109ZSPv
+--------------------------------------------------------
+
+--------------------------------------------------------
