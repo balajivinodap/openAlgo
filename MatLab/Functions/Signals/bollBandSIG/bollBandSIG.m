@@ -53,7 +53,7 @@ end;
 %% Parse
 [fOpen,fClose] = OHLCSplitter(price);
 
-STA = bollBandSTA_mex(fClose,period,maType,devUp,devDwn);
+[STA,LBAND,MOV,UBAND] = bollBandSTA_mex(fClose,period,maType,devUp,devDwn);
 
 % Convert state to signal
 for ii=2:rows
