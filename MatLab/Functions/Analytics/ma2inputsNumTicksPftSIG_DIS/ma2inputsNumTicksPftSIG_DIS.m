@@ -2,7 +2,7 @@ function varargout = ma2inputsNumTicksPftSIG_DIS(price,F,S,typeMA,...
                                              minTick,numTicks,openAvg,...
                                              bigPoint,cost,scaling,hSub)
 %MA2INPUTSNUMTICKSPFTSIG_DIS returns a trading signal for a simple lead/lag indicator with achieved profits
-%   %ma2inputsNumTicksPftSIG_DIS returns a trading signal for a simple lead/lag indicator with achieved 
+%   ma2inputsNumTicksPftSIG_DIS returns a trading signal for a simple lead/lag indicator with achieved 
 %   profits derived from 'ma2inputsSTA'
 %
 %   STA = MA2INPUTSSTA(PRICE, F, S, type) returns a STATE based upon provided lead (F) and lag (S) periods.

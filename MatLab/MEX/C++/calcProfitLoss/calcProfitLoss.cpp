@@ -369,9 +369,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 								openPosition = openPosition + sigInPtr[ii];
 							}
 						}
-						// Signal is reverse
-						openLedger.push_back(createLineEntry(ii, int(sigInPtr[ii]), dataInPtr[ii+1]));
-						openPosition = openPosition + int(sigInPtr[ii]);
 					}
 				}
 			}
@@ -382,17 +379,15 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			// !!!!!!!!!!!!!!!!!!!!!!
 			// Because we are using virtual bars for calculations, we have introduced a known issue
 			// that a profit may occur within an observation High or Low.  To offset this we will
-			// not create an openEQ value if the next bar is an offsetting quantity equal to the current openPosition
+			// clean certain openEQ calculations below. This will cause some invalid depictions
+			// of open equity between observations but would be effectively be a margining issue
 			if (openPosition != 0)
 			{
-				//if((sumQty(openLedger) != sigInPtr[ii+1] * -1) && (dataInPtr[ii + 1 + SHIFT_OPEN] != dataInPtr[ii + 1 + SHIFT_CLOSE]))
-				//{
-					//// We will aggregate all line items
-					for (int jj = 0; jj < openLedger.size(); jj++)
-					{
-						openEQIdx[ii+1] = openEQIdx[ii+1] + ((dataInPtr[ii+1+SHIFT_CLOSE] - openLedger[jj].price) * openLedger[jj].quantity * BIG_POINT);
-					}
-				//}
+				//// We will aggregate all line items
+				for (int jj = 0; jj < openLedger.size(); jj++)
+				{
+					openEQIdx[ii+1] = openEQIdx[ii+1] + ((dataInPtr[ii+1+SHIFT_CLOSE] - openLedger[jj].price) * openLedger[jj].quantity * BIG_POINT);
+				}
 			}
 		} // end for
 
@@ -400,6 +395,18 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		openLedger.~deque();
 
 		// These are for convenience and could be removed for optimization
+		// This first loop is a very 'dirty' cleaning of trades that were closed on the next observation.
+		// Because we are creating a vBar for profit objectives, if the openEquity is greater than the next
+		// observation's cash, we'll reduce openEquity to equal cash.  This should normalize some spikes.
+		for(int nn=1; nn < rowsData - 1; nn++)
+		{
+			// We should only need to adjust for profit taking (positive equity)
+			if (openEQIdx[nn] != cashIdx[nn+1] && openEQIdx[nn+1] == 0 && cashIdx[nn+1] > 0)
+			{
+				openEQIdx[nn] = cashIdx[nn+1];
+			}
+		}
+
 		// Calculate a cumulative sum of closed trades and open equity per observation
 		double runSum = 0;
 		for (int kk=0; kk < rowsData; kk++)
@@ -527,6 +534,6 @@ bool knownAdvSig(double advSig)
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4915.23045
+//   Revision:	4924.25440
 //   Copyright:	(c)2013
 //
