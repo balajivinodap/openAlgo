@@ -25,24 +25,32 @@ function [SIG, R, SH, SNR, LEAD, LAG] = maSnrSIG(price,maF,maS,typeMA,snrThresh,
 %
 
 %% MEX code to be skipped
-coder.extrinsic('sharpe','calcProfitLoss','remEchos_mex','ma2inputsSIG_mex','OHLCSplitter','snr_mex')
+coder.extrinsic('sharpe','calcProfitLoss','remEchos_mex','ma2inputsSTA_mex','OHLCSplitter','snr_mex')
 
 % Preallocate so we can MEX
 rows = size(price,1);
 fOpen = zeros(rows,1);                  %#ok<NASGU>
 fClose = zeros(rows,1);                 %#ok<NASGU>
 LAG = zeros(rows,1);                    %#ok<NASGU>
-SIG = zeros(rows,1);                    %#ok<NASGU>
+SIG = zeros(rows,1);                    
+STA = zeros(rows,1);                    %#ok<NASGU>
 SNR = zeros(rows,1);                   	%#ok<NASGU>
 LEAD = zeros(rows,1);                   %#ok<NASGU>
 R = zeros(rows,1);
-SH = zeros(rows,1);                     %#ok<NASGU>
 
 %% Parse
 [fOpen,fClose] = OHLCSplitter(price);
 
 %% Generate signal
-[SIG,~,~,LEAD,LAG] = ma2inputsSIG_mex(price,maF,maS,typeMA,bigPoint,cost,scaling);
+% Get state
+[STA, LEAD, LAG] = ma2inputsSTA_mex(fClose,maF,maS,typeMA);
+
+% Convert state to signal
+SIG(STA < 0) = -1.5;
+SIG(STA > 0) =  1.5;
+
+% Clear erroneous signals calculated prior to enough data
+SIG(1:maS-1) = 0;
 
 %% Measure SNR
 % Defaults: iMult = .635, qMult = .338
@@ -128,7 +136,7 @@ end; %if
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4920.26064
+%   Revision:      4925.31055
 %   Copyright:     (c)2013
 %
 

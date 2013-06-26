@@ -1,4 +1,4 @@
-function varargout = maRsiSIG(price,N,M,typeMA,Mrsi,thresh,typeRSI,isSignal,bigPoint,cost,scaling)
+function [SIG, R, SH] = maRsiSIG(price,N,M,typeMA,Mrsi,thresh,typeRSI,isSignal,bigPoint,cost,scaling)
 % MA+RSI in function call
 %%
 %
@@ -6,18 +6,17 @@ function varargout = maRsiSIG(price,N,M,typeMA,Mrsi,thresh,typeRSI,isSignal,bigP
 %               1 - Signal              each element, MA + RSI or we can use
 %                                       the RSI as a filter condition for MA.
 
-%% NEED TO ADD ERROR CHECKING OF INPUTS
-%% Defaults
-if ~exist('N','var'), N = 12; end;
-if ~exist('M','var'), M = 26; end;
-if ~exist('typeMA','var'), typeMA=0; end;
-if ~exist('Mrsi','var'), Mrsi = [14 0]; end;
-if ~exist('thresh','var'), thresh = 65; end;
-if ~exist('typeRSI','var'), typeRSI = 0; end;
-if ~exist('isSignal','var'), isSignal = 0; end;
-if ~exist('scaling','var'), scaling = 1; end;
-if ~exist('cost','var'), cost = 0; end;         % default cost
-if ~exist('bigPoint','var'), bigPoint = 1; end; % default bigPoint
+%% MEX code to be skipped
+coder.extrinsic('sharpe','calcProfitLoss','remEchos_mex','ma2inputsSTA_mex','OHLCSplitter','rsiSTA_mex')
+
+% Preallocate so we can MEX
+rows = size(price,1);
+fOpen = zeros(rows,1);                  %#ok<NASGU>
+fClose = zeros(rows,1);                 %#ok<NASGU>
+SIG = zeros(rows,1);                    
+R = zeros(rows,1);
+staMA = zeros(rows,1);                  %#ok<NASGU>
+staRsi = zeros(rows,1);             	%#ok<NASGU>
 
 if length(Mrsi) == 1
     Mrsi = [15*Mrsi Mrsi];
@@ -25,9 +24,9 @@ end
 
 [fOpen,fClose] = OHLCSplitter(price);
 
-sma = ma2inputsSTA_mex(price,N,M,typeMA);
+staMA = ma2inputsSTA_mex(price,N,M,typeMA);
 % NOTE: rsiSTA returns a 1 when oversold and -1 when overbought
-srsi = rsiSTA_mex(price,Mrsi,thresh,typeRSI);
+staRsi = rsiSTA_mex(price,Mrsi,thresh,typeRSI);
 
 %%  The RSI is either used as a signal generator or a filter condition for another signal
 %   If we are using it to generate a signal, we should return only an actionable signal with no repeats
@@ -37,52 +36,32 @@ srsi = rsiSTA_mex(price,Mrsi,thresh,typeRSI);
 %% Use RSI as FILTER
 if isSignal == 0
     % Aggregate the two states
-    s = (sma+srsi);
+    SIG = (staMA + staRsi);
     
     % Any instance where the |sum| of the 2 signals is ~= 2 means both conditions are not met
     % Drop those instances
-    s(abs(s)~=2) = 0;
+    SIG(abs(SIG)~=2) = 0;
     
     % Refine to a signal
-    s = sign(s) * 1.5;
+    SIG = sign(SIG) * 1.5;
     
     %% Use RSI as SIGNAL
 elseif isSignal == 1
     % Aggregate the two signals normalizing them to +/- 1.5
-    s = sign(sma+srsi) * 1.5;
+    SIG = sign(staMA + staRsi) * 1.5;
 end; %if
 
 %% Drop any repeats for PNL
-s = remEchos_mex(s);
+SIG = remEchos_mex(SIG);
 
 %% Make sure we have at least one trade first
-if ~isempty(find(s,1))
-    [~,~,~,r] = calcProfitLoss([fOpen fClose],s,bigPoint,cost);
-    sh = scaling*sharpe(r,0);
+if ~isempty(find(SIG,1))
+    [~,~,~,R] = calcProfitLoss([fOpen fClose],SIG,bigPoint,cost);
+    SH = scaling*sharpe(R,0);
 else
     % No signal so no return or sharpe.
-    r = zeros(length(price),1);
-    sh = 0;
+    SH = 0;
 end; %if
-
-%% Return values
-for i = 1:nargout
-    switch i
-        case 1
-            varargout{1} = s; % signal (with repeats because it contains an MA signal)
-        case 2
-            varargout{2} = r; % return (pnl)
-        case 3
-            varargout{3} = sh; % sharpe ratio
-        case 4
-            varargout{4} = ri; % rsi signal
-        case 5
-            varargout{5} = ma; % moving average
-        otherwise
-            warning('maRsiSIG:OutputArg',...
-                'Too many output arguments requested, ignoring last ones');
-    end %switch
-end %for
 
 %%
 %   -------------------------------------------------------------------------
@@ -135,7 +114,7 @@ end %for
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4906.24976
+%   Revision:      4925.31406
 %   Copyright:     (c)2013
 %
 
