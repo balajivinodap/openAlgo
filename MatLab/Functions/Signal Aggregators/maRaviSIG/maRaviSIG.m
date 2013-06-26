@@ -41,15 +41,23 @@ rows = size(price,1);
 fOpen = zeros(rows,1);                  %#ok<NASGU>
 fClose = zeros(rows,1);                 %#ok<NASGU>
 SIG = zeros(rows,1);                    %#ok<NASGU>
+STA = zeros(rows,1);                    %#ok<NASGU>
 LEAD = zeros(rows,1);                 	%#ok<NASGU>
 LAG = zeros(rows,1);                    %#ok<NASGU>
 RAV = zeros(rows,1);                    %#ok<NASGU>
 R = zeros(rows,1);
-SH = zeros(rows,1);                     %#ok<NASGU>
 
 [fOpen,fClose] = OHLCSplitter(price);
 
-[SIG,~,~,LEAD,LAG] = ma2inputsSIG_mex(price,maF,maS,typeMA,bigPoint,cost,scaling);
+[STA, LEAD, LAG] = ma2inputsSTA_mex(fClose,maF,maS,typeMA);
+
+% Convert state to signal
+SIG(STA < 0) = -1.5;
+SIG(STA > 0) =  1.5;
+
+% Clear erroneous signals calculated prior to enough data
+SIG(1:maS-1) = 0;
+
 RAV = ravi_mex(price,raviF,raviS,raviD,raviM);
 
 % RAVI is used to filter signals that are not considered trending.
@@ -144,7 +152,7 @@ end; %if
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4920.24924
+%   Revision:      4925.32157
 %   Copyright:     (c)2013
 %
 

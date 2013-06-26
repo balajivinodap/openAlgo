@@ -39,7 +39,6 @@ SIG = zeros(rows,1);                    %#ok<NASGU>
 RI = zeros(rows,1);                   	%#ok<NASGU>
 RAV = zeros(rows,1);                    %#ok<NASGU>
 R = zeros(rows,1);
-SH = zeros(rows,1);                     %#ok<NASGU>
 
 if length(rsiM) == 1
     rsiM = [15*rsiM rsiM];

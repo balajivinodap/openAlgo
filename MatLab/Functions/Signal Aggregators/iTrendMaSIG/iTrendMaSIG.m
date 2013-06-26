@@ -30,7 +30,6 @@ SIG = zeros(rows,1);
 MA = zeros(rows,1);                    %#ok<NASGU>
 TLINE = zeros(rows,1);                  %#ok<NASGU>
 R = zeros(rows,1);
-SH = zeros(rows,1);                     %#ok<NASGU>
 
 if rows < 55
     error('iTrendMA:dataSizeFailure',...
@@ -43,8 +42,8 @@ end;
 HighLow = (fHigh+fLow)/2;
 
 %% iTrend signal generation using dominant cycle crossing
-[TLINE] = iTrend_mex(HighLow);
-[MA] = movAvg_mex(fClose,M,M,typeMA);
+TLINE = iTrend_mex(HighLow);
+MA = movAvg_mex(fClose,M,M,typeMA);
 
 MA(1:M)=fClose(1:M);
 
