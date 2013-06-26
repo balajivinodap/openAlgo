@@ -42,10 +42,10 @@ catch me % make sure "ParforProgressStarter2" didn't get moved to a different di
 end
 
 parfor ii = 1:row
-    [~,~,shTest(ii)] = rsiRaviSIG_DIS(vBarsTest,[x(ii,1) x(ii,2)],x(ii,3),x(ii,4),...
+    [~,~,shTest(ii)] = rsiRaviSIG_mex(vBarsTest,[x(ii,1) x(ii,2)],x(ii,3),x(ii,4),...
         x(ii,5),x(ii,6),x(ii,7),x(ii,8), x(ii,9), x(ii,10),...
         bigPoint,cost,scaling);
-    [~,~,shVal(ii)] = rsiRaviSIG_DIS(vBarsVal,[x(ii,1) x(ii,2)],x(ii,3),x(ii,4),...
+    [~,~,shVal(ii)] = rsiRaviSIG_mex(vBarsVal,[x(ii,1) x(ii,2)],x(ii,3),x(ii,4),...
         x(ii,5),x(ii,6),x(ii,7),x(ii,8),x(ii,9), x(ii,10),...
         bigPoint,cost,scaling); %#ok<PFBNS>
     ppm.increment(); %#ok<PFBNS> % update progressbar
@@ -110,6 +110,6 @@ shMETS = ((shTest*2)+shVal)/3;
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4906.24976
+%   Revision:      4925.31764
 %   Copyright:     (c)2013
 %
