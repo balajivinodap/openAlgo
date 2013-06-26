@@ -34,13 +34,13 @@ function [SIG, R, SH, RAV, LEAD, LAG] = maRaviSIG(price,maF,maS,typeMA,raviF,rav
 %   We should expect performance to be better in trending phases compared to ranging
 
 %% MEX code to be skipped
-coder.extrinsic('sharpe','calcProfitLoss','remEchos_mex','ma2inputsSIG_mex','OHLCSplitter','ravi_mex')
+coder.extrinsic('sharpe','calcProfitLoss','remEchos_mex','ma2inputsSTA_mex','OHLCSplitter','ravi_mex')
 
 %% Preallocate so we can MEX
 rows = size(price,1);
 fOpen = zeros(rows,1);                  %#ok<NASGU>
 fClose = zeros(rows,1);                 %#ok<NASGU>
-SIG = zeros(rows,1);                    %#ok<NASGU>
+SIG = zeros(rows,1);                    
 STA = zeros(rows,1);                    %#ok<NASGU>
 LEAD = zeros(rows,1);                 	%#ok<NASGU>
 LAG = zeros(rows,1);                    %#ok<NASGU>
