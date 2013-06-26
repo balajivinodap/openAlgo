@@ -395,32 +395,37 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		openLedger.~deque();
 
 		// These are for convenience and could be removed for optimization
-		// This first loop is a very 'dirty' cleaning of trades that were closed on the next observation.
-		// Because we are creating a vBar for profit objectives, if the openEquity is greater than the next
-		// observation's cash, we'll reduce openEquity to equal cash.  This should normalize some spikes.
-		for(int nn=1; nn < rowsData - 1; nn++)
-		{
-			// We should only need to adjust for profit taking (positive equity)
-			if (openEQIdx[nn] != cashIdx[nn+1] && openEQIdx[nn+1] == 0 && cashIdx[nn+1] > 0)
-			{
-				openEQIdx[nn] = cashIdx[nn+1];
-			}
-		}
 
 		// Calculate a cumulative sum of closed trades and open equity per observation
-		double runSum = 0;
-		for (int kk=0; kk < rowsData; kk++)
+		
+		// This loop is a 'dirty' cleaning of trades that were closed on the next observation.
+		// Because we are creating a vBar for profit objectives, if the openEquity is greater than the next
+		// observation's cash, we'll reduce openEquity to equal cash.  This should normalize some spikes.
+		for (int ll = 1; ll < rowsData - 1; ll++)
 		{
-			runSum = runSum + cashIdx[kk];
-			netLiqIdx[kk] = runSum + openEQIdx[kk];
+				if (openEQIdx[ll] != cashIdx[ll+1] && openEQIdx[ll+1] == 0 && cashIdx[ll+1] > 0)
+				{
+					openEQIdx[ll] = cashIdx[ll+1];
+				}
 		}
 
-		// Calculate a return from day to day based on the change in value observation to observation
+		double runSum = 0;
 		returnsIdx[0] = 0;
-		for (int ll=1; ll < rowsData; ll++)
+		for (int kk=0; kk < rowsData; kk++)
 		{
-			returnsIdx[ll] = netLiqIdx[ll] - netLiqIdx[ll-1];
-		}
+			
+
+			runSum = runSum + cashIdx[kk];
+			netLiqIdx[kk] = runSum + openEQIdx[kk];
+
+			// Calculate a return from day to day based on the change in value observation to observation
+			if (kk>0)
+			{
+				returnsIdx[kk] = netLiqIdx[kk] - netLiqIdx[kk-1];
+			}
+
+		} //for
+
 	}
 	// No trades or signal on the last observation. Return zeros.
 	else
