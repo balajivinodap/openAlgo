@@ -38,9 +38,9 @@ try
 end
 
 parfor ii = 1:row
-	[~,~,shTest(ii)] = iTrendRaviSIG_DIS(vBarsTest,x(ii,1),x(ii,2),x(ii,3),x(ii,4),x(ii,5),x(ii,6),...
+	[~,~,shTest(ii)] = iTrendRaviSIG_mex(vBarsTest,x(ii,1),x(ii,2),x(ii,3),x(ii,4),x(ii,5),x(ii,6),...
                                             bigPoint,cost,scaling); 
-	[~,~,shVal(ii)] = iTrendRaviSIG_DIS(vBarsVal,x(ii,1),x(ii,2),x(ii,3),x(ii,4),x(ii,5),x(ii,6),...
+	[~,~,shVal(ii)] = iTrendRaviSIG_mex(vBarsVal,x(ii,1),x(ii,2),x(ii,3),x(ii,4),x(ii,5),x(ii,6),...
                                             bigPoint,cost,scaling); %#ok<PFBNS>
         ppm.increment(); %#ok<PFBNS> % update progressbar
 end; %parfor
@@ -104,6 +104,6 @@ shMETS = ((shTest*2)+shVal)/3;
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4906.24976
+%   Revision:      4925.30150
 %   Copyright:     (c)2013
 %
