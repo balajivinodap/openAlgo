@@ -64,7 +64,8 @@ s = remEchos_mex(s);
 
 % Make sure we have at least one trade first
 if ~isempty(find(s,1))
-    [~,~,~,r] = calcProfitLoss([fOpen fClose],s,bigPoint,cost);
+    [cash,cash(:,2),cash(:,3),r] = calcProfitLoss([fOpen fClose],s,bigPoint,cost);
+    %[cash,openEQ,netLiq,returns] = 
     sh = scaling*sharpe(r,0);
 else
     % No signal so no return or sharpe.

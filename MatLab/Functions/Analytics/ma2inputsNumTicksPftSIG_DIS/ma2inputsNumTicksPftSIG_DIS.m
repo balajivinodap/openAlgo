@@ -48,6 +48,9 @@ end; %if
 
 %% Process input args
 if ~exist('typeMA', 'var'), typeMA = 0; end; %if
+if ~exist('minTick','var'), minTick = .05; end; %if
+if ~exist('numTicks', 'var'), numTicks = 1; end; %if
+if ~exist('openAvg', 'var'), openAvg = 0; end; %if
 if ~exist('scaling','var'), scaling = 1; end; %if
 if ~exist('cost', 'var'), cost = 0; end; %if
 if ~exist('bigPoint', 'var'), bigPoint = 1; end; %if
@@ -198,7 +201,7 @@ end %if
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4906.24976
+%   Revision:      4926.23744
 %   Copyright:     (c)2013
 %
 

@@ -62,6 +62,7 @@
 
 #include "mex.h"
 #include <deque>
+#include <cmath>
 #include "myMath.h"
 
 // Declare external reference to undocumented C function
@@ -112,11 +113,11 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	// Check number of inputs
 	if (nrhs != 4)
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:NumInputs",
-		"Number of input arguments is not correct. Aborting.");
+		"Number of input arguments is not correct. Aborting (116).");
 
 	if (nlhs != 4)
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:NumOutputs",
-		"Number of output assignments is not correct. Aborting.");
+		"Number of output assignments is not correct. Aborting (120).");
 
 	// Define constants (#define assigns a variable as either a constant or a macro)
 	// Inputs
@@ -137,19 +138,19 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	// Check type of supplied inputs
 	if (!isReal2DfullDouble(data_IN)) 
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:BadInputType",
-		"Input 'data' must be a 2 dimensional full double array. Aborting.");
+		"Input 'data' must be a 2 dimensional full double array. Aborting (141).");
 
 	if (!isReal2DfullDouble(sig_IN)) 
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:BadInputType",
-		"Input 'sig' must be a 2 dimensional full double array. Aborting.");
+		"Input 'sig' must be a 2 dimensional full double array. Aborting (145).");
 
 	if (!isRealScalar(bigPoint_IN)) 
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:BadInputType",
-		"Input 'bigPoint' must be a single scalar double. Aborting.");
+		"Input 'bigPoint' must be a single scalar double. Aborting (149).");
 
 	if (!isRealScalar(cost_IN)) 
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:BadInputType",
-		"Input 'cost' must be a single scalar double. Aborting.");
+		"Input 'cost' must be a single scalar double. Aborting (153).");
 
 	// Assign variables
 	rowsData = mxGetM(data_IN);
@@ -159,23 +160,23 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 	if (rowsData != rowsSig)
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:ArrayMismatch",
-		"The number of rows in the data array and the signal array are different. Aborting.");
+		"The number of rows in the data array and the signal array are different. Aborting (163).");
 
 	if (colsSig > 1)
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:ArrayMismatch",
-		"Input 'sig' must be a single column array. Aborting.");
+		"Input 'sig' must be a single column array. Aborting (167).");
 
 	if (colsData != 2 && colsData != 4)
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:ArrayMismatch",
-		"Input 'data' must be in the form of 'O | C'. Aborting.");
+		"Input 'data' must be in the form of 'O | C'. Aborting (171).");
 
 	if (!isRealScalar(bigPoint_IN)) 
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:ScalarMismatch",
-		"Input 'bigPoint' must be a double scalar value. Aborting.");
+		"Input 'bigPoint' must be a double scalar value. Aborting (175).");
 
 	if (!isRealScalar(cost_IN))  
 		mexErrMsgIdAndTxt( "MATLAB:calcProfitLoss:ScalarMismatch",
-		"Input 'cost' must be a double scalar value. Aborting.");
+		"Input 'cost' must be a double scalar value. Aborting (179).");
 
 	// Primarily for readability
 	int shifter = 1;
@@ -246,74 +247,27 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		{
 			if (sigInPtr[ii] != 0)
 			{
-				// Check if additive, reductive or reverse
-				// Additive
-				if ((openPosition <= 0 && sigInPtr[ii] <= -1) || (openPosition >= 0 && sigInPtr[ii] >= 1))
+				// Is this an advanced signal?
+				if (fraction(sigInPtr[ii]))
+					// Advanced signal
 				{
-					// No special handling required for an advanced signal when it is additive
-					// We will add a check for the proper advanced fraction value for ease of extending
-					// the logic in the future
-					if (fraction(sigInPtr[ii]))
+					// Check for known advanced signal type
+					if (knownAdvSig(sigInPtr[ii]))
+						// Known
 					{
-						if (knownAdvSig(sigInPtr[ii]))
+						// Check for additive or reductive
+						if ((openPosition <= 0 && sigInPtr[ii] <= -1) || (openPosition >= 0 && sigInPtr[ii] >= 1))
+							// Additive
 						{
-							// Trade is additive. Add or create existing position --> openLedger
-							openLedger.push_back(createLineEntry(ii, int(sigInPtr[ii]), dataInPtr[ii+1]));
-							openPosition = openPosition + int(sigInPtr[ii]);
+							// We ignore reverse advance instructions when they are additive
 						}
+						// Reductive
 						else
 						{
-							// Unknown advanced signal.  Throw an error.
-							mexErrMsgIdAndTxt( "calcProfitLoss:AdvancedSignal:fractionUnknown",
-								"A signal contained an advanced fractional instruction %f that we could not interpret. Aborting (269).",sigInPtr[ii]);
-						}
-					}
-					// Not an advanced signal
-					else
-					{
-						// Trade is additive. Add or create existing position --> openLedger
-						openLedger.push_back(createLineEntry(ii, int(sigInPtr[ii]), dataInPtr[ii+1]));
-						openPosition = openPosition + int(sigInPtr[ii]);
-					}
-				}
-				// Reductive or Reverse
-				else if ((openPosition < 0 && sigInPtr[ii] > 0) || (openPosition > 0 && sigInPtr[ii] < 0))
-				{
-					// Is this an advanced signal?
-					if(fraction(sigInPtr[ii]))
-					{
-						if(knownAdvSig(sigInPtr[ii]))
-						{
-							// Liquidate any open position
-							while (!openLedger.empty())
+							// Confirm instruction is fractional reverse
+							if (abs(sigInPtr[ii] - int(sigInPtr[ii])) == 0.5)			// Reverse instruction
 							{
-								// Aggregate cash for corresponding observations (signal + 1)
-								cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger.front().price) * openLedger.front().quantity * BIG_POINT) - 
-									(abs(openLedger.front().quantity)* COST);
-								openLedger.pop_front();
-							}
-
-							// New position should be the integer of the advanced signal
-							openPosition = 0;
-						}
-						else
-						{
-							// Unknown advanced signal.  Throw an error.
-							mexErrMsgIdAndTxt( "calcProfitLoss:AdvancedSignal:fractionUnknown",
-								"A signal contained an advanced fractional instruction %f that we could not interpret. Aborting.",sigInPtr[ii]);
-						}
-					}
-
-					// Do we have a signal with an integer portion ?
-					if (abs(int(sigInPtr[ii])) >= 1)
-					{
-						// Signal is reductive
-						if ((int(sigInPtr[ii]) > 0 && openPosition < 0) || (int(sigInPtr[ii]) < 0 && openPosition > 0))					
-						{
-							// Signal is effectively a reverse or liquidate
-							if (abs(int(sigInPtr[ii])) >= abs(openPosition))
-							{
-								// New trade is larger than or equal to existing position. Calculate cash on all ledger lines
+								// Liquidate any open position
 								while (!openLedger.empty())
 								{
 									// Aggregate cash for corresponding observations (signal + 1)
@@ -321,56 +275,98 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 										(abs(openLedger.front().quantity)* COST);
 									openLedger.pop_front();
 								}
-								
-								// update open position tracker
-								openPosition = int(sigInPtr[ii]) + openPosition;
 
-								// if there is a 'remainder', this is the new net open position
-								// put it on the openLedger
-								if (openPosition != 0)
-								{
-									openLedger.push_back(createLineEntry(ii,openPosition,dataInPtr[ii+1]));
-								}
+								openPosition = 0;
 							}
-							// partial liquidation
 							else
 							{
-								// New trade is smaller than the current open position.
-								// How many do we need to reduce by?
-								int needQty = sigInPtr[ii];
-
-								// Prepare to iterate until we are satisfied
-								while (needQty !=0)
-								{
-									// Is the current line item quantity larger than what we need?
-									if (abs(openLedger.front().quantity) > needQty)
-									{
-										// If so we will P&L the quantity we need and reduce the open position size
-										cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger.front().price) * -needQty * BIG_POINT) - 
-											(abs(needQty) * COST);
-										// Reduce the position size.  We are aggregating so we add (e.g. 5 Purchases + 4 Sales = 1 Long)
-										openLedger.front().quantity = openLedger.front().quantity + needQty;
-										// We are satisfied and don't need any more contracts
-										needQty = 0;
-									}
-									// Current line item quantity is equal to or smaller than what we need.  Process P&L and remove.
-									else
-									{
-										// P&L entire quantity
-										cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger.front().price) * -openLedger.front().quantity * BIG_POINT) - 
-											(abs(openLedger.front().quantity) * COST);
-										// Reduce needed quantity by what we've been provided
-										needQty = needQty + openLedger.front().quantity;
-										// Remove the line item (FIFO)
-										openLedger.pop_front();
-									}
-								}
-								// update open position tracker
-								openPosition = openPosition + sigInPtr[ii];
+								//	This is here for ease of adding additional instructions later.
+								// Unknown advanced signal.  Throw an error.
+								mexErrMsgIdAndTxt( "calcProfitLoss:AdvancedSignal:fractionUnknown",
+									"A signal contained an advanced fractional instruction %f that we could not interpret. Aborting (286).",sigInPtr[ii]);
 							}
 						}
 					}
+					else
+						// Unknown instruction
+					{
+						// Unknown advanced signal.  Throw an error.
+						mexErrMsgIdAndTxt( "calcProfitLoss:AdvancedSignal:fractionUnknown",
+							"A signal contained an advanced fractional instruction %f that we could not interpret. Aborting (295).",sigInPtr[ii]);
+					}
 				}
+
+				// Any integer and if so Additive or reductive ?
+				if ((openPosition <= 0 && sigInPtr[ii] <= -1) || (openPosition >= 0 && sigInPtr[ii] >= 1))
+					// Additive
+				{
+					// Trade is additive. Add or create existing position --> openLedger
+					openLedger.push_back(createLineEntry(ii, int(sigInPtr[ii]), dataInPtr[ii+1]));
+					openPosition = openPosition + int(sigInPtr[ii]);
+				}
+				// Reductive
+				else
+				{
+					// Signal is effectively a reverse or liquidate
+					if (int(abs(sigInPtr[ii])) >= abs(openPosition))
+					{
+						// New trade is larger than or equal to existing position. Calculate cash on all ledger lines
+						while (!openLedger.empty())
+						{
+							// Aggregate cash for corresponding observations (signal + 1)
+							cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger.front().price) * openLedger.front().quantity * BIG_POINT) - 
+								(abs(openLedger.front().quantity)* COST);
+							openLedger.pop_front();
+						}
+
+						// update open position tracker
+						openPosition = int(sigInPtr[ii]) + openPosition;
+
+						// if there is a 'remainder', this is the new net open position
+						// put it on the openLedger
+						if (openPosition != 0)
+						{
+							openLedger.push_back(createLineEntry(ii,openPosition,dataInPtr[ii+1]));
+						}
+					}
+					// partial liquidation
+					else
+					{
+						// New trade is smaller than the current open position.
+						// How many do we need to reduce by?
+						int needQty = sigInPtr[ii];
+
+						// Prepare to iterate until we are satisfied
+						while (needQty !=0)
+						{
+							// Is the current line item quantity larger than what we need?
+							if (abs(openLedger.front().quantity) > needQty)
+							{
+								// If so we will P&L the quantity we need and reduce the open position size
+								cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger.front().price) * -needQty * BIG_POINT) - 
+									(abs(needQty) * COST);
+								// Reduce the position size.  We are aggregating so we add (e.g. 5 Purchases + 4 Sales = 1 Long)
+								openLedger.front().quantity = openLedger.front().quantity + needQty;
+								// We are satisfied and don't need any more contracts
+								needQty = 0;
+							}
+							// Current line item quantity is equal to or smaller than what we need.  Process P&L and remove.
+							else
+							{
+								// P&L entire quantity
+								cashIdx[ii+1] = cashIdx[ii+1] + ((dataInPtr[ii+1] - openLedger.front().price) * -openLedger.front().quantity * BIG_POINT) - 
+									(abs(openLedger.front().quantity) * COST);
+								// Reduce needed quantity by what we've been provided
+								needQty = needQty + openLedger.front().quantity;
+								// Remove the line item (FIFO)
+								openLedger.pop_front();
+							}
+						}
+						// update open position tracker
+						openPosition = openPosition + sigInPtr[ii];
+					}
+				}
+
 			}
 
 			// Calculate current openEQ if there are any positions
@@ -397,24 +393,22 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		// These are for convenience and could be removed for optimization
 
 		// Calculate a cumulative sum of closed trades and open equity per observation
-		
+
 		// This loop is a 'dirty' cleaning of trades that were closed on the next observation.
 		// Because we are creating a vBar for profit objectives, if the openEquity is greater than the next
 		// observation's cash, we'll reduce openEquity to equal cash.  This should normalize some spikes.
 		for (int ll = 1; ll < rowsData - 1; ll++)
 		{
-				if (openEQIdx[ll] != cashIdx[ll+1] && openEQIdx[ll+1] == 0 && cashIdx[ll+1] > 0)
-				{
-					openEQIdx[ll] = cashIdx[ll+1];
-				}
+			if (openEQIdx[ll] != cashIdx[ll+1] && openEQIdx[ll+1] == 0 && cashIdx[ll+1] > 0)
+			{
+				openEQIdx[ll] = cashIdx[ll+1];
+			}
 		}
 
 		double runSum = 0;
 		returnsIdx[0] = 0;
 		for (int kk=0; kk < rowsData; kk++)
 		{
-			
-
 			runSum = runSum + cashIdx[kk];
 			netLiqIdx[kk] = runSum + openEQIdx[kk];
 
@@ -499,13 +493,13 @@ bool knownAdvSig(double advSig)
 //  -------------------------------------------------------------------------
 //        This code is distributed in the hope that it will be useful,
 //
-//                      	 WITHOUT ANY WARRANTY
+//                         WITHOUT ANY WARRANTY AND
 //
 //                  WITHOUT CLAIM AS TO MERCHANTABILITY
 //
 //                  OR FITNESS FOR A PARTICULAR PURPOSE
 //
-//                           expressed or implied.
+//                           EXPRESSED OR IMPLIED.
 //
 //   Use of this code, pseudocode, algorithmic or trading logic contained
 //   herein, whether sound or faulty for any purpose is the sole
@@ -514,10 +508,14 @@ bool knownAdvSig(double advSig)
 //   or recommended usage from the AUTHOR or any of the possible
 //   contributors listed or unlisted, known or unknown.
 //
-//   Any reference of this code or to this code including any variants from
-//   this code, or any other credits due this AUTHOR from this code shall be
-//   clearly and unambiguously cited and evident during any use, whether in
-//   whole or in part.
+//	 Redistribution and use in source and binary forms, with or without
+//	 modification, are permitted provided that the following conditions are met: 
+//
+//	 1. Redistributions of source code must retain the below copyright notice, 
+//	 this list of conditions and the following disclaimer. 
+//	 2. Redistributions in binary form must reproduce the below copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution. 
 //
 //   The public sharing of this code does not relinquish, reduce, restrict or
 //   encumber any rights the AUTHOR has in respect to claims of intellectual
@@ -539,6 +537,6 @@ bool knownAdvSig(double advSig)
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4924.25440
+//   Revision:	4928.21457
 //   Copyright:	(c)2013
 //
