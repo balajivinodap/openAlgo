@@ -235,10 +235,17 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	numTicks =	mxGetScalar(numTicks_IN);
 	openAvg =	mxGetScalar(openAvg_IN);
 
+	// Final check of inputs
 	if ((openAvg != 0) && (openAvg != 1))
 	{
 		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:ProfitTargetCalc",
 			"Input 'openAvg' must be either 0 - atomic price | 1 - average price. \nInput was given as %d. Aborting.", openAvg);
+	}
+	
+	if (minTick < 0)
+	{
+		mexErrMsgIdAndTxt( "MATLAB:numTicksProfit:minTickError",
+			"Input 'minTick' must be an integer greater than or equal to zero. \nInput was given as %d. Aborting.", minTick);
 	}
 
 	PROFIT_TGT = (minTick * numTicks);
@@ -258,9 +265,10 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		}
 	}	
 
-	// Either return the input if not trades found, or start the check for profit targets reached per open position
+	// If there are no trades or the minTick is zero indicating no profit taking then return the original input.
+	// Otherwise start the check for profit targets reached per open position
 	// We have no trades
-	if (!anyTrades)						
+	if (!anyTrades || minTick == 0)						
 	{
 		// http://www.mathworks.com/support/solutions/en/data/1-6NU359/index.html
 		// Return what we were given
@@ -604,17 +612,6 @@ void moveProfitLedger(list<profitEntry> &profitLedger, const int ID, int qty, do
 	profitLedger.push_back(createProfitLedgerEntry(ID, qty * -1, price));	
 }
 
-//void moveOpenLedger(list<openEntry> &openLedger, const int ID, int qty, int &openPosition)
-//{
-//	// We take the price of the next observation for the generated signal
-//	openLedger.push_back(createOpenLedgerEntry(ID, qty, barsInPtr[ID + 1 + shiftOpen]));
-//	openPosition = openPosition - qty;
-//}
-
-// sameBarProfitCheck uses the Signal index and will look at the corresponding
-// 'next' observation for price data. It is important to note that this is referencing
-// the last entry on the openLedger.  Additionally, minMax needs to have been updated
-// prior to calling this function.
 void sameBarProfitCheck(list<openEntry> &openLedger, list<profitEntry> &profitLedger, const int ID, int qty, int &openPosition, double &minMax)
 {
 	if (openAvg == 0)
@@ -964,6 +961,6 @@ void chkOpenMethod(int &openPosition, const int curBar, double &minMax, list<ope
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4914.39102
+//   Revision:	4929.25227
 //   Copyright:	(c)2013
 //
