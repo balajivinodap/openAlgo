@@ -84,8 +84,8 @@ if nargout == 0
     linkaxes(ax,'x')
 else
     %% Return values
-    for i = 1:nargout
-        switch i
+    for ii = 1:nargout
+        switch ii
             case 1
                 varargout{1} = SIG; % signal
             case 2

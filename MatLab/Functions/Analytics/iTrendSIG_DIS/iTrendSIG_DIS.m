@@ -106,8 +106,8 @@ highsLows = (fHigh + fLow) / 2;
         title(['Final Return = ',thousandSepCash(sum(R))])
         linkaxes(ax,'x')
     else
-        for i = 1:nargout
-            switch i
+        for ii = 1:nargout
+            switch ii
                 case 1
                     varargout{1} = SIG;
                 case 2

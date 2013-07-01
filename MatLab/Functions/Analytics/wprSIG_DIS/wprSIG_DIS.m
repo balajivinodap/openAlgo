@@ -113,8 +113,8 @@ elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
     linkaxes(ax,'x')
 else
     %% Return values
-    for i = 1:nargout
-        switch i
+    for ii = 1:nargout
+        switch ii
             case 1
                 varargout{1} = s; % signal
             case 2

@@ -127,8 +127,8 @@ if nargout == 0
     
 else
     %% Return values
-    for i = 1:nargout
-        switch i
+    for ii = 1:nargout
+        switch ii
             case 1
                 if isSignal == 1
                     warning('We do not expect to use marsiMETS to generate signals when isSignal == 1');

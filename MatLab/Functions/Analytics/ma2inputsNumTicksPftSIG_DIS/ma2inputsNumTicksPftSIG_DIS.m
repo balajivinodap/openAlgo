@@ -87,7 +87,7 @@ if (numTicks < 0 || floor(numTicks)~= numTicks)
         '''numTicks'' input was not an integer value >= 0. Aborting.');
 end; %if
 
-[barsOut,sigOut,R,SH,LEAD,LAG] = ma2inputsNumTicksPftSIG(price,F,S,typeMA,...
+[barsOut,sigOut,R,SH,LEAD,LAG] = ma2inputsNumTicksPftSIG_mex(price,F,S,typeMA,...
                                              minTick,numTicks,openAvg,...
                                              bigPoint,cost,scaling);
 
@@ -129,8 +129,8 @@ elseif (nargout == 0) && exist('hSub','var')% Plot as subplot
     title(['F:',num2str(F),'   S:',num2str(S),'   Ticks:',num2str(numTicks),'      Final Return = ',thousandSepCash(sum(R))])
     linkaxes(ax,'x')
 else
-    for i = 1:nargout
-        switch i
+    for ii = 1:nargout
+        switch ii
             case 1
                 varargout{1} = barsOut;
             case 2
