@@ -1,0 +1,6 @@
+"\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_AD.c" 
+"\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_ADOSC.c" 
+"\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_EMA.c" 
+"\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_common\ta_global.c"
+-I"\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\include" 
+-I"\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_common"
