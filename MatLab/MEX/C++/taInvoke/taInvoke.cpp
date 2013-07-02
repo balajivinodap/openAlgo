@@ -1,12 +1,11 @@
-// taWrapper.cpp
+// taInvoke.cpp
 //
 // Matlab function:
-// [varout] = taWrapper(taFunction,data,varin)
+// [varout] = taInvoke(taFunction, varin)
 //
 // 
 // Inputs:
 //		taFunction	The name of the TA-Lib function to call
-//		data		A Mx4 array of prices in the form of Open | High | Low | Close
 //		varin		The input variable(s) as necessary for the called taFunction
 //
 // Outputs:
@@ -54,7 +53,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	// Check number of inputs
 	if (nrhs < 2)
 		mexErrMsgIdAndTxt( "MATLAB:taWrapper:NumInputs",
-		"Number of input arguments is not correct. Aborting (26).");
+		"Number of input arguments is not correct. Aborting (56).");
 
 	// Define constants (#define assigns a variable as either a constant or a macro)
 	// Inputs
@@ -88,14 +87,21 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			// Check number of inputs
 			if (nrhs != 5)
 				mexErrMsgIdAndTxt( "MATLAB:taWrapper:ta_ad:NumInputs",
-				"Number of input arguments is not correct. Price data should be parsed into vectors H | L | C followed by a volume vector V. Aborting (232).");
+				"Number of input arguments is not correct. Price data should be parsed into vectors H | L | C followed by a volume vector V. Aborting (90).");
 			if (nlhs != 1)
 				mexErrMsgIdAndTxt( "MATLAB:taWrapper:ta_ad:NumOutputs",
-					"The function 'ta_ad' (Chaikin A/D Line) produces a single vector output. Aborting (235).");
+					"The function 'ta_ad' (Chaikin A/D Line) produces a single vector output. Aborting (93).");
+			
+			// Create constants for readability
+			// Inputs
 			#define high_IN		prhs[1]
 			#define low_IN		prhs[2]
 			#define close_IN	prhs[3]
 			#define vol_IN		prhs[4]
+
+			// Outputs
+			#define ad_OUT		plhs[0]
+
 
 			// Declare variables
 			int startIdx, endIdx, rows, colsH, colsL, colsC, colsV;
@@ -120,25 +126,25 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			if (colsH != 1)
 			{
 				mexErrMsgIdAndTxt( "MATLAB:taWrapper:ta_ad:InputErr",
-					"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'High' vector had more than 1 column.  Aborting (266).");
+					"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'High' vector had more than 1 column.  Aborting (129).");
 			}
 
 			if (colsL != 1)
 			{
 				mexErrMsgIdAndTxt( "MATLAB:taWrapper:ta_ad:InputErr",
-					"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'Low' vector had more than 1 column.  Aborting (271).");
+					"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'Low' vector had more than 1 column.  Aborting (135).");
 			}
 
 			if (colsC != 1)
 			{
 				mexErrMsgIdAndTxt( "MATLAB:taWrapper:ta_ad:InputErr",
-					"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'Close' vector had more than 1 column.  Aborting (277).");
+					"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'Close' vector had more than 1 column.  Aborting (141).");
 			}
 
 			if (colsV != 1)
 			{
 				mexErrMsgIdAndTxt( "MATLAB:taWrapper:ta_ad:InputErr",
-					"Volume data should be a single vector array. Aborting (283).");
+					"Volume data should be a single vector array. Aborting (147).");
 			}
 
 			endIdx = rows - 1;  // Adjust for C++ starting at '0'
@@ -159,12 +165,12 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			{
 				mxFree(outReal);
 				mexPrintf("%s%i","Return code=",retCode);
-				mexErrMsgTxt("Invocation to 'ta_ad' failed. Aborting (305).");
+				mexErrMsgTxt("Invocation to 'ta_ad' failed. Aborting (169).");
 			}
 
 			// Populate Output
-			plhs[0] = mxCreateDoubleMatrix(adIdx+outElements,1, mxREAL);
-			memcpy(((double*) mxGetData(plhs[0]))+adIdx, outReal, outElements*mxGetElementSize(plhs[0]));
+			ad_OUT = mxCreateDoubleMatrix(adIdx+outElements,1, mxREAL);
+			memcpy(((double*) mxGetData(ad_OUT))+adIdx, outReal, outElements*mxGetElementSize(ad_OUT));
 		
 			// Cleanup
 			mxFree(outReal);  
@@ -972,3 +978,64 @@ void InitSwitchMapping()
 
 }
 
+//
+//  -------------------------------------------------------------------------
+//                                  _    _ 
+//         ___  _ __   ___ _ __    / \  | | __ _  ___   ___  _ __ __ _ 
+//        / _ \| '_ \ / _ \ '_ \  / _ \ | |/ _` |/ _ \ / _ \| '__/ _` |
+//       | (_) | |_) |  __/ | | |/ ___ \| | (_| | (_) | (_) | | | (_| |
+//        \___/| .__/ \___|_| |_/_/   \_\_|\__, |\___(_)___/|_|  \__, |
+//             |_|                         |___/                 |___/
+//  -------------------------------------------------------------------------
+//        This code is distributed in the hope that it will be useful,
+//
+//                         WITHOUT ANY WARRANTY AND
+//
+//                  WITHOUT CLAIM AS TO MERCHANTABILITY
+//
+//                  OR FITNESS FOR A PARTICULAR PURPOSE
+//
+//                           EXPRESSED OR IMPLIED.
+//
+//   Use of this code, pseudocode, algorithmic or trading logic contained
+//   herein, whether sound or faulty for any purpose is the sole
+//   responsibility of the USER. Any such use of these algorithms, coding
+//   logic or concepts in whole or in part carry no covenant of correctness
+//   or recommended usage from the AUTHOR or any of the possible
+//   contributors listed or unlisted, known or unknown.
+//
+//	 Redistribution and use in source and binary forms, with or without
+//	 modification, are permitted provided that the following conditions are met: 
+//
+//	 1. Redistributions of source code must retain the below copyright notice, 
+//	 this list of conditions and the following disclaimer. 
+//	 2. Redistributions in binary form must reproduce the below copyright notice,
+//   this list of conditions and the following disclaimer in the documentation
+//   and/or other materials provided with the distribution. 
+//
+//   The public sharing of this code does not relinquish, reduce, restrict or
+//   encumber any rights the AUTHOR has in respect to claims of intellectual
+//   property.
+//
+//	 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
+//	 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
+//	 IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
+//	 ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
+//	 LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
+//	 CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
+//	 SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
+//	 INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
+//	 CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
+//	 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
+//	 POSSIBILITY OF SUCH DAMAGE.
+//
+//   -------------------------------------------------------------------------
+//
+//                             ALL RIGHTS RESERVED
+//
+//   -------------------------------------------------------------------------
+//
+//   Author:	Mark Tompkins
+//   Revision:	4930.37947
+//   Copyright:	(c)2013
+//
