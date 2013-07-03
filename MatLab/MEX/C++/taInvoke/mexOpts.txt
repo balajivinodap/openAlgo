@@ -1,4 +1,6 @@
-"\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_AD.c" 
+"\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_ACCBANDS.c"
+"\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_ACOS.c"
+"\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_AD.c"  
 "\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_ADOSC.c" 
 "\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_ADX.c"
 "\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_ADXR.c"

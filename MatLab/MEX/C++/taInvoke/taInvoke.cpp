@@ -85,13 +85,193 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 	switch (s_mapStringValues[taFuncNameIn])
 	{
-		// accbands
+		// Acceleration Bands
 		case ta_accbands:
-			break;
+			{
+				// REQUIRED INPUTS
+				//		Price	H | L | C	separate vectors
+
+				// OPTIONAL INPUTS
+				//		Lookback period	(default 14)
+
+				// OUTPUTS
+				//		upperBand		
+				//		midBand
+				//		lowerBand
+
+				// Check number of inputs
+				if (nrhs < 4 || nrhs > 5)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_accbands:NumInputs",
+					"Number of input arguments to function 'ta_accbands' is not correct. Price data should be parsed into vectors H | L | C. Aborting (105).");
+				if (nlhs != 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_accbands:NumOutputs",
+					"The function 'ta_accbands' (Acceleration Bands) produces 3 vector outputs that must be assigned. Aborting (108).");
+
+				// Create constants for readability
+				// Inputs
+				#define high_IN		prhs[1]
+				#define low_IN		prhs[2]
+				#define close_IN	prhs[3]
+
+				// Outputs
+				#define accUpper_OUT	plhs[0]
+				#define accMid_OUT		plhs[1]
+				#define accLower_OUT	plhs[2]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsH, colsL, colsC, lookback;
+				double *highPtr, *lowPtr, *closePtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				highPtr		= mxGetPr(high_IN);
+				rows		= (int)mxGetM(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				colsL		= (int)mxGetN(low_IN);
+				closePtr	= mxGetPr(close_IN);
+				colsC		= (int)mxGetN(close_IN);
+
+				// Validate
+				chkSingleVol(colsH, colsL, colsC, 139);
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int accIdx, outElements;
+				double *accUpper, *accMid, *accLower;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs == 5) 
+				{
+					#define lookback_IN	prhs[4]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The ACCBANDS lookback must be a scalar. Aborting (154).");
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				accUpper	= (double*)mxCalloc(rows, sizeof(double));
+				accMid		= (double*)mxCalloc(rows, sizeof(double));
+				accLower	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_ACCBANDS(startIdx, endIdx, highPtr, lowPtr, closePtr, lookback, &accIdx, &outElements, accUpper, accMid, accLower);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(accUpper);
+					mxFree(accMid);
+					mxFree(accLower);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (180).", taFuncNameIn);
+				}
+
+				// Populate Output
+				accUpper_OUT = mxCreateDoubleMatrix(accIdx + outElements,1, mxREAL);
+				accMid_OUT = mxCreateDoubleMatrix(accIdx + outElements,1, mxREAL);
+				accLower_OUT = mxCreateDoubleMatrix(accIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(accUpper_OUT)) + accIdx, accUpper, outElements * mxGetElementSize(accUpper_OUT));
+				memcpy(((double *) mxGetData(accMid_OUT)) + accIdx, accMid, outElements * mxGetElementSize(accMid_OUT));
+				memcpy(((double *) mxGetData(accLower_OUT)) + accIdx, accLower, outElements * mxGetElementSize(accLower_OUT));
+
+				// Cleanup
+				mxFree(accUpper); 
+				mxFree(accMid); 
+				mxFree(accLower); 
+				break;
+			}
+			
 		// Vector Trigonometric ACos
 		case ta_acos:
+			{
+				// REQUIRED INPUTS
+				//		input	any single column vector of cosine values (-1 to 1)
+				//				e.g. acos(-1) = pi (~3.14) radians = 180 degrees
 
-			break;
+				// OPTIONAL INPUTS
+				//		none
+
+				// OUTPUTS
+				//		ACOS	Inverse cosine of input (radians)
+
+				// Check number of inputs
+				if (nrhs != 2)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_acos:NumInputs",
+					"Number of input arguments to function 'ta_acos' is not correct. A single vector of radian values should be provided. Aborting (106).");
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_acos:NumOutputs",
+					"The function 'ta_acos' (Vector Trigonometric ACos) produces a single vector output that must be assigned. Aborting (109).");
+
+				// Create constants for readability
+				// Inputs
+				#define cos_IN			prhs[1]
+
+				// Outputs
+				#define acos_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsCos;
+				double *cosPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse inputs and error check
+				// Assign pointers and get dimensions
+				cosPtr		= mxGetPr(cos_IN);
+				colsCos		= (int)mxGetN(cos_IN);
+				rows		= (int)mxGetM(cos_IN);
+
+				if (colsCos != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_acos:InputErr",
+						"Cosine data should be a single vector array. Aborting (134).");
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int acosIdx, outElements;
+				double *outReal;
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				// May have to change typeMA from decimal to name
+				retCode = TA_ACOS(startIdx, endIdx, cosPtr, &acosIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgTxt("Invocation to 'ta_acos' failed. Aborting (156).");
+				}
+
+				// Populate Output
+				acos_OUT = mxCreateDoubleMatrix(acosIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(acos_OUT)) + acosIdx, outReal, outElements * mxGetElementSize(acos_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+				break;
+			}
+			
 	
 		// Chaikin A/D Line
 		// ad = taWrapper('ta_ad', high, low, close, vol);
@@ -357,7 +537,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				colsC		= (int)mxGetN(close_IN);
 
 				// Validate
-				chkSingleVol(colsH, colsL, colsC, 360);
+				chkSingleVol(colsH, colsL, colsC, 487);
 
 				endIdx = rows - 1;  // Adjust for C++ starting at '0'
 				startIdx = 0;
@@ -372,7 +552,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 					#define lookback_IN	prhs[4]
 					if (!isRealScalar(lookback_IN))
 						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
-						"The ADX lookback must be a scalar. Aborting (375).");
+						"The ADX lookback must be a scalar. Aborting (527).");
 					/* Get the scalar input lookback */
 					// Assign
 					lookback = (int)mxGetScalar(lookback_IN);
@@ -403,7 +583,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				{
 					mxFree(outReal);
 					mexPrintf("%s%i","Return code=",retCode);
-					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (406).", taFuncNameIn);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (573).", taFuncNameIn);
 				}
 
 				// Populate Output
@@ -463,6 +643,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				// Parse inputs and error check
 				// Assign pointers and get dimensions
 				pricePtr		= mxGetPr(price_IN);
+				colsP		= (int)mxGetN(price_IN);
 				rows		= (int)mxGetM(price_IN);
 
 				if (colsP != 1)
@@ -551,7 +732,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				{
 					mxFree(outReal);
 					mexPrintf("%s%i","Return code=",retCode);
-					mexErrMsgTxt("Invocation to 'ta_apo' failed. Aborting (551).");
+					mexErrMsgTxt("Invocation to 'ta_apo' failed. Aborting (620).");
 				}
 
 				// Populate Output
@@ -760,8 +941,11 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 		// Vector Trigonometric ASin
 		case ta_asin:       
+			{
 
-			break;
+				break;
+			}
+			
 		// Vector Trigonometric ATan
 		case ta_atan:       
 
