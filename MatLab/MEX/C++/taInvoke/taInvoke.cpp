@@ -40,10 +40,10 @@ static enum StringValue { taNotDefined, ta_acos, ta_ad, ta_add, ta_adosc, ta_adx
 							ta_sin, ta_sinh, ta_sma, ta_sqrt, ta_stddev, ta_stoch, ta_stochf, ta_stochrsi, ta_sub, ta_sum, ta_t3, ta_tan, ta_tanh, ta_tema, ta_trange, ta_trima, ta_trix, 
 							ta_tsf, ta_typprice, ta_ultosc, ta_var, ta_wclprice, ta_willr, ta_wma};
 
+// Prototypes
 // Map to associate the strings with the enum values
 static map<string, StringValue> s_mapStringValues;
-
-// Initialization
+void chkSingleVol(int colsH, int colsL, int colsC, int lineNum);
 static void InitSwitchMapping();
 
 // Macros
@@ -95,18 +95,20 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				// REQUIRED INPUTS
 				//		Price	H | L | C	separate vectors
 				//		Volume
+
 				// OPTIONAL INPUTS
 				//		none
+
 				// OUTPUT
 				//		ad		vector of Chaikin advance / decline line values
 
 				// Check number of inputs
 				if (nrhs != 5)
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ad:NumInputs",
-					"Number of input arguments to function 'ta_ad' is not correct. Price data should be parsed into vectors H | L | C followed by a volume vector V. Aborting (102).");
+					"Number of input arguments to function 'ta_ad' is not correct. Price data should be parsed into vectors H | L | C followed by a volume vector V. Aborting (108).");
 				if (nlhs != 1)
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ad:NumOutputs",
-						"The function 'ta_ad' (Chaikin A/D Line) produces a single vector output. Aborting (105).");
+						"The function 'ta_ad' (Chaikin A/D Line) produces a single vector output. Aborting (111).");
 			
 				// Create constants for readability
 				// Inputs
@@ -139,28 +141,12 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				colsV		= (int)mxGetN(vol_IN);
 
 				// Input validation
-				if (colsH != 1)
-				{
-					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ad:InputErr",
-						"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'High' vector had more than 1 column.  Aborting (141).");
-				}
-
-				if (colsL != 1)
-				{
-					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ad:InputErr",
-						"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'Low' vector had more than 1 column.  Aborting (147).");
-				}
-
-				if (colsC != 1)
-				{
-					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ad:InputErr",
-						"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'Close' vector had more than 1 column.  Aborting (153).");
-				}
+				chkSingleVol(colsH, colsL, colsC, 144);
 
 				if (colsV != 1)
 				{
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ad:InputErr",
-						"Volume data should be a single vector array. Aborting (159).");
+						"Volume data should be a single vector array. Aborting (149).");
 				}
 
 				endIdx = rows - 1;  // Adjust for C++ starting at '0'
@@ -204,19 +190,21 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				// REQUIRED INPUTS
 				//		Price	H | L | C	separate vectors
 				//		Volume
+				
 				// OPTIONAL INPUTS
 				//		Fast MA look back	(default 3)
 				//		Slow MA look back	(default 10)
+
 				// OUTPUT
 				//		ad		vector of Chaikin advance / decline line values
 
 				// Check number of inputs
 				if (nrhs < 5 || nrhs > 7)
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_adosc:NumInputs",
-					"Number of input arguments is not correct. Price data should be parsed into vectors H | L | C followed by a volume vector V.\nOptional inputs are fastMA | slowMA. Aborting (212).");
+					"Number of input arguments is not correct. Price data should be parsed into vectors H | L | C followed by a volume vector V.\nOptional inputs are fastMA | slowMA. Aborting (220).");
 				if (nlhs != 1)
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_adosc:NumOutputs",
-					"The function 'ta_adosc' (Chaikin A/D Oscillator) produces a single vector output you must assign. Aborting (219).");
+					"The function 'ta_adosc' (Chaikin A/D Oscillator) produces a single vector output that must be assigned. Aborting (223).");
 
 				// Create constants for readability
 				// Inputs
@@ -249,23 +237,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				colsV		= (int)mxGetN(vol_IN);
 
 				// Input validation
-				if (colsH != 1)
-				{
-					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_adosc:InputErr",
-						"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'High' vector had more than 1 column.  Aborting (250).");
-				}
-
-				if (colsL != 1)
-				{
-					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_adosc:InputErr",
-						"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'Low' vector had more than 1 column.  Aborting (256).");
-				}
-
-				if (colsC != 1)
-				{
-					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_adosc:InputErr",
-						"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'Close' vector had more than 1 column.  Aborting (262).");
-				}
+				chkSingleVol(colsH, colsL, colsC, 240);
 
 				if (colsV != 1)
 				{
@@ -296,13 +268,13 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
 						"The slowMA (%d) must not be less than the fastMA (%d). Aborting (289).",slowMA_IN,fastMA_IN);	
 
-					/* Get the scalar input optInTimePeriod. */
+					/* Get the scalar inputs */
 					// Assign
 					fastMA = (int)mxGetScalar(fastMA_IN);
 					slowMA = (int)mxGetScalar(slowMA_IN);
 				}
 				else
-				// Default look back periods
+				// Default lookback periods
 				{
 					fastMA = 3;
 					slowMA = 10;
@@ -319,7 +291,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				{
 					mxFree(outReal);
 					mexPrintf("%s%i","Return code=",retCode);
-					mexErrMsgTxt("Invocation to 'ta_adosc' failed. Aborting (318).");
+					mexErrMsgTxt("Invocation to 'ta_adosc' failed. Aborting (294).");
 				}
 
 				// Populate Output
@@ -331,8 +303,99 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				break;
 			}
 		// Average Directional Movement Index
-		case ta_adx:       
+		case ta_adx:
+			{
+				// REQUIRED INPUTS
+				//		Price	H | L | C	separate vectors
 
+				// OPTIONAL INPUTS
+				//		Look back period	(default 14)
+
+				// OUTPUT
+				//		adx		vector of Average Directional Movement Index
+
+				// Check number of inputs
+				if (nrhs < 4 || nrhs > 5)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_adx:NumInputs",
+					"Number of input arguments to function 'ta_adx' is not correct. Price data should be parsed into vectors H | L | C. Aborting (351).");
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_adx:NumOutputs",
+					"The function 'ta_adx' (Average Directional Movement Index) produces a single vector output that must be assigned. Aborting (354).");
+
+				// Create constants for readability
+				// Inputs
+				#define high_IN		prhs[1]
+				#define low_IN		prhs[2]
+				#define close_IN	prhs[3]
+
+				// Outputs
+				#define adx_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsH, colsL, colsC, lookback;
+				double *highPtr, *lowPtr, *closePtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				highPtr		= mxGetPr(high_IN);
+				rows		= (int)mxGetM(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				colsL		= (int)mxGetN(low_IN);
+				closePtr	= mxGetPr(close_IN);
+				colsC		= (int)mxGetN(close_IN);
+
+				chkSingleVol(colsH, colsL, colsC, 350);
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int adxIdx, outElements;
+				double *outReal;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs ==5) 
+				{
+					#define lookback_IN	prhs[4]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The ADX lookback must be a scalar. Aborting (366).");
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+				}
+				else
+				// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_ADX(startIdx, endIdx, highPtr, lowPtr, closePtr, lookback, &adxIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgTxt("Invocation to 'ta_adx' failed. Aborting (388).");
+				}
+
+				// Populate Output
+				adx_OUT = mxCreateDoubleMatrix(adxIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(adx_OUT)) + adxIdx, outReal, outElements * mxGetElementSize(adx_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+				break;
+			}
 			break;
 		// Average Directional Movement Index Rating
 		case ta_adxr:       
@@ -1123,6 +1186,27 @@ void InitSwitchMapping()
 	s_mapStringValues["ta_willr"]				= ta_willr;
 	s_mapStringValues["ta_wma"]					= ta_wma;
 
+}
+
+void chkSingleVol( int colsH, int colsL, int colsC, int lineNum )
+{
+	if (colsH != 1)
+	{
+		mexErrMsgIdAndTxt( "MATLAB:taInvoke:InputErr",
+			"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'High' vector had more than 1 column.  Aborting (%i).", lineNum);
+	}
+
+	if (colsL != 1)
+	{
+		mexErrMsgIdAndTxt( "MATLAB:taInvoke:InputErr",
+			"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'Low' vector had more than 1 column.  Aborting (%i).", lineNum);
+	}
+
+	if (colsC != 1)
+	{
+		mexErrMsgIdAndTxt( "MATLAB:taInvoke:InputErr",
+			"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'Close' vector had more than 1 column.  Aborting (%i).", lineNum);
+	}
 }
 
 //
