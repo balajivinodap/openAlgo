@@ -62,7 +62,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 	// Define constants (#define assigns a variable as either a constant or a macro)
 	// Inputs
-#define taFuncName_IN		prhs[0]
+	#define taFuncName_IN		prhs[0]
 
 	/* Assign pointers to the function string */ 
 	int funcNumChars = (int)mxGetN(taFuncName_IN)+1;	// +1 for the NULL added at the end
@@ -191,6 +191,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				mxFree(accUpper); 
 				mxFree(accMid); 
 				mxFree(accLower); 
+
 				break;
 			}
 			
@@ -199,21 +200,21 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			{
 				// REQUIRED INPUTS
 				//		input	any single column vector of cosine values (-1 to 1)
-				//				e.g. acos(-1) = pi (~3.14) radians = 180 degrees
 
 				// OPTIONAL INPUTS
 				//		none
 
 				// OUTPUTS
 				//		ACOS	Inverse cosine of input (radians)
+				//				e.g. acos(-1) = pi (~3.14) radians = 180 degrees
 
 				// Check number of inputs
 				if (nrhs != 2)
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_acos:NumInputs",
-					"Number of input arguments to function 'ta_acos' is not correct. A single vector of radian values should be provided. Aborting (106).");
+					"Number of input arguments to function 'ta_acos' is not correct. A single vector of values (-1 =< x =< 1) should be provided. Aborting (214).");
 				if (nlhs != 1)
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_acos:NumOutputs",
-					"The function 'ta_acos' (Vector Trigonometric ACos) produces a single vector output that must be assigned. Aborting (109).");
+					"The function 'ta_acos' (Vector Trigonometric ACos) produces a single vector output that must be assigned. Aborting (217).");
 
 				// Create constants for readability
 				// Inputs
@@ -269,12 +270,11 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 				// Cleanup
 				mxFree(outReal); 
+
 				break;
 			}
 			
-	
 		// Chaikin A/D Line
-		// ad = taWrapper('ta_ad', high, low, close, vol);
 		case ta_ad:
 			{
 				// REQUIRED INPUTS
@@ -304,7 +304,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 				// Outputs
 				#define ad_OUT		plhs[0]
-
 
 				// Declare variables
 				int startIdx, endIdx, rows, colsH, colsL, colsC, colsV;
@@ -363,12 +362,90 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				mxFree(outReal);  
 				break;
 			}
+
 		// Vector Arithmetic Add
 		case ta_add:       
 			{
+				// REQUIRED INPUTS
+				//		Augend
+				//		Addend
 
+				// OPTIONAL INPUTS
+				//		none
+
+				// OUTPUTS
+				//		Sum
+
+				// Check number of inputs
+				if (nrhs != 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_add:NumInputs",
+					"Number of input arguments to function 'ta_add' is not correct. Two vectors for summation should be provided. Aborting (380).");
+
+				// Create constants for readability
+				// Inputs
+				#define augend_IN		prhs[1]
+				#define added_IN		prhs[2]
+
+				// Outputs
+				#define sumTotal_OUT	plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsAug, colsAdd;
+				double *augendPtr, *addendPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				augendPtr		= mxGetPr(augend_IN);
+				rows			= (int)mxGetM(augend_IN);
+				colsAug			= (int)mxGetN(augend_IN);
+				addendPtr		= mxGetPr(added_IN);
+				colsAdd			= (int)mxGetN(added_IN);
+
+				if (colsAug != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:InputErr",
+						"Vector addition inputs should be single dimensional vectors.\nThe augend vector had more than 1 column.  Aborting (408).");
+				}
+
+				if (colsAdd != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:InputErr",
+						"Vector addition inputs should be single dimensional vectors.\nThe addend vector had more than 1 column.  Aborting (414).");
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int addIdx, outElements;
+				double *sumTotal;
+
+				// Preallocate heap
+				sumTotal = (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_ADD(startIdx, endIdx, augendPtr, addendPtr, &addIdx, &outElements, sumTotal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(sumTotal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (434).", taFuncNameIn);
+				}
+
+				// Populate Output
+				sumTotal_OUT = mxCreateDoubleMatrix(addIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(sumTotal_OUT)) + addIdx, sumTotal, outElements * mxGetElementSize(sumTotal_OUT));
+
+				// Cleanup
+				mxFree(sumTotal); 
+
+				break;
 			}
-			break;
+			
 		// Chaikin A/D Oscillator
 		case ta_adosc:
 			{
@@ -489,6 +566,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				mxFree(outReal); 
 				break;
 			}
+
 		// ADX
 		case ta_adx:		// Average Directional Movement Index
 		case ta_adxr:		// Average Directional Movement Index Rating
@@ -594,6 +672,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				mxFree(outReal); 
 				break;
 			}
+
 		// Absolute Price Oscillator
 		case ta_apo:       
 			{
@@ -743,6 +822,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				mxFree(outReal); 
 				break;
 			}
+
 		// Aroon
 		case ta_aroon:       
 			{
@@ -942,6 +1022,79 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		// Vector Trigonometric ASin
 		case ta_asin:       
 			{
+				// REQUIRED INPUTS
+				//		input	any single column vector of sine values (-1 to 1)
+				//				
+
+				// OPTIONAL INPUTS
+				//		none
+
+				// OUTPUTS
+				//		ASIN	Inverse sine of input (radians)
+				//				e.g. asin(1) = pi/2 (~1.57) radians = 90 degrees
+
+				// Check number of inputs
+				if (nrhs != 2)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_asin:NumInputs",
+					"Number of input arguments to function 'ta_asin' is not correct. A single vector of values (-1 =< x =< 1) should be provided. Aborting (1038).");
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_acos:NumOutputs",
+					"The function 'ta_asin' (Vector Trigonometric ASin) produces a single vector output that must be assigned. Aborting (1041).");
+
+				// Create constants for readability
+				// Inputs
+				#define sin_IN			prhs[1]
+
+				// Outputs
+				#define asin_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsSin;
+				double *sinPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse inputs and error check
+				// Assign pointers and get dimensions
+				sinPtr		= mxGetPr(sin_IN);
+				colsSin		= (int)mxGetN(sin_IN);
+				rows		= (int)mxGetM(sin_IN);
+
+				if (colsSin != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_asin:InputErr",
+						"Sine data should be a single vector array. Aborting (1066).");
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int asinIdx, outElements;
+				double *outReal;
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				// May have to change typeMA from decimal to name
+				retCode = TA_ASIN(startIdx, endIdx, sinPtr, &asinIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgTxt("Invocation to 'ta_acos' failed. Aborting (156).");
+				}
+
+				// Populate Output
+				asin_OUT = mxCreateDoubleMatrix(asinIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(asin_OUT)) + asinIdx, outReal, outElements * mxGetElementSize(asin_OUT));
+
+				// Cleanup
+				mxFree(outReal);
 
 				break;
 			}
@@ -1723,13 +1876,13 @@ void chkSingleVol( int colsH, int colsL, int lineNum )
 	if (colsH != 1)
 	{
 		mexErrMsgIdAndTxt( "MATLAB:taInvoke:InputErr",
-			"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'High' vector had more than 1 column.  Aborting (%i).", lineNum);
+			"Price data should be passed to the function already parsed into H | L vectors.\nThe 'High' vector had more than 1 column.  Aborting (%i).", lineNum);
 	}
 
 	if (colsL != 1)
 	{
 		mexErrMsgIdAndTxt( "MATLAB:taInvoke:InputErr",
-			"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'Low' vector had more than 1 column.  Aborting (%i).", lineNum);
+			"Price data should be passed to the function already parsed into H | L vectors.\nThe 'Low' vector had more than 1 column.  Aborting (%i).", lineNum);
 	}
 }
 
@@ -1812,6 +1965,6 @@ void chkSingleVol( int colsH, int colsL, int colsC, int lineNum )
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4931.37284
+//   Revision:	4932.22892
 //   Copyright:	(c)2013
 //
