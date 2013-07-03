@@ -3,6 +3,8 @@
 "\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_ADX.c"
 "\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_ADXR.c"
 "\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_APO.c"
+"\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_AROON.c"
+"\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_AROONOSC.c"
 "\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_DEMA.c"
 "\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_EMA.c"
 "\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_KAMA.c"

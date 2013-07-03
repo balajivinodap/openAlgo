@@ -43,7 +43,9 @@ static enum StringValue { taNotDefined, ta_accbands, ta_acos, ta_ad, ta_add, ta_
 // Prototypes
 // Map to associate the strings with the enum values
 static map<string, StringValue> s_mapStringValues;
+void chkSingleVol(int colsH, int colsL, int lineNum);
 void chkSingleVol(int colsH, int colsL, int colsC, int lineNum);
+
 static void InitSwitchMapping();
 
 // Macros
@@ -315,7 +317,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				//		Price	H | L | C	separate vectors
 
 				// OPTIONAL INPUTS
-				//		Look back period	(default 14)
+				//		Lookback period	(default 14)
 
 				// OUTPUT
 				//		adx		vector of Average Directional Movement Index
@@ -354,7 +356,8 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				closePtr	= mxGetPr(close_IN);
 				colsC		= (int)mxGetN(close_IN);
 
-				chkSingleVol(colsH, colsL, colsC, 350);
+				// Validate
+				chkSingleVol(colsH, colsL, colsC, 360);
 
 				endIdx = rows - 1;  // Adjust for C++ starting at '0'
 				startIdx = 0;
@@ -369,7 +372,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 					#define lookback_IN	prhs[4]
 					if (!isRealScalar(lookback_IN))
 						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
-						"The ADX lookback must be a scalar. Aborting (366).");
+						"The ADX lookback must be a scalar. Aborting (375).");
 					/* Get the scalar input lookback */
 					// Assign
 					lookback = (int)mxGetScalar(lookback_IN);
@@ -400,7 +403,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				{
 					mxFree(outReal);
 					mexPrintf("%s%i","Return code=",retCode);
-					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (401).", taFuncNameIn);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (406).", taFuncNameIn);
 				}
 
 				// Populate Output
@@ -561,12 +564,200 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			}
 		// Aroon
 		case ta_aroon:       
+			{
+				// REQUIRED INPUTS
+				//		Price	H | L	separate vectors
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback period	(default 14)
+
+				// OUTPUT
+				//		aroonUp		vector of Aroon Up indicator values
+				//		aroonDn		vector of Aroon Down indicator values
+
+				// Check number of inputs
+				if (nrhs < 3 || nrhs > 4)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_aroon:NumInputs",
+					"Number of input arguments to function 'ta_aroon' is not correct. Price data should be parsed into separate vectors H | L. Aborting (578).");
+				if (nlhs != 2)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_aroon:NumOutputs",
+					"The function 'ta_aroon' (Aroon Indicator) produces 2 vectors as output that must be assigned. Aborting (581).");
+
+				// Create constants for readability
+				// Inputs
+				#define high_IN			prhs[1]
+				#define low_IN			prhs[2]
+
+				// Outputs
+				#define aroonUp_OUT		plhs[0]
+				#define aroonDn_OUT		plhs[1]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsH, colsL, lookback;
+				double *highPtr, *lowPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				highPtr		= mxGetPr(high_IN);
+				rows		= (int)mxGetM(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				colsL		= (int)mxGetN(low_IN);
+
+				// Validate
+				chkSingleVol(colsH, colsL, 611);
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int aroonIdx, outElements;
+				double *aroonUp, *aroonDn;
+
+				// Get optional input or assign default
+				if (nrhs == 4) 
+				{
+					#define lookback_IN	prhs[3]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The AROON lookback must be a scalar. Aborting (625).");
+					
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+				}
+				else
+				// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				aroonUp = (double*)mxCalloc(rows, sizeof(double));
+				aroonDn = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_AROON(startIdx, endIdx, highPtr, lowPtr, lookback, &aroonIdx, &outElements, aroonDn, aroonUp);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(aroonUp);
+					mxFree(aroonDn);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (649).", taFuncNameIn);
+				}
+
+				// Populate Output
+				aroonDn_OUT = mxCreateDoubleMatrix(aroonIdx + outElements,1, mxREAL);
+				aroonUp_OUT = mxCreateDoubleMatrix(aroonIdx + outElements,1, mxREAL);
+				
+				memcpy(((double *) mxGetData(aroonDn_OUT)) + aroonIdx, aroonDn, outElements * mxGetElementSize(aroonDn_OUT));
+				memcpy(((double *) mxGetData(aroonUp_OUT)) + aroonIdx, aroonUp, outElements * mxGetElementSize(aroonUp_OUT));
+
+				// Cleanup
+				mxFree(aroonDn); 
+				mxFree(aroonUp);
+				break;
+			}
+			
 		// Aroon Oscillator
 		case ta_aroonosc:       
+			{
+				// REQUIRED INPUTS
+				//		Price	H | L	separate vectors
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback period	(default 14)
+
+				// OUTPUT
+				//		aroonOsc	vector of Aroon Oscillator values
+
+				// Check number of inputs
+				if (nrhs < 3 || nrhs > 4)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_aroonosc:NumInputs",
+					"Number of input arguments to function 'ta_aroon' is not correct. Price data should be parsed into separate vectors H | L. Aborting (578).");
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_aroonosc:NumOutputs",
+					"The function 'ta_aroonosc' (Aroon Oscillator) produces a single vector as output that must be assigned. Aborting (684).");
+
+				// Create constants for readability
+				// Inputs
+				#define high_IN			prhs[1]
+				#define low_IN			prhs[2]
+
+				// Outputs
+				#define aroonOsc_OUT	plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsH, colsL, lookback;
+				double *highPtr, *lowPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				highPtr		= mxGetPr(high_IN);
+				rows		= (int)mxGetM(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				colsL		= (int)mxGetN(low_IN);
+
+				// Validate
+				chkSingleVol(colsH, colsL, 710);
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int aroonoscIdx, outElements;
+				double *aroonOsc;
+
+				// Get optional input or assign default
+				if (nrhs == 4) 
+				{
+					#define lookback_IN	prhs[3]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The AROONOSC lookback must be a scalar. Aborting (725).");
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				aroonOsc = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_AROONOSC(startIdx, endIdx, highPtr, lowPtr, lookback, &aroonoscIdx, &outElements, aroonOsc);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(aroonOsc);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (749).", taFuncNameIn);
+				}
+
+				// Populate Output
+				aroonOsc_OUT = mxCreateDoubleMatrix(aroonoscIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(aroonOsc_OUT)) + aroonoscIdx, aroonOsc, outElements * mxGetElementSize(aroonOsc_OUT));
+
+				// Cleanup
+				mxFree(aroonOsc); 
+				break;
+			}
+
 		// Vector Trigonometric ASin
 		case ta_asin:       
 
@@ -1341,6 +1532,21 @@ void InitSwitchMapping()
 	s_mapStringValues["ta_willr"]				= ta_willr;
 	s_mapStringValues["ta_wma"]					= ta_wma;
 
+}
+
+void chkSingleVol( int colsH, int colsL, int lineNum )
+{
+	if (colsH != 1)
+	{
+		mexErrMsgIdAndTxt( "MATLAB:taInvoke:InputErr",
+			"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'High' vector had more than 1 column.  Aborting (%i).", lineNum);
+	}
+
+	if (colsL != 1)
+	{
+		mexErrMsgIdAndTxt( "MATLAB:taInvoke:InputErr",
+			"Price data should be passed to the function already parsed into H | L | C vectors.\nThe 'Low' vector had more than 1 column.  Aborting (%i).", lineNum);
+	}
 }
 
 void chkSingleVol( int colsH, int colsL, int colsC, int lineNum )
