@@ -21,7 +21,7 @@
 using namespace std;
 
 // Value-Definitions of the different String values
-static enum StringValue { taNotDefined, ta_acos, ta_ad, ta_add, ta_adosc, ta_adx, ta_adxr, ta_apo, ta_aroon, ta_aroonosc, ta_asine, ta_atan, ta_atr, ta_avgprice, ta_avgdev, ta_bbands, 
+static enum StringValue { taNotDefined, ta_accbands, ta_acos, ta_ad, ta_add, ta_adosc, ta_adx, ta_adxr, ta_apo, ta_aroon, ta_aroonosc, ta_asin, ta_atan, ta_atr, ta_avgprice, ta_avgdev, ta_bbands, 
 							ta_beta, ta_bop, ta_cci, 
 							// Candlestick section start
 							ta_cdl2crows, ta_cdl3blackcrows, ta_cdl3inside, ta_cdl3linestrike, ta_cdl3outside, ta_cdl3startsinsouth, ta_cdl3whitesoldiers, ta_cdlabandonedbaby, 
@@ -83,6 +83,9 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 	switch (s_mapStringValues[taFuncNameIn])
 	{
+		// accbands
+		case ta_accbands:
+			break;
 		// Vector Trigonometric ACos
 		case ta_acos:
 
@@ -302,8 +305,9 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				mxFree(outReal); 
 				break;
 			}
-		// Average Directional Movement Index
-		case ta_adx:
+		// ADX
+		case ta_adx:		// Average Directional Movement Index
+		case ta_adxr:		// Average Directional Movement Index Rating
 			{
 				// REQUIRED INPUTS
 				//		Price	H | L | C	separate vectors
@@ -377,15 +381,24 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				// Preallocate heap
 				outReal = (double*)mxCalloc(rows, sizeof(double));
 
-				// Invoke with error catch
-				retCode = TA_ADX(startIdx, endIdx, highPtr, lowPtr, closePtr, lookback, &adxIdx, &outElements, outReal);
+				if (taFuncNameIn.compare("ta_adx") == 0)
+				{
+					// Invoke with error catch
+					retCode = TA_ADX(startIdx, endIdx, highPtr, lowPtr, closePtr, lookback, &adxIdx, &outElements, outReal);
+				}
+				else
+				{
+					// Invoke with error catch
+					retCode = TA_ADXR(startIdx, endIdx, highPtr, lowPtr, closePtr, lookback, &adxIdx, &outElements, outReal);
+				}
+				
 
 				// Error handling
 				if (retCode) 
 				{
 					mxFree(outReal);
 					mexPrintf("%s%i","Return code=",retCode);
-					mexErrMsgTxt("Invocation to 'ta_adx' failed. Aborting (388).");
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (401).", taFuncNameIn);
 				}
 
 				// Populate Output
@@ -396,11 +409,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				mxFree(outReal); 
 				break;
 			}
-			break;
-		// Average Directional Movement Index Rating
-		case ta_adxr:       
-
-			break;
 		// Absolute Price Oscillator
 		case ta_apo:       
 
@@ -414,7 +422,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 			break;
 		// Vector Trigonometric ASin
-		case ta_asine:       
+		case ta_asin:       
 
 			break;
 		// Vector Trigonometric ATan
@@ -1026,6 +1034,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 void InitSwitchMapping()
 {
+	s_mapStringValues["ta_accbands"]			= ta_accbands;
 	s_mapStringValues["ta_acos"]				= ta_acos;
 	s_mapStringValues["ta_ad"]					= ta_ad;
 	s_mapStringValues["ta_add"]					= ta_add;
@@ -1035,7 +1044,7 @@ void InitSwitchMapping()
 	s_mapStringValues["ta_apo"]					= ta_apo;
 	s_mapStringValues["ta_aroon"]				= ta_aroon;
 	s_mapStringValues["ta_aroonosc"]			= ta_aroonosc;
-	s_mapStringValues["ta_asine"]				= ta_asine;
+	s_mapStringValues["ta_asin"]				= ta_asin;
 	s_mapStringValues["ta_atan"]				= ta_atan;
 	s_mapStringValues["ta_atr"]					= ta_atr;
 	s_mapStringValues["ta_avgprice"]			= ta_avgprice;
@@ -1148,7 +1157,7 @@ void InitSwitchMapping()
 	s_mapStringValues["ta_minus_di"]			= ta_minus_di;
 	s_mapStringValues["ta_minus_dm"]			= ta_minus_dm;
 	s_mapStringValues["ta_mom"]					= ta_mom;
-	s_mapStringValues["ta_mult"]					= ta_mult;
+	s_mapStringValues["ta_mult"]				= ta_mult;
 	s_mapStringValues["ta_natr"]				= ta_natr;
 	s_mapStringValues["ta_obv"]					= ta_obv;
 	s_mapStringValues["ta_plus_di"]				= ta_plus_di;
@@ -1267,6 +1276,6 @@ void chkSingleVol( int colsH, int colsL, int colsC, int lineNum )
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4930.37947
+//   Revision:	4931.37284
 //   Copyright:	(c)2013
 //
