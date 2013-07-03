@@ -103,15 +103,15 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				//		none
 
 				// OUTPUT
-				//		ad		vector of Chaikin advance / decline line values
+				//		AD		vector of Chaikin advance / decline line values
 
 				// Check number of inputs
 				if (nrhs != 5)
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ad:NumInputs",
-					"Number of input arguments to function 'ta_ad' is not correct. Price data should be parsed into vectors H | L | C followed by a volume vector V. Aborting (108).");
+					"Number of input arguments to function 'ta_ad' is not correct. Price data should be parsed into vectors H | L | C followed by a volume vector V. Aborting (111).");
 				if (nlhs != 1)
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ad:NumOutputs",
-						"The function 'ta_ad' (Chaikin A/D Line) produces a single vector output. Aborting (111).");
+						"The function 'ta_ad' (Chaikin A/D Line) produces a single vector output that must be assigned. Aborting (114).");
 			
 				// Create constants for readability
 				// Inputs
@@ -149,7 +149,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				if (colsV != 1)
 				{
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ad:InputErr",
-						"Volume data should be a single vector array. Aborting (149).");
+						"Volume data should be a single vector array. Aborting (152).");
 				}
 
 				endIdx = rows - 1;  // Adjust for C++ starting at '0'
@@ -195,11 +195,11 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				//		Volume
 				
 				// OPTIONAL INPUTS
-				//		Fast MA look back	(default 3)
-				//		Slow MA look back	(default 10)
+				//		fastMA		Fast MA lookback	(default 3)
+				//		slowMA		Slow MA lookback	(default 10)
 
 				// OUTPUT
-				//		ad		vector of Chaikin advance / decline line values
+				//		ADOSC		vector of Chaikin advance / decline oscillator values
 
 				// Check number of inputs
 				if (nrhs < 5 || nrhs > 7)
@@ -256,25 +256,27 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				double *outReal;
 				
 				// Parse optional inputs if given, else default 
-				if (nrhs ==7) 
+				if (nrhs == 7) 
 				{
 					#define fastMA_IN	prhs[5]
 					#define slowMA_IN	prhs[6]
 
 					if (!isRealScalar(fastMA_IN))
 						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
-						"The fastMA look back must be a scalar. Aborting (283).");
+						"The fastMA lookback must be a scalar. Aborting (266).");
 					else if (!isRealScalar(slowMA_IN))
 						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
-						"The slowMA look back must be a scalar. Aborting (286).");	
-					else if (fastMA_IN > slowMA_IN)
-						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
-						"The slowMA (%d) must not be less than the fastMA (%d). Aborting (289).",slowMA_IN,fastMA_IN);	
+						"The slowMA lookback must be a scalar. Aborting (269).");	
 
 					/* Get the scalar inputs */
 					// Assign
 					fastMA = (int)mxGetScalar(fastMA_IN);
 					slowMA = (int)mxGetScalar(slowMA_IN);
+
+					if (fastMA > slowMA)
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The slowMA (%d) must not be less than the fastMA (%d). Aborting (278).", slowMA, fastMA);
+
 				}
 				else
 				// Default lookback periods
@@ -362,7 +364,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				double *outReal;
 
 				// Parse optional inputs if given, else default 
-				if (nrhs ==5) 
+				if (nrhs == 5) 
 				{
 					#define lookback_IN	prhs[4]
 					if (!isRealScalar(lookback_IN))
@@ -411,8 +413,152 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			}
 		// Absolute Price Oscillator
 		case ta_apo:       
+			{
+				// REQUIRED INPUTS
+				//		Price	any single column vector of price observations
 
-			break;
+				// OPTIONAL INPUTS
+				//		fastMA		Fast MA look back	(default 12)
+				//		slowMA		Slow MA look back	(default 26)
+				//		typeMA		Moving average calculation type:
+				//						0	-	Simple Moving Average				SMA	(default)
+				//						1	-	Exponential Moving Average			EMA
+				//						2	-	Weighted Moving Average				WMA
+				//						3	-	Double Exponential Moving Average	DEMA
+				//						4	-	Triple Exponential Moving Average	TEMA
+				//						5	-	Triangular Moving Average			TRIMA
+				//						6	-	Kaufman Adaptive Moving Average		KAMA
+				//						7	-	MESA Adaptive Moving Average		MAMA
+				//						8	-	Triple Exponential Moving Average	T3
+
+				// OUTPUT
+				//		APO			vector of Chaikin advance / decline line values
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 5)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_apo:NumInputs",
+					"Number of input arguments to function 'ta_apo' is not correct. A single vector of price data should be provided.\nOptional scalar arguments are fastMA, slowMA, typeMA. Aborting (111).");
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_apo:NumOutputs",
+					"The function 'ta_apo' (Absolute Price Oscillator) produces a single vector output that must be assigned. Aborting (441).");
+				
+				// Create constants for readability
+				// Inputs
+				#define price_IN		prhs[1]
+
+				// Outputs
+				#define apo_OUT			plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsP;
+				double *pricePtr;
+				int fastMA, slowMA, typeMA;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse inputs and error check
+				// Assign pointers and get dimensions
+				pricePtr		= mxGetPr(price_IN);
+				rows		= (int)mxGetM(price_IN);
+
+				if (colsP != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_apo:InputErr",
+						"Price data should be a single vector array. Aborting (465).");
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int apoIdx, outElements;
+				double *outReal;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs >= 4) 
+				{
+					#define fastMA_IN	prhs[2]
+					#define slowMA_IN	prhs[3]
+
+					if (!isRealScalar(fastMA_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The fastMA lookback must be a scalar. Aborting (483).");
+					else if (!isRealScalar(slowMA_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The slowMA lookback must be a scalar. Aborting (490).");
+					
+					/* Get the scalar inputs */
+					// Assign
+					fastMA = (int)mxGetScalar(fastMA_IN);
+					slowMA = (int)mxGetScalar(slowMA_IN);
+
+					if (fastMA > slowMA)
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The slowMA (%d) must not be less than the fastMA (%d). Aborting (502).", slowMA, fastMA);
+
+
+					/* Get the scalar inputs */
+					// Assign
+					fastMA = (int)mxGetScalar(fastMA_IN);
+					slowMA = (int)mxGetScalar(slowMA_IN);
+
+					if (nrhs == 5)
+					{
+						#define typeMA_IN	prhs[4]
+
+						if (!isRealScalar(typeMA_IN))
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The typeMA must be a scalar value of available types. Aborting (512).");
+
+						typeMA = (int)mxGetScalar(typeMA_IN);
+
+						if (typeMA < 0 || typeMA > 8)
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The typeMA must be a scalar value of available types (0 - 8). Aborting (518).");
+					}
+					else
+					// No typeMA provided
+					{
+						typeMA = 0;
+					}
+				}
+				else if (nrhs == 3)
+				{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"Ambiguous inputs. Aborting (529).");
+				}
+				else
+				// No optional inputs.  Supply defaults
+				{
+					fastMA = 12;
+					slowMA = 26;
+					typeMA = 0;
+				}
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));			// added cast
+
+				// Invoke with error catch
+				// May have to change typeMA from decimal to name
+				retCode = TA_APO(startIdx, endIdx, pricePtr, fastMA, slowMA, (TA_MAType)typeMA, &apoIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgTxt("Invocation to 'ta_apo' failed. Aborting (551).");
+				}
+
+				// Populate Output
+				apo_OUT = mxCreateDoubleMatrix(apoIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(apo_OUT)) + apoIdx, outReal, outElements * mxGetElementSize(apo_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+				break;
+			}
 		// Aroon
 		case ta_aroon:       
 
