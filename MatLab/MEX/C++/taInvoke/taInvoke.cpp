@@ -25,7 +25,7 @@ using namespace std;
 static enum StringValue { taNotDefined, ta_accbands, ta_acos, ta_ad, ta_add, ta_adosc, ta_adx, ta_adxr, ta_apo, ta_aroon, ta_aroonosc, ta_asin, ta_atan, ta_atr, ta_avgdev, ta_avgprice, ta_bbands, 
 							ta_beta, ta_bop, ta_cci, 
 							// Candlestick section start
-							ta_cdl2crows, ta_cdl3blackcrows, ta_cdl3inside, ta_cdl3linestrike, ta_cdl3outside, ta_cdl3startsinsouth, ta_cdl3whitesoldiers, ta_cdlabandonedbaby, 
+							ta_cdl2crows, ta_cdl3blackcrows, ta_cdl3inside, ta_cdl3linestrike, ta_cdl3outside, ta_cdl3starsinsouth, ta_cdl3whitesoldiers, ta_cdlabandonedbaby, 
 							ta_cdladvanceblock, ta_cdlbelthold, ta_cdlbreakaway, ta_cdlclosingmarubozu, ta_cdlconcealbabyswall, ta_cdlcounterattack, ta_cdldarkcloudcover, ta_cdldoji, 
 							ta_cdldojistar, ta_cdldragonflydoji, ta_cdlengulfing, ta_cdleveningdojistar, ta_cdleveningstar, ta_cdlgapsidesidewhite, ta_cdlgravestonedoji, ta_cdlhammer, 
 							ta_cdlhangingman, ta_cdlharami, ta_cdlharamicross, ta_cdlhighwave, ta_cdlhikkake, ta_cdlhikkakemod, ta_cdlhomingpigeon, ta_cdlidentical3crows, ta_cdlinneck, 
@@ -1243,7 +1243,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				// Check number of inputs
 				if (nrhs < 4 || nrhs > 5)
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_atr:NumInputs",
-					"Number of input arguments to function 'ta_atr' is not correct. Price data should be parsed into vectors H | L | C.\n An optional lookback scalar may also be provided. Aborting (1196).");
+					"Number of input arguments to function 'ta_atr' is not correct. Price data should be parsed into vectors H | L | C.\nAn optional lookback scalar may also be provided. Aborting (1196).");
 				if (nlhs != 1)
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_atr:NumOutputs",
 					"The function 'ta_atr' (Average True Range) produces a single vector output that must be assigned. Aborting (1199).");
@@ -1275,7 +1275,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				colsC		= (int)mxGetN(close_IN);
 
 				// Validate
-				chkSingleVol(colsH, colsL, colsC, 1228);
+				chkSingleVol(colsH, colsL, colsC, 1278);
 
 				endIdx = rows - 1;  // Adjust for C++ starting at '0'
 				startIdx = 0;
@@ -1291,6 +1291,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 					if (!isRealScalar(lookback_IN))
 						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
 						"The ATR lookback must be a scalar. Aborting (1243).");
+
 					/* Get the scalar input lookback */
 					// Assign
 					lookback = (int)mxGetScalar(lookback_IN);
@@ -1311,7 +1312,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				{
 					mxFree(outReal);
 					mexPrintf("%s%i","Return code=",retCode);
-					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (1264).", taFuncNameIn);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (1315).", taFuncNameIn);
 				}
 
 				// Populate Output
@@ -1332,7 +1333,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 				break;
 			}
-
 
 		// Average Deviation
 		case ta_avgdev:       
@@ -1487,7 +1487,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				colsC		= (int)mxGetN(close_IN);
 
 				// Validate
-				chkSingleVol(colsO, colsH, colsL, colsC, 1423);
+				chkSingleVol(colsO, colsH, colsL, colsC, 1490);
 
 				endIdx = rows - 1;  // Adjust for C++ starting at '0'
 				startIdx = 0;
@@ -1707,74 +1707,509 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				break;
 			}
 
-		// Beta
+		// Beta - correlated volatility (http://en.wikipedia.org/wiki/Beta_coefficient) 
 		case ta_beta:       
+			{
+				// REQUIRED INPUTS
+				//		Data		a single vector of observational data for a stock or future
+				//		Base		the base to create the comparison (e.g. S&P 500)
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback period		(default 5)
+
+				// OUTPUT
+				//		BETA				vector of correlated volatility measurements
+
+				// Check number of inputs
+				if (nrhs < 3 || nrhs > 4)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_beta:NumInputs",
+					"Number of input arguments to function 'ta_beta' is not correct. Price data should be parsed into 2 vectors Individual Instrument | Index.\n An optional lookback scalar may also be provided. Aborting (1725).");
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_beta:NumOutputs",
+					"The function 'ta_beta' (Beta) produces a single vector output that must be assigned. Aborting (1728).");
+
+				// Create constants for readability
+				// Inputs
+				#define ind_IN		prhs[1]
+				#define base_IN		prhs[2]
+
+				// Outputs
+				#define beta_OUT	plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsI, colsB, lookback;
+				double *indPtr, *basePtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				indPtr		= mxGetPr(ind_IN);
+				rows		= (int)mxGetM(ind_IN);
+				colsI		= (int)mxGetN(ind_IN);
+				basePtr		= mxGetPr(base_IN);
+				colsB		= (int)mxGetN(ind_IN);
+
+				if (colsI != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_beta:InputErr",
+						"The individual instrument data should be a single vector array. Aborting (1756).");
+				}
+
+				if (colsB != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_beta:InputErr",
+						"The base instrument data should be a single vector array. Aborting (1762).");
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int betaIdx, outElements;
+				double *outReal;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs == 4) 
+				{
+				#define lookback_IN	prhs[3]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The BETA lookback must be a scalar. Aborting (1778).");
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 5;
+				}
+
+				// Preallocate heap
+				outReal	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_BETA(startIdx, endIdx, indPtr, basePtr, lookback, &betaIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (1801).", taFuncNameIn);
+				}
+
+				// Populate Output
+				beta_OUT = mxCreateDoubleMatrix(betaIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(beta_OUT)) + betaIdx, outReal, outElements * mxGetElementSize(beta_OUT));
+
+				// Cleanup
+				mxFree(outReal);
+
+				break;
+			}
+
 		// Balance Of Power
 		case ta_bop:       
+			{
+				// REQUIRED INPUTS
+				//		Price			O | H | L | C	separate vectors
 
-			break;
+				// OPTIONAL INPUTS
+				//		none
+
+				// OUTPUTS
+				//		BOP				vector of the Balance of Power calculations
+
+				// Check number of inputs
+				if (nrhs != 5)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_bop:NumInputs",
+					"Number of input arguments to function 'ta_bop' is not correct. Price data should be parsed into vectors O | H | L | C. Aborting (1829).");
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_bop:NumOutputs",
+					"The function 'ta_bop' (Balance of Power) produces a single vector output that must be assigned. Aborting (1832).");
+
+				// Create constants for readability
+				// Inputs
+				#define open_IN			prhs[1]
+				#define high_IN			prhs[2]
+				#define low_IN			prhs[3]
+				#define close_IN		prhs[4]
+
+				// Outputs
+				#define bop_OUT			plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsO, colsH, colsL, colsC, lookback;
+				double *openPtr, *highPtr, *lowPtr, *closePtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				openPtr		= mxGetPr(open_IN);
+				colsO		= (int)mxGetN(open_IN);
+				rows		= (int)mxGetM(open_IN);
+				highPtr		= mxGetPr(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				colsL		= (int)mxGetN(low_IN);
+				closePtr	= mxGetPr(close_IN);
+				colsC		= (int)mxGetN(close_IN);
+
+				// Validate
+				chkSingleVol(colsO, colsH, colsL, colsC, 1864);
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int bopIdx, outElements;
+				double *outReal;
+
+				// Preallocate heap
+				outReal	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_BOP(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &bopIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (1883).", taFuncNameIn);
+				}
+
+				// Populate Output
+				bop_OUT = mxCreateDoubleMatrix(bopIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(bop_OUT)) + bopIdx, outReal, outElements * mxGetElementSize(bop_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				break;
+			}
+
 		// Commodity Channel Index
 		case ta_cci:       
+			{
+				// REQUIRED INPUTS
+				//		Price	H | L | C	separate vectors
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback period		(default 14)
+
+				// OUTPUT
+				//		CCI					vector of average true range values
+
+				// Check number of inputs
+				if (nrhs < 4 || nrhs > 5)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_cci:NumInputs",
+					"Number of input arguments to function 'ta_cci' is not correct. Price data should be parsed into vectors H | L | C.\nAn optional lookback scalar may also be provided. Aborting (1911).");
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_cci:NumOutputs",
+					"The function 'ta_cci' (Commodity Channel Index) produces a single vector output that must be assigned. Aborting (1914).");
+
+				// Create constants for readability
+				// Inputs
+				#define high_IN		prhs[1]
+				#define low_IN		prhs[2]
+				#define close_IN	prhs[3]
+
+				// Outputs
+				#define cci_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsH, colsL, colsC, lookback;
+				double *highPtr, *lowPtr, *closePtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				highPtr		= mxGetPr(high_IN);
+				rows		= (int)mxGetM(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				colsL		= (int)mxGetN(low_IN);
+				closePtr	= mxGetPr(close_IN);
+				colsC		= (int)mxGetN(close_IN);
+
+				// Validate
+				chkSingleVol(colsH, colsL, colsC, 1943);
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int cciIdx, outElements;
+				double *outReal;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs == 5) 
+				{
+					#define lookback_IN	prhs[4]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The CCI lookback must be a scalar. Aborting (1958).");
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				outReal	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_CCI(startIdx, endIdx, highPtr, lowPtr, closePtr, lookback, &cciIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (1980).", taFuncNameIn);
+				}
+
+				// Populate Output
+				cci_OUT = mxCreateDoubleMatrix(cciIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(cci_OUT)) + cciIdx, outReal, outElements * mxGetElementSize(cci_OUT));
+
+				// Cleanup
+				mxFree(outReal);
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *outPtr = mxGetPr(cci_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					outPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+
+		// CANDLESTICK DETECTIONS
 		// Two Crows
-		case ta_cdl2crows:       
-
-			break;
+		case ta_cdl2crows:
 		// Three Black Crows
-		case ta_cdl3blackcrows:       
-
-			break;
+		case ta_cdl3blackcrows:
 		// Three Inside Up/Down
-		case ta_cdl3inside:       
-
-			break;
+		case ta_cdl3inside:
 		// Three-Line Strike
-		case ta_cdl3linestrike:       
-
-			break;
+		case ta_cdl3linestrike:
 		// Three Outside Up/Down
-		case ta_cdl3outside:       
-
-			break;
+		case ta_cdl3outside:
 		// Three Stars In The South
-		case ta_cdl3startsinsouth:       
-
-			break;
+		case ta_cdl3starsinsouth: 
 		// Three Advancing White Soldiers
-		case ta_cdl3whitesoldiers:       
-
-			break;
+		case ta_cdl3whitesoldiers:
 		// Abandoned Baby
-		case ta_cdlabandonedbaby:       
-
-			break;
+		case ta_cdlabandonedbaby:
 		// Advance Block
-		case ta_cdladvanceblock:       
-
-			break;
+		case ta_cdladvanceblock: 
 		// Belt-hold
-		case ta_cdlbelthold:       
-
-			break;
+		case ta_cdlbelthold:  
 		// Breakaway
-		case ta_cdlbreakaway:       
-
-			break;
+		case ta_cdlbreakaway:  
 		// Closing Marubozu
-		case ta_cdlclosingmarubozu:       
-
-			break;
+		case ta_cdlclosingmarubozu: 
 		// Concealing Baby Swallow
-		case ta_cdlconcealbabyswall:       
-
-			break;
+		case ta_cdlconcealbabyswall:  
 		// Counterattack
-		case ta_cdlcounterattack:       
+		case ta_cdlcounterattack:
+			{
+				// REQUIRED INPUTS
+				//		Price	O | H | L | C	separate vectors
 
-			break;
+				// OPTIONAL INPUTS
+				//		CDLABANDONEDBABY	
+				//			pctPen				Percentage of penetration of a candle within another candle (decimal input)
+
+				// OUTPUTS
+				//		CDL2CROWS				vector of the instances identified as Two Crows Candlestick formation
+
+				// Check number of inputs
+				if (nrhs > 6)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:Candlestick:NumInputs",
+					"The number of input arguments to the called candlestick function is not correct. Price data should be parsed into vectors O | H | L | C. Aborting (2033).");
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:Candlestick:NumOutputs",
+					"The called candlestick function produces a single vector output that must be assigned. Aborting (2020).");
+
+				// Create constants for readability
+				// Inputs
+				#define open_IN			prhs[1]
+				#define high_IN			prhs[2]
+				#define low_IN			prhs[3]
+				#define close_IN		prhs[4]
+
+				// Outputs
+				#define cdl_OUT			plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsO, colsH, colsL, colsC, lookback;
+				double *openPtr, *highPtr, *lowPtr, *closePtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				openPtr		= mxGetPr(open_IN);
+				colsO		= (int)mxGetN(open_IN);
+				rows		= (int)mxGetM(open_IN);
+				highPtr		= mxGetPr(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				colsL		= (int)mxGetN(low_IN);
+				closePtr	= mxGetPr(close_IN);
+				colsC		= (int)mxGetN(close_IN);
+
+				// Validate
+				chkSingleVol(colsO, colsH, colsL, colsC, 2052);
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int cdlIdx, outElements;
+				int *outInt;
+
+				// Preallocate heap
+				outInt	= (int*)mxCalloc(rows, sizeof(int));
+
+				// Candlestick Pattern Switch
+				switch (s_mapStringValues[taFuncNameIn])
+				{
+					case ta_cdl2crows:
+						{
+							retCode = TA_CDL2CROWS(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdl3blackcrows:   
+						{
+							retCode = TA_CDL3BLACKCROWS(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdl3inside:  
+						{
+							retCode = TA_CDL3INSIDE(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdl3linestrike: 
+						{
+							retCode = TA_CDL3LINESTRIKE(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdl3outside:
+						{
+							retCode = TA_CDL3OUTSIDE(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdl3starsinsouth:  
+						{
+							retCode = TA_CDL3STARSINSOUTH(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdl3whitesoldiers:   
+						{
+							retCode = TA_CDL3WHITESOLDIERS(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}			
+					case ta_cdlabandonedbaby:
+						{
+							double pctPen;
+							// Parse optional inputs if given, else default 
+							if (nrhs == 6) 
+							{
+								#define pctPen_IN	prhs[5]
+								if (!isRealScalar(pctPen_IN))
+									mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+									"The CCI lookback must be a scalar. Aborting (2132).");
+
+								/* Get the scalar input lookback */
+								// Assign
+								pctPen = (double)mxGetScalar(pctPen_IN);
+
+								// Validate
+								if (pctPen < 0 || pctPen > 1)
+								{
+									mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+										"The penetration percent for CANDLEAVGPERIOD is not in a decimal format. Aborting (2143).");
+								}
+							}
+							else
+								// Default penetration percentage period
+							{
+								pctPen = .3;
+							}
+
+							retCode = TA_CDLABANDONEDBABY(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, pctPen, &cdlIdx, &outElements, outInt);
+
+							break;
+						}
+					case ta_cdladvanceblock:  
+						{
+							retCode = TA_CDLADVANCEBLOCK(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlbelthold:  
+						{
+							retCode = TA_CDLBELTHOLD(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlbreakaway:  
+						{
+							retCode = TA_CDLBREAKAWAY(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlclosingmarubozu:  
+						{
+							retCode = TA_CDLCLOSINGMARUBOZU(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlconcealbabyswall:  
+						{
+							retCode = TA_CDLCONCEALBABYSWALL(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlcounterattack:  
+						{
+							retCode = TA_CDLCOUNTERATTACK(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+				}
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outInt);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (2071).", taFuncNameIn);
+				}
+
+				// Populate Output
+				cdl_OUT = mxCreateNumericMatrix(cdlIdx + outElements,1, mxINT32_CLASS, mxREAL);
+				memcpy((int*)(mxGetData(cdl_OUT)) + cdlIdx, outInt, outElements * mxGetElementSize(cdl_OUT));
+
+				// Cleanup
+				mxFree(outInt); 
+
+				break;
+			}
+
+
 		// Dark Cloud Cover
 		case ta_cdldarkcloudcover:       
 
@@ -2286,8 +2721,8 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 		// Unknown function given as input
 		default:
-			mexErrMsgIdAndTxt( "MATLAB:taWrapper:UnknownFunction",
-				"Unable to find a matching function to: %s. Aborting (864).",taFuncNameIn);
+			mexErrMsgIdAndTxt( "MATLAB:taInvoke:UnknownFunction",
+				"Unable to find a matching function to: '%s'. Aborting (2714).",taFuncNameIn);
 			break;
 	}
 
@@ -2320,7 +2755,7 @@ void InitSwitchMapping()
 	s_mapStringValues["ta_cdl3inside"]			= ta_cdl3inside;
 	s_mapStringValues["ta_cdl3linestrike"]		= ta_cdl3linestrike;
 	s_mapStringValues["ta_cdl3outside"]			= ta_cdl3outside;
-	s_mapStringValues["ta_cdl3startsinsouth"]	= ta_cdl3startsinsouth;
+	s_mapStringValues["ta_cdl3starsinsouth"]	= ta_cdl3starsinsouth;
 	s_mapStringValues["ta_cdl3whitesoldiers"]	= ta_cdl3whitesoldiers;
 	s_mapStringValues["ta_cdlabandonedbaby"]	= ta_cdlabandonedbaby;
 	s_mapStringValues["ta_cdladvanceblock"]		= ta_cdladvanceblock;
