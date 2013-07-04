@@ -15,13 +15,14 @@
 #include <map>
 #include <algorithm>	// So we can transform the function name string input ...
 #include <string>		// from char to string ensuring lowercase
+#include "myMath.h"
 
 //#include "matrix.h" <-- May not be necessary
 
 using namespace std;
 
 // Value-Definitions of the different String values
-static enum StringValue { taNotDefined, ta_accbands, ta_acos, ta_ad, ta_add, ta_adosc, ta_adx, ta_adxr, ta_apo, ta_aroon, ta_aroonosc, ta_asin, ta_atan, ta_atr, ta_avgprice, ta_avgdev, ta_bbands, 
+static enum StringValue { taNotDefined, ta_accbands, ta_acos, ta_ad, ta_add, ta_adosc, ta_adx, ta_adxr, ta_apo, ta_aroon, ta_aroonosc, ta_asin, ta_atan, ta_atr, ta_avgdev, ta_avgprice, ta_bbands, 
 							ta_beta, ta_bop, ta_cci, 
 							// Candlestick section start
 							ta_cdl2crows, ta_cdl3blackcrows, ta_cdl3inside, ta_cdl3linestrike, ta_cdl3outside, ta_cdl3startsinsouth, ta_cdl3whitesoldiers, ta_cdlabandonedbaby, 
@@ -45,12 +46,16 @@ static enum StringValue { taNotDefined, ta_accbands, ta_acos, ta_ad, ta_add, ta_
 static map<string, StringValue> s_mapStringValues;
 void chkSingleVol(int colsH, int colsL, int lineNum);
 void chkSingleVol(int colsH, int colsL, int colsC, int lineNum);
+void chkSingleVol(int colsO, int colsH, int colsL, int colsC, int lineNum);
 
 static void InitSwitchMapping();
 
 // Macros
 #define isReal2DfullDouble(P) (!mxIsComplex(P) && mxGetNumberOfDimensions(P) == 2 && !mxIsSparse(P) && mxIsDouble(P))
 #define isRealScalar(P) (isReal2DfullDouble(P) && mxGetNumberOfElements(P) == 1)
+
+// Global variables
+double m_Nan = std::numeric_limits<double>::quiet_NaN(); 
 
 void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				 int nrhs, const mxArray *prhs[]) /* Input variables */
@@ -136,7 +141,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				colsC		= (int)mxGetN(close_IN);
 
 				// Validate
-				chkSingleVol(colsH, colsL, colsC, 139);
+				chkSingleVol(colsH, colsL, colsC, 140);
 
 				endIdx = rows - 1;  // Adjust for C++ starting at '0'
 				startIdx = 0;
@@ -191,6 +196,19 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				mxFree(accUpper); 
 				mxFree(accMid); 
 				mxFree(accLower); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *uBandPtr = mxGetPr(accUpper_OUT);
+				double *mBandPtr = mxGetPr(accMid_OUT);
+				double *lBandPtr = mxGetPr(accLower_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					uBandPtr[iter] = m_Nan;
+					mBandPtr[iter] = m_Nan;
+					lBandPtr[iter] = m_Nan;
+				}
 
 				break;
 			}
@@ -670,6 +688,16 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 				// Cleanup
 				mxFree(outReal); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *outPtr = mxGetPr(adx_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					outPtr[iter] = m_Nan;
+				}
+
 				break;
 			}
 
@@ -922,6 +950,18 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				// Cleanup
 				mxFree(aroonDn); 
 				mxFree(aroonUp);
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *upPtr = mxGetPr(aroonUp_OUT);
+				double *dnPtr = mxGetPr(aroonDn_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					upPtr[iter] = m_Nan;
+					dnPtr[iter] = m_Nan;
+				}
+
 				break;
 			}
 			
@@ -1016,6 +1056,16 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 				// Cleanup
 				mxFree(aroonOsc); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *outPtr = mxGetPr(aroonOsc_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					outPtr[iter] = m_Nan;
+				}
+
 				break;
 			}
 
@@ -1100,25 +1150,563 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			}
 			
 		// Vector Trigonometric ATan
-		case ta_atan:       
+		case ta_atan: 
+			{
+				// REQUIRED INPUTS
+				//		input	any single column vector of tan values (all Reals)
 
-			break;
-		// Average True Range
+				// OPTIONAL INPUTS
+				//		none
+
+				// OUTPUTS
+				//		ATAN	Inverse tangent of input (radians)
+				//				e.g. atan(0) = 0 radians = 0 degrees
+
+				// Check number of inputs
+				if (nrhs != 2)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_atan:NumInputs",
+					"Number of input arguments to function 'ta_atan' is not correct. A single vector of Real values should be provided. Aborting (1117).");
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_acos:NumOutputs",
+					"The function 'ta_atan' (Vector Trigonometric ATan) produces a single vector output that must be assigned. Aborting (1120).");
+
+				// Create constants for readability
+				// Inputs
+				#define tan_IN			prhs[1]
+
+				// Outputs
+				#define atan_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsTan;
+				double *tanPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse inputs and error check
+				// Assign pointers and get dimensions
+				tanPtr		= mxGetPr(tan_IN);
+				colsTan		= (int)mxGetN(tan_IN);
+				rows		= (int)mxGetM(tan_IN);
+
+				if (colsTan != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_atan:InputErr",
+						"Tangent data should be a single vector array. Aborting (1145).");
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int atanIdx, outElements;
+				double *outReal;
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				// May have to change typeMA from decimal to name
+				retCode = TA_ATAN(startIdx, endIdx, tanPtr, &atanIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgTxt("Invocation to 'ta_atan' failed. Aborting (1167).");
+				}
+
+				// Populate Output
+				atan_OUT = mxCreateDoubleMatrix(atanIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(atan_OUT)) + atanIdx, outReal, outElements * mxGetElementSize(atan_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				break;
+			}
+
+		// Average True Range (Uses TRANGE for smoothing.)
 		case ta_atr:       
+			{
+				// REQUIRED INPUTS
+				//		Price	H | L | C	separate vectors
 
-			break;
-		// Average Price
-		case ta_avgprice:       
+				// OPTIONAL INPUTS
+				//		Lookback period		(default 14)
 
-			break;
+				// OUTPUT
+				//		ATR					vector of average true range values
+
+				// Check number of inputs
+				if (nrhs < 4 || nrhs > 5)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_atr:NumInputs",
+					"Number of input arguments to function 'ta_atr' is not correct. Price data should be parsed into vectors H | L | C.\n An optional lookback scalar may also be provided. Aborting (1196).");
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_atr:NumOutputs",
+					"The function 'ta_atr' (Average True Range) produces a single vector output that must be assigned. Aborting (1199).");
+
+				// Create constants for readability
+				// Inputs
+				#define high_IN		prhs[1]
+				#define low_IN		prhs[2]
+				#define close_IN	prhs[3]
+
+				// Outputs
+				#define atr_OUT	plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsH, colsL, colsC, lookback;
+				double *highPtr, *lowPtr, *closePtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				highPtr		= mxGetPr(high_IN);
+				rows		= (int)mxGetM(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				colsL		= (int)mxGetN(low_IN);
+				closePtr	= mxGetPr(close_IN);
+				colsC		= (int)mxGetN(close_IN);
+
+				// Validate
+				chkSingleVol(colsH, colsL, colsC, 1228);
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int atrIdx, outElements;
+				double *outReal;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs == 5) 
+				{
+					#define lookback_IN	prhs[4]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The ATR lookback must be a scalar. Aborting (1243).");
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+				}
+				else
+				// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				outReal	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_ATR(startIdx, endIdx, highPtr, lowPtr, closePtr, lookback, &atrIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (1264).", taFuncNameIn);
+				}
+
+				// Populate Output
+				atr_OUT = mxCreateDoubleMatrix(atrIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(atr_OUT)) + atrIdx, outReal, outElements * mxGetElementSize(atr_OUT));
+
+				// Cleanup
+				mxFree(outReal);
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *outPtr = mxGetPr(atr_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					outPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+
+
 		// Average Deviation
 		case ta_avgdev:       
+			{
+				// REQUIRED INPUTS
+				//		Data				a vector of obseration data
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback period		(default 14)
+
+				// OUTPUT
+				//		AVGDEV				vector of average deviation values
+
+				// Check number of inputs
+				if (nrhs != 2)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_avgdev:NumInputs",
+					"Number of input arguments to function 'ta_avgdev' is not correct. Observational data should be a single vector.\n An optional lookback scalar may also be provided. Aborting (1293).");
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_avgdev:NumOutputs",
+					"The function 'ta_avgdev' (Average Deviation) produces a single vector output that must be assigned. Aborting (1296).");
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN		prhs[1]
+
+				// Outputs
+				#define avgdev_OUT	plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_avgdev:InputErr",
+						"Observational data should be a single vector array. Aborting (1321).");
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int avgdevIdx, outElements;
+				double *outReal;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs == 3) 
+				{
+					#define lookback_IN	prhs[2]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The ATR lookback must be a scalar. Aborting (1338).");
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				outReal	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_AVGDEV(startIdx, endIdx, dataPtr, lookback, &avgdevIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (1359).", taFuncNameIn);
+				}
+
+				// Populate Output
+				avgdev_OUT = mxCreateDoubleMatrix(avgdevIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(avgdev_OUT)) + avgdevIdx, outReal, outElements * mxGetElementSize(avgdev_OUT));
+
+				// Cleanup
+				mxFree(outReal);
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *outPtr = mxGetPr(avgdev_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					outPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+
+			// Average Price (O + H + L + C / 4)
+		case ta_avgprice:       
+			{
+				// REQUIRED INPUTS
+				//		Price	O | H | L | C	separate vectors
+
+				// OPTIONAL INPUTS
+				//		none
+
+				// OUTPUTS
+				//		AVGPRICE				vector of the Averages of O H L C  per observation
+
+				// Check number of inputs
+				if (nrhs != 5)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_avgprice:NumInputs",
+					"Number of input arguments to function 'ta_avgprice' is not correct. Price data should be parsed into vectors O | H | L | C. Aborting (1387).");
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_avgprice:NumOutputs",
+					"The function 'ta_avgprice' (Average Price) produces a single vector output that must be assigned. Aborting (1390).");
+
+				// Create constants for readability
+				// Inputs
+				#define open_IN			prhs[1]
+				#define high_IN			prhs[2]
+				#define low_IN			prhs[3]
+				#define close_IN		prhs[4]
+
+				// Outputs
+				#define avgPrice_OUT	plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsO, colsH, colsL, colsC, lookback;
+				double *openPtr, *highPtr, *lowPtr, *closePtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				openPtr		= mxGetPr(open_IN);
+				colsO		= (int)mxGetN(open_IN);
+				rows		= (int)mxGetM(open_IN);
+				highPtr		= mxGetPr(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				colsL		= (int)mxGetN(low_IN);
+				closePtr	= mxGetPr(close_IN);
+				colsC		= (int)mxGetN(close_IN);
+
+				// Validate
+				chkSingleVol(colsO, colsH, colsL, colsC, 1423);
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int avgpriceIdx, outElements;
+				double *outReal;
+
+				// Preallocate heap
+				outReal	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_AVGPRICE(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &avgpriceIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (1442).", taFuncNameIn);
+				}
+
+				// Populate Output
+				avgPrice_OUT = mxCreateDoubleMatrix(avgpriceIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(avgPrice_OUT)) + avgpriceIdx, outReal, outElements * mxGetElementSize(avgPrice_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				break;
+			}
+
 		// Bollinger Bands
 		case ta_bbands:       
+			{
+				// REQUIRED INPUTS
+				//		Data		a single vector of observational data
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback	lookback period (default 5)
+				//		DevUp		multiplier for upper band (default 2)
+				//		DevDn		multiplier for lower band (default 2)
+				//		typeMA		Moving average calculation type:
+				//						0	-	Simple Moving Average				SMA	(default)
+				//						1	-	Exponential Moving Average			EMA
+				//						2	-	Weighted Moving Average				WMA
+				//						3	-	Double Exponential Moving Average	DEMA
+				//						4	-	Triple Exponential Moving Average	TEMA
+				//						5	-	Triangular Moving Average			TRIMA
+				//						6	-	Kaufman Adaptive Moving Average		KAMA
+				//						7	-	MESA Adaptive Moving Average		MAMA
+				//						8	-	Triple Exponential Moving Average	T3	
+
+				// OUTPUTS
+				//		upperBand		
+				//		midBand
+				//		lowerBand
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 6)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_bbands:NumInputs",
+					"Number of input arguments to function 'ta_bbands' is incorrect. Observational data should be a single vector.\nOptional inputs are: Lookback period, Upper STD Multiplier, Lower STD Multiplier. Aborting (1475).");
+				if (nrhs == 4)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_bbands:NumInputs",
+					"Number of input arguments to function 'ta_bbands' is ambiguous.\nWhen providing optional inputs, you may provide just the 'Lookback period, or 'Lookback period, Upper STD Multiplier, Lower STD Multiplier'. Aborting (1478).");
+				if (nlhs != 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_bbands:NumOutputs",
+					"The function 'ta_bbands' (Bollinger Bands) produces 3 vector outputs that must be assigned. Aborting (1481).");
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN			prhs[1]
+
+				// Outputs
+				#define bbUpper_OUT		plhs[0]
+				#define bbMid_OUT		plhs[1]
+				#define bbLower_OUT		plhs[2]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback;
+				double *dataPtr, upMult, dnMult;
+				int typeMA;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_bbands:InputErr",
+						"Observational data should be a single vector array. Aborting (1504).");
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int bbandsIdx, outElements;
+				double *bbUpper, *bbMid, *bbLower;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs > 2) 
+				{
+					#define lookback_IN	prhs[2]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The BBANDS lookback must be a scalar. Aborting (1524).");
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					// Check for integer to protect against STD multiples
+					if (fraction(lookback))
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"A fraction was detected in the BBANDS lookback input.  This may have been intended to be an STD band multiplier? Aborting (1534).");
+					}
+
+					if (nrhs == 3)
+					{
+						upMult = 2;
+						dnMult = 2;
+						typeMA = 0;
+					}
+					else
+					{
+						#define upMult_IN	prhs[3]
+						#define dnMult_IN	prhs[4]
+
+						// Validate
+						if (!isRealScalar(upMult_IN))
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The BBANDS STD upper multiplier must be a scalar. Aborting (1550).");
+						if (!isRealScalar(dnMult_IN))
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The BBANDS STD lower multiplier must be a scalar. Aborting (1553).");
+
+						/* Get the scalar input multipliers */
+						// Assign
+						upMult = (double)mxGetScalar(upMult_IN);
+						dnMult = (double)mxGetScalar(dnMult_IN);
+
+						if (nrhs == 5)
+						{
+							typeMA = 0;
+						}
+						else
+						{
+							#define typeMA_IN	prhs[5]
+
+							// Validate
+							if (!isRealScalar(typeMA_IN))
+								mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+								"The BBANDS typeMA must be a scalar. Aborting (1583).");
+
+							typeMA = (int)mxGetScalar(typeMA_IN);
+						}
+					}
+				}
+				// No optional inputs given.  Default all values
+				else
+				{
+					lookback = 5;
+					upMult = 2;
+					dnMult = 2;
+					typeMA = 0;
+				}
+
+				// Preallocate heap
+				bbUpper	= (double*)mxCalloc(rows, sizeof(double));
+				bbMid	= (double*)mxCalloc(rows, sizeof(double));
+				bbLower	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_BBANDS(startIdx, endIdx, dataPtr, lookback, upMult,dnMult, (TA_MAType)typeMA, &bbandsIdx, &outElements, bbUpper, bbMid, bbLower);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(bbUpper);
+					mxFree(bbMid);
+					mxFree(bbLower);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgTxt("Invocation to 'ta_bbands' failed. Aborting (1604).");
+				}
+
+				// Populate Output
+				bbUpper_OUT = mxCreateDoubleMatrix(bbandsIdx + outElements,1, mxREAL);
+				bbMid_OUT = mxCreateDoubleMatrix(bbandsIdx + outElements,1, mxREAL);
+				bbLower_OUT = mxCreateDoubleMatrix(bbandsIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(bbUpper_OUT)) + bbandsIdx, bbUpper, outElements * mxGetElementSize(bbUpper_OUT));
+				memcpy(((double *) mxGetData(bbMid_OUT)) + bbandsIdx, bbMid, outElements * mxGetElementSize(bbMid_OUT));
+				memcpy(((double *) mxGetData(bbLower_OUT)) + bbandsIdx, bbLower, outElements * mxGetElementSize(bbLower_OUT));
+
+				// Cleanup
+				mxFree(bbUpper); 
+				mxFree(bbMid); 
+				mxFree(bbLower); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *uBandPtr = mxGetPr(bbUpper_OUT);
+				double *mBandPtr = mxGetPr(bbMid_OUT);
+				double *lBandPtr = mxGetPr(bbLower_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					uBandPtr[iter] = m_Nan;
+					mBandPtr[iter] = m_Nan;
+					lBandPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+
 		// Beta
 		case ta_beta:       
 
@@ -1721,8 +2309,8 @@ void InitSwitchMapping()
 	s_mapStringValues["ta_asin"]				= ta_asin;
 	s_mapStringValues["ta_atan"]				= ta_atan;
 	s_mapStringValues["ta_atr"]					= ta_atr;
-	s_mapStringValues["ta_avgprice"]			= ta_avgprice;
 	s_mapStringValues["ta_avgdev"]				= ta_avgdev;
+	s_mapStringValues["ta_avgprice"]			= ta_avgprice;
 	s_mapStringValues["ta_bbands"]				= ta_bbands;
 	s_mapStringValues["ta_beta"]				= ta_beta;
 	s_mapStringValues["ta_bop"]					= ta_bop;
@@ -1907,6 +2495,34 @@ void chkSingleVol( int colsH, int colsL, int colsC, int lineNum )
 	}
 }
 
+void chkSingleVol(int colsO, int colsH, int colsL, int colsC, int lineNum )
+{
+	if (colsO != 1)
+	{
+		mexErrMsgIdAndTxt( "MATLAB:taInvoke:InputErr",
+			"Price data should be passed to the function already parsed into O | H | L | C vectors.\nThe 'Open' vector had more than 1 column.  Aborting (%i).", lineNum);
+	}
+
+	if (colsH != 1)
+	{
+		mexErrMsgIdAndTxt( "MATLAB:taInvoke:InputErr",
+			"Price data should be passed to the function already parsed into O | H | L | C vectors.\nThe 'High' vector had more than 1 column.  Aborting (%i).", lineNum);
+	}
+
+	if (colsL != 1)
+	{
+		mexErrMsgIdAndTxt( "MATLAB:taInvoke:InputErr",
+			"Price data should be passed to the function already parsed into O | H | L | C vectors.\nThe 'Low' vector had more than 1 column.  Aborting (%i).", lineNum);
+	}
+
+	if (colsC != 1)
+	{
+		mexErrMsgIdAndTxt( "MATLAB:taInvoke:InputErr",
+			"Price data should be passed to the function already parsed into O | H | L | C vectors.\nThe 'Close' vector had more than 1 column.  Aborting (%i).", lineNum);
+	}
+}
+
+
 //
 //  -------------------------------------------------------------------------
 //                                  _    _ 
@@ -1965,6 +2581,6 @@ void chkSingleVol( int colsH, int colsL, int colsC, int lineNum )
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4932.22892
+//   Revision:	4933.20689
 //   Copyright:	(c)2013
 //
