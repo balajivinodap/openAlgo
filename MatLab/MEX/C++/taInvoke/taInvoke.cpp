@@ -2000,101 +2000,72 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			}
 
 		// CANDLESTICK DETECTIONS
-		// Two Crows
-		case ta_cdl2crows:
-		// Three Black Crows
-		case ta_cdl3blackcrows:
-		// Three Inside Up/Down
-		case ta_cdl3inside:
-		// Three-Line Strike
-		case ta_cdl3linestrike:
-		// Three Outside Up/Down
-		case ta_cdl3outside:
-		// Three Stars In The South
-		case ta_cdl3starsinsouth: 
-		// Three Advancing White Soldiers
-		case ta_cdl3whitesoldiers:
-		// Abandoned Baby
-		case ta_cdlabandonedbaby:
-		// Advance Block
-		case ta_cdladvanceblock: 
-		// Belt-hold
-		case ta_cdlbelthold:  
-		// Breakaway
-		case ta_cdlbreakaway:  
-		// Closing Marubozu
-		case ta_cdlclosingmarubozu: 
-		// Concealing Baby Swallow
-		case ta_cdlconcealbabyswall:  
-		// Counterattack
-		case ta_cdlcounterattack:
-		// Dark Cloud Cover
-		case ta_cdldarkcloudcover:  
-		// Doji
-		case ta_cdldoji:
-		// Doji Star
-		case ta_cdldojistar:
-		// Dragonfly Doji
-		case ta_cdldragonflydoji: 
-		// Engulfing Pattern
-		case ta_cdlengulfing: 
-		// Evening Doji Star
-		case ta_cdleveningdojistar: 
-		// Evening Star
-		case ta_cdleveningstar: 
-		// Up/Down-gap side-by-side white lines
-		case ta_cdlgapsidesidewhite:    
-		// Gravestone Doji
-		case ta_cdlgravestonedoji:  
-		// Hammer
-		case ta_cdlhammer:   
-		// Hanging Man
-		case ta_cdlhangingman: 
-		// Harami Pattern
-		case ta_cdlharami:  
-		// Harami Cross Pattern
-		case ta_cdlharamicross:  
-		// High-Wave Candle
-		case ta_cdlhighwave: 
-		// Hikkake Pattern
-		case ta_cdlhikkake: 
-		// Modified Hikkake Pattern
-		case ta_cdlhikkakemod:   
-		// Homing Pigeon
-		case ta_cdlhomingpigeon: 
-		// Identical Three Crows
-		case ta_cdlidentical3crows:
-		// In-Neck Pattern
-		case ta_cdlinneck:   
-		// Inverted Hammer
-		case ta_cdlinvertedhammer:
-		// Kicking
-		case ta_cdlkicking: 
-		// Kicking - bull/bear determined by the longer Marubozu
-		case ta_cdlkickingbylength:
-		// Ladder Bottom
-		case ta_cdlladderbottom:
-		// Long Legged Doji
-		case ta_cdllongleggeddoji:  
-		// Long Line Candle
-		case ta_cdllongline:  
-		// Marubozu
-		case ta_cdlmarubozu:  
-		// Matching Low
-		case ta_cdlmatchinglow:   
-		// Mat Hold
-		case ta_cdlmathold: 
-		// Morning Doji Star
-		case ta_cdlmorningdojistar:  
-		// Morning Star
-		case ta_cdlmorningstar: 
-		// On-Neck Pattern
-		case ta_cdlonneck: 
+		case ta_cdl2crows:								// Two Crows
+		case ta_cdl3blackcrows:							// Three Black Crows
+		case ta_cdl3inside:								// Three Inside Up/Down
+		case ta_cdl3linestrike:							// Three-Line Strike
+		case ta_cdl3outside:							// Three Outside Up/Down
+		case ta_cdl3starsinsouth:						// Three Stars In The South
+		case ta_cdl3whitesoldiers:						// Three Advancing White Soldiers
+		case ta_cdlabandonedbaby:						// Abandoned Baby
+		case ta_cdladvanceblock:						// Advance Block
+		case ta_cdlbelthold:							// Belt-hold
+		case ta_cdlbreakaway:							// Breakaway 
+		case ta_cdlclosingmarubozu:						// Closing Marubozu
+		case ta_cdlconcealbabyswall:					// Concealing Baby Swallow
+		case ta_cdlcounterattack:						// Counterattack
+		case ta_cdldarkcloudcover:						// Dark Cloud Cover
+		case ta_cdldoji:								// Doji
+		case ta_cdldojistar:							// Doji Star
+		case ta_cdldragonflydoji:						// Dragonfly Doji
+		case ta_cdlengulfing:							// Engulfing Pattern
+		case ta_cdleveningdojistar:						// Evening Doji Star
+		case ta_cdleveningstar:							// Evening Star
+		case ta_cdlgapsidesidewhite:					// Up | Down-gap side-by-side white lines
+		case ta_cdlgravestonedoji:						// Gravestone Doji
+		case ta_cdlhammer:								// Hammer 
+		case ta_cdlhangingman:							// Hanging Man
+		case ta_cdlharami:								// Harami Pattern
+		case ta_cdlharamicross:							// Harami Cross Pattern
+		case ta_cdlhighwave:							// High-Wave Candle
+		case ta_cdlhikkake:								// Hikkake Pattern
+		case ta_cdlhikkakemod:							// Modified Hikkake Pattern 
+		case ta_cdlhomingpigeon:						// Homing Pigeon
+		case ta_cdlidentical3crows:						// Identical Three Crows
+		case ta_cdlinneck:								// In-Neck Pattern
+		case ta_cdlinvertedhammer:						// Inverted Hammer
+		case ta_cdlkicking:								// Kicking
+		case ta_cdlkickingbylength:						// Kicking - bull/bear determined by the longer Marubozu
+		case ta_cdlladderbottom:						// Ladder Bottom
+		case ta_cdllongleggeddoji:						// Long Legged Doji
+		case ta_cdllongline:							// Long Line Candle
+		case ta_cdlmarubozu:							// Marubozu
+		case ta_cdlmatchinglow:							// Matching Low
+		case ta_cdlmathold:								// Mat Hold
+		case ta_cdlmorningdojistar:						// Morning Doji Star
+		case ta_cdlmorningstar:							// Morning Star
+		case ta_cdlonneck:								// On-Neck Pattern
+		case ta_cdlpiercing:							// Piercing Pattern
+		case ta_cdlrickshawman:							// Rickshaw Man
+		case ta_cdlrisefall3methods:					// Rising/Falling Three Methods
+		case ta_cdlseparatinglines:						// Separating Lines
+		case ta_cdlshootingstar:						// Shooting Star
+		case ta_cdlshortline:							// Short Line Candle
+		case ta_cdlspinningtop:							// Spinning Top
+		case ta_cdlstalledpattern:						// Stalled Pattern  
+		case ta_cdlsticksandwich:						// Stick Sandwich
+		case ta_cdltakuri:								// Takuri (Dragonfly Doji with very long lower shadow)
+		case ta_cdltasukigap:							// Tasuki Gap
+		case ta_cdlthrusting:							// Thrusting Pattern
+		case ta_cdltristar:								// Tristar Pattern
+		case ta_cdlunique3river:						// Unique 3 River
+		case ta_cdlupsidegap2crows:						// Upside Gap Two Crows
+		case ta_cdlxsidegap3methods:					// Upside/Downside Gap Three Methods
 			{
 				// REQUIRED INPUTS
 				//		Price	O | H | L | C	separate vectors
 
-				// OPTIONAL INPUTS
+				// OPTIONAL INPUT
 				//		CDLABANDONEDBABY
 				//		CDLDARKCLOUDCOVER
 				//		CDLEVENINGDOJISTAR
@@ -2114,7 +2085,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				// Create constants for readability
 				// Inputs
 				#define open_IN			prhs[1]
-				#define high_IN			prhs[2]
+				#define data_IN			prhs[2]
 				#define low_IN			prhs[3]
 				#define close_IN		prhs[4]
 
@@ -2422,9 +2393,86 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 							retCode = TA_CDLONNECK(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
 							break;
 						}
-					
-					
-					
+					case ta_cdlpiercing:  
+						{
+							retCode = TA_CDLPIERCING(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlrickshawman:  
+						{
+							retCode = TA_CDLRICKSHAWMAN(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlrisefall3methods:  
+						{
+							retCode = TA_CDLRISEFALL3METHODS(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlseparatinglines:  
+						{
+							retCode = TA_CDLSEPARATINGLINES(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlshootingstar:  
+						{
+							retCode = TA_CDLSHOOTINGSTAR(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlshortline:  
+						{
+							retCode = TA_CDLSHORTLINE(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlspinningtop:  
+						{
+							retCode = TA_CDLSPINNINGTOP(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlstalledpattern:  
+						{
+							retCode = TA_CDLSTALLEDPATTERN(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlsticksandwich:  
+						{
+							retCode = TA_CDLSTICKSANDWICH(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdltakuri:  
+						{
+							retCode = TA_CDLTAKURI(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdltasukigap:  
+						{
+							retCode = TA_CDLTASUKIGAP(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlthrusting:  
+						{
+							retCode = TA_CDLTHRUSTING(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdltristar:  
+						{
+							retCode = TA_CDLTRISTAR(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlunique3river:  
+						{
+							retCode = TA_CDLUNIQUE3RIVER(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlupsidegap2crows:  
+						{
+							retCode = TA_CDLUPSIDEGAP2CROWS(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlxsidegap3methods:  
+						{
+							retCode = TA_CDLXSIDEGAP3METHODS(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}					
 				}
 
 				// Error handling
@@ -2445,80 +2493,190 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				break;
 			}
 
-
-
-		// Piercing Pattern
-		case ta_cdlpiercing:       
-
-			break;
-		// Rickshaw Man
-		case ta_cdlrickshawman:       
-
-			break;
-		// Rising/Falling Three Methods
-		case ta_cdlrisefall3methods:       
-
-			break;
-		// Separating Lines
-		case ta_cdlseparatinglines:       
-
-			break;
-		// Shooting Star
-		case ta_cdlshootingstar:       
-
-			break;
-		// Short Line Candle
-		case ta_cdlshortline:       
-
-			break;
-		// Spinning Top
-		case ta_cdlspinningtop:       
-
-			break;
-		// Stalled Pattern
-		case ta_cdlstalledpattern:       
-
-			break;
-		// Stick Sandwich
-		case ta_cdlsticksandwich:       
-
-			break;
-		// Takuri (Dragonfly Doji with very long lower shadow)
-		case ta_cdltakuri:       
-
-			break;
-		// Tasuki Gap
-		case ta_cdltasukigap:       
-
-			break;
-		// Thrusting Pattern
-		case ta_cdlthrusting:       
-
-			break;
-		// Tristar Pattern
-		case ta_cdltristar:       
-
-			break;
-		// Unique 3 River
-		case ta_cdlunique3river:       
-
-			break;
-		// Upside Gap Two Crows
-		case ta_cdlupsidegap2crows:       
-
-			break;
-		// Upside/Downside Gap Three Methods
-		case ta_cdlxsidegap3methods:       
-
-			break;
 		// Vector Ceil
 		case ta_ceil:       
+			{
+				// REQUIRED INPUTS
+				//		data	any single column vector of observations
 
-			break;
+				// OPTIONAL INPUTS
+				//		none
+
+				// OUTPUTS
+				//		CEIL	A vector output of CEIL values
+
+				// Check number of inputs
+				if (nrhs != 2)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ceil:NumInputs",
+					"Number of input arguments to function 'ta_ceil' is not correct. A single vector of values should be provided. Aborting (2511).");
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ceil:NumOutputs",
+					"The function 'ta_ceil' (Ceil - round up) produces a single vector output that must be assigned. Aborting (2514).");
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN			prhs[1]
+
+				// Outputs
+				#define ceil_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+				rows		= (int)mxGetM(data_IN);
+
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ceil:InputErr",
+						"Observation data should be a single vector array. Aborting (2539).");
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *outReal;
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				// May have to change typeMA from decimal to name
+				retCode = TA_CEIL(startIdx, endIdx, dataPtr, &dataIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgTxt("Invocation to 'ta_atan' failed. Aborting (2561).");
+				}
+
+				// Populate Output
+				ceil_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(ceil_OUT)) + dataIdx, outReal, outElements * mxGetElementSize(ceil_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				break;
+			}
+			
 		// Chande Momentum Oscillator
 		case ta_cmo:       
+			{
+				// REQUIRED INPUTS
+				//		data		any single column vector of observations
 
-			break;
+				// OPTIONAL INPUTS
+				//		lookback	Lookback period	(default 14)
+
+				// OUTPUT
+				//		CMO			vector of Chande Momentum Oscillator values
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_cmo:NumInputs",
+					"The number of input arguments to function 'ta_cmo' is incorrect. A single vector of observations should be provided.\nAn optional lookback period may be specified. Aborting (2589).");
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_cmo:NumOutputs",
+					"The function 'ta_cmo' (Chande Momentum Oscillator) produces a single vector as output that must be assigned. Aborting (2592).");
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN			prhs[1]
+
+				// Outputs
+				#define cmo_OUT			plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validation
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_cmo:InputErr",
+						"Observation data should be a single vector array. Aborting (2617).");
+
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int cmoIdx, outElements;
+				double *outReal;
+
+				// Get optional input or assign default
+				if (nrhs == 3) 
+				{
+				#define lookback_IN	prhs[2]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The CMO lookback must be a scalar. Aborting (2635).");
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_CMO(startIdx, endIdx, dataPtr, lookback, &cmoIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (2658).", taFuncNameIn);
+				}
+
+				// Populate Output
+				cmo_OUT = mxCreateDoubleMatrix(cmoIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(cmo_OUT)) + cmoIdx, outReal, outElements * mxGetElementSize(cmo_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *outPtr = mxGetPr(cmo_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					outPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+			
 		// Pearson's Correlation Coefficient (r)
 		case ta_correl:       
 
@@ -3129,6 +3287,6 @@ void chkSingleVol(int colsO, int colsH, int colsL, int colsC, int lineNum )
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4933.20689
+//   Revision:	4933.33903
 //   Copyright:	(c)2013
 //
