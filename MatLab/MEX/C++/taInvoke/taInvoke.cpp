@@ -2028,12 +2028,76 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		case ta_cdlconcealbabyswall:  
 		// Counterattack
 		case ta_cdlcounterattack:
+		// Dark Cloud Cover
+		case ta_cdldarkcloudcover:  
+		// Doji
+		case ta_cdldoji:
+		// Doji Star
+		case ta_cdldojistar:
+		// Dragonfly Doji
+		case ta_cdldragonflydoji: 
+		// Engulfing Pattern
+		case ta_cdlengulfing: 
+		// Evening Doji Star
+		case ta_cdleveningdojistar: 
+		// Evening Star
+		case ta_cdleveningstar: 
+		// Up/Down-gap side-by-side white lines
+		case ta_cdlgapsidesidewhite:    
+		// Gravestone Doji
+		case ta_cdlgravestonedoji:  
+		// Hammer
+		case ta_cdlhammer:   
+		// Hanging Man
+		case ta_cdlhangingman: 
+		// Harami Pattern
+		case ta_cdlharami:  
+		// Harami Cross Pattern
+		case ta_cdlharamicross:  
+		// High-Wave Candle
+		case ta_cdlhighwave: 
+		// Hikkake Pattern
+		case ta_cdlhikkake: 
+		// Modified Hikkake Pattern
+		case ta_cdlhikkakemod:   
+		// Homing Pigeon
+		case ta_cdlhomingpigeon: 
+		// Identical Three Crows
+		case ta_cdlidentical3crows:
+		// In-Neck Pattern
+		case ta_cdlinneck:   
+		// Inverted Hammer
+		case ta_cdlinvertedhammer:
+		// Kicking
+		case ta_cdlkicking: 
+		// Kicking - bull/bear determined by the longer Marubozu
+		case ta_cdlkickingbylength:
+		// Ladder Bottom
+		case ta_cdlladderbottom:
+		// Long Legged Doji
+		case ta_cdllongleggeddoji:  
+		// Long Line Candle
+		case ta_cdllongline:  
+		// Marubozu
+		case ta_cdlmarubozu:  
+		// Matching Low
+		case ta_cdlmatchinglow:   
+		// Mat Hold
+		case ta_cdlmathold: 
+		// Morning Doji Star
+		case ta_cdlmorningdojistar:  
+		// Morning Star
+		case ta_cdlmorningstar: 
+		// On-Neck Pattern
+		case ta_cdlonneck: 
 			{
 				// REQUIRED INPUTS
 				//		Price	O | H | L | C	separate vectors
 
 				// OPTIONAL INPUTS
-				//		CDLABANDONEDBABY	
+				//		CDLABANDONEDBABY
+				//		CDLDARKCLOUDCOVER
+				//		CDLEVENINGDOJISTAR
 				//			pctPen				Percentage of penetration of a candle within another candle (decimal input)
 
 				// OUTPUTS
@@ -2128,6 +2192,12 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 							break;
 						}			
 					case ta_cdlabandonedbaby:
+					case ta_cdldarkcloudcover:
+					case ta_cdleveningdojistar:
+					case ta_cdleveningstar:
+					case ta_cdlmathold:
+					case ta_cdlmorningdojistar:
+					case ta_cdlmorningstar:
 						{
 							double pctPen;
 							// Parse optional inputs if given, else default 
@@ -2155,7 +2225,45 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 								pctPen = .3;
 							}
 
-							retCode = TA_CDLABANDONEDBABY(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, pctPen, &cdlIdx, &outElements, outInt);
+							switch (s_mapStringValues[taFuncNameIn])
+							{
+								case ta_cdlabandonedbaby:
+									{
+										retCode = TA_CDLABANDONEDBABY(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, pctPen, &cdlIdx, &outElements, outInt);
+										break;
+									}
+
+								case ta_cdldarkcloudcover:
+									{
+										retCode = TA_CDLDARKCLOUDCOVER(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, pctPen, &cdlIdx, &outElements, outInt);
+										break;
+									}
+								case ta_cdleveningdojistar:  
+									{
+										retCode = TA_CDLEVENINGDOJISTAR(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, pctPen, &cdlIdx, &outElements, outInt);
+										break;
+									}
+								case ta_cdleveningstar:  
+									{
+										retCode = TA_CDLEVENINGSTAR(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, pctPen, &cdlIdx, &outElements, outInt);
+										break;
+									}
+								case ta_cdlmathold:  
+									{
+										retCode = TA_CDLMATHOLD(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr,  pctPen, &cdlIdx, &outElements, outInt);
+										break;
+									}
+								case ta_cdlmorningdojistar:  
+									{
+										retCode = TA_CDLMORNINGDOJISTAR(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, pctPen, &cdlIdx, &outElements, outInt);
+										break;
+									}
+								case ta_cdlmorningstar:  
+									{
+										retCode = TA_CDLMORNINGSTAR(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, pctPen, &cdlIdx, &outElements, outInt);
+										break;
+									}
+							}
 
 							break;
 						}
@@ -2189,6 +2297,134 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 							retCode = TA_CDLCOUNTERATTACK(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
 							break;
 						}
+					case ta_cdldoji:  
+						{
+							retCode = TA_CDLDOJI(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdldojistar:  
+						{
+							retCode = TA_CDLDOJISTAR(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdldragonflydoji:  
+						{
+							retCode = TA_CDLDRAGONFLYDOJI(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlengulfing:  
+						{
+							retCode = TA_CDLENGULFING(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlgapsidesidewhite:  
+						{
+							retCode = TA_CDLGAPSIDESIDEWHITE(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlgravestonedoji:  
+						{
+							retCode = TA_CDLGRAVESTONEDOJI(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlhammer:  
+						{
+							retCode = TA_CDLHAMMER(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlhangingman:  
+						{
+							retCode = TA_CDLHANGINGMAN(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlharami:  
+						{
+							retCode = TA_CDLHARAMI(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlharamicross:  
+						{
+							retCode = TA_CDLHARAMICROSS(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlhighwave:  
+						{
+							retCode = TA_CDLHIGHWAVE(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlhikkake:  
+						{
+							retCode = TA_CDLHIKKAKE(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlhikkakemod:  
+						{
+							retCode = TA_CDLHIKKAKEMOD(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlhomingpigeon:  
+						{
+							retCode = TA_CDLHIKKAKEMOD(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlidentical3crows:  
+						{
+							retCode = TA_CDLIDENTICAL3CROWS(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlinneck:  
+						{
+							retCode = TA_CDLINNECK(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlinvertedhammer:  
+						{
+							retCode = TA_CDLINVERTEDHAMMER(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlkicking:  
+						{
+							retCode = TA_CDLKICKING(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlkickingbylength:  
+						{
+							retCode = TA_CDLKICKINGBYLENGTH(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlladderbottom:  
+						{
+							retCode = TA_CDLLADDERBOTTOM(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdllongleggeddoji:  
+						{
+							retCode = TA_CDLLONGLEGGEDDOJI(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdllongline:  
+						{
+							retCode = TA_CDLLONGLINE(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlmarubozu:  
+						{
+							retCode = TA_CDLMARUBOZU(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlmatchinglow:  
+						{
+							retCode = TA_CDLMATCHINGLOW(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					case ta_cdlonneck:  
+						{
+							retCode = TA_CDLONNECK(startIdx, endIdx, openPtr, highPtr, lowPtr, closePtr, &cdlIdx, &outElements, outInt);
+							break;
+						}
+					
+					
+					
 				}
 
 				// Error handling
@@ -2210,130 +2446,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 			}
 
 
-		// Dark Cloud Cover
-		case ta_cdldarkcloudcover:       
 
-			break;
-		// Doji
-		case ta_cdldoji:       
-
-			break;
-		// Doji Star
-		case ta_cdldojistar:       
-
-			break;
-		// Dragonfly Doji
-		case ta_cdldragonflydoji:       
-
-			break;
-		// Engulfing Pattern
-		case ta_cdlengulfing:       
-
-			break;
-		// Evening Doji Star
-		case ta_cdleveningdojistar:       
-
-			break;
-		// Evening Star
-		case ta_cdleveningstar:       
-
-			break;
-		// Up/Down-gap side-by-side white lines
-		case ta_cdlgapsidesidewhite:       
-
-			break;
-		// Gravestone Doji
-		case ta_cdlgravestonedoji:       
-
-			break;
-		// Hammer
-		case ta_cdlhammer:       
-
-			break;
-		// Hanging Man
-		case ta_cdlhangingman:       
-
-			break;
-		// Harami Pattern
-		case ta_cdlharami:       
-
-			break;
-		// Harami Cross Pattern
-		case ta_cdlharamicross:       
-
-			break;
-		// High-Wave Candle
-		case ta_cdlhighwave:       
-
-			break;
-		// Hikkake Pattern
-		case ta_cdlhikkake:       
-
-			break;
-		// Modified Hikkake Pattern
-		case ta_cdlhikkakemod:       
-
-			break;
-		// Homing Pigeon
-		case ta_cdlhomingpigeon:       
-
-			break;
-		// Identical Three Crows
-		case ta_cdlidentical3crows:       
-
-			break;
-		// In-Neck Pattern
-		case ta_cdlinneck:       
-
-			break;
-		// Inverted Hammer
-		case ta_cdlinvertedhammer:       
-
-			break;
-		// Kicking
-		case ta_cdlkicking:       
-
-			break;
-		// Kicking - bull/bear determined by the longer Marubozu
-		case ta_cdlkickingbylength:       
-
-			break;
-		// Ladder Bottom
-		case ta_cdlladderbottom:       
-
-			break;
-		// Long Legged Doji
-		case ta_cdllongleggeddoji:       
-
-			break;
-		// Long Line Candle
-		case ta_cdllongline:       
-
-			break;
-		// Marubozu
-		case ta_cdlmarubozu:       
-
-			break;
-		// Matching Low
-		case ta_cdlmatchinglow:       
-
-			break;
-		// Mat Hold
-		case ta_cdlmathold:       
-
-			break;
-		// Morning Doji Star
-		case ta_cdlmorningdojistar:       
-
-			break;
-		// Morning Star
-		case ta_cdlmorningstar:       
-
-			break;
-		// On-Neck Pattern
-		case ta_cdlonneck:       
-
-			break;
 		// Piercing Pattern
 		case ta_cdlpiercing:       
 
