@@ -3314,7 +3314,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				{
 
 					// REQUIRED INPUTS
-					//		data		A single vector of observations
+					//		data	A single vector of observations
 
 					// OPTIONAL INPUTS
 					//		none
@@ -4073,52 +4073,1617 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 		// Kaufman Adaptive Moving Average
 		case ta_kama:       
+				{
+					// REQUIRED INPUTS
+					//		data		A single vector of observations
 
-			break;
+					// OPTIONAL INPUTS
+					//		Lookback	lookback period	(default 30)
+
+					// OUTPUT
+					//		KAMA		vector of kaufman adaptive moving average values
+
+
+					// Check number of inputs
+					if (nrhs < 2 || nrhs > 3)
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_kama:NumInputs",
+						"Number of input arguments to function 'ta_kama' is incorrect. Observation data should be parsed into a single input vector. Aborting (%d).", codeLine);
+					if (nlhs != 1)
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_kama:NumOutputs",
+						"The function 'ta_kama' (Kaufman Adaptive Moving Average) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+
+					// Create constants for readability
+					// Inputs
+					#define data_IN			prhs[1]
+
+					// Outputs
+					#define kama_OUT		plhs[0]
+
+					// Declare variables
+					int startIdx, endIdx, rows, colsD, lookback;
+					double *dataPtr;
+
+					// Initialize error handling 
+					TA_RetCode retCode;
+
+					// Parse required inputs and error check
+					// Assign pointers and get dimensions
+					dataPtr		= mxGetPr(data_IN);
+					rows		= (int)mxGetM(data_IN);
+					colsD		= (int)mxGetN(data_IN);
+
+					// Validate
+					if (colsD != 1)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_kama:InputErr",
+							"Observational data should be a single vector array. Aborting (%d).", codeLine);
+					}
+
+					endIdx = rows - 1;  // Adjust for C++ starting at '0'
+					startIdx = 0;
+
+					// Output variables
+					int dataIdx, outElements;
+					double *outReal;
+
+					// Get optional input or assign default
+					if (nrhs == 3) 
+					{
+						#define lookback_IN	prhs[2]
+						if (!isRealScalar(lookback_IN))
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The KAMA lookback must be a scalar. Aborting (%d).", codeLine);
+
+						/* Get the scalar input lookback */
+						// Assign
+						lookback = (int)mxGetScalar(lookback_IN);
+
+						if(lookback < 2)
+						{
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+								"The KAMA lookback must be a scalar with a value of 2 or greater. Aborting (%d).", codeLine);
+						}
+					}
+					else
+						// Default lookback period
+					{
+						lookback = 30;
+					}
+
+					// Preallocate heap
+					outReal = (double*)mxCalloc(rows, sizeof(double));
+
+					// Invoke with error catch
+					retCode = TA_KAMA(startIdx, endIdx, dataPtr, lookback, &dataIdx, &outElements, outReal);
+
+					// Error handling
+					if (retCode) 
+					{
+						mxFree(outReal);
+						mexPrintf("%s%i","Return code=",retCode);
+						mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+					}
+
+					// Populate Output
+					kama_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+					memcpy(((double *) mxGetData(kama_OUT)) + dataIdx, outReal, outElements * mxGetElementSize(kama_OUT));
+
+					// Cleanup
+					mxFree(outReal); 
+
+					// NaN data before lookback
+					// assign the variables for manipulating the arrays (by pointer reference)
+					double *outPtr = mxGetPr(kama_OUT);
+
+					for (int iter = 0; iter < lookback; iter++)
+					{
+						outPtr[iter] = m_Nan;
+					}
+
+					break;
+				}
+
 		// Linear Regression
 		case ta_linearreg:       
+				{
+					// REQUIRED INPUTS
+					//		data		A single vector of observations
 
-			break;
+					// OPTIONAL INPUTS
+					//		Lookback	lookback period	(default 14)
+
+					// OUTPUT
+					//		LINREG		vector of linear regression values
+
+
+					// Check number of inputs
+					if (nrhs < 2 || nrhs > 3)
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_linearreg:NumInputs",
+						"Number of input arguments to function 'ta_linearreg' is incorrect. Observation data should be parsed into a single input vector. Aborting (%d).", codeLine);
+					if (nlhs != 1)
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_linearreg:NumOutputs",
+						"The function 'ta_linearreg' (Linear Regression) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+
+					// Create constants for readability
+					// Inputs
+					#define data_IN			prhs[1]
+
+					// Outputs
+					#define linreg_OUT		plhs[0]
+
+					// Declare variables
+					int startIdx, endIdx, rows, colsD, lookback;
+					double *dataPtr;
+
+					// Initialize error handling 
+					TA_RetCode retCode;
+
+					// Parse required inputs and error check
+					// Assign pointers and get dimensions
+					dataPtr		= mxGetPr(data_IN);
+					rows		= (int)mxGetM(data_IN);
+					colsD		= (int)mxGetN(data_IN);
+
+					// Validate
+					if (colsD != 1)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_linearreg:InputErr",
+							"Observational data should be a single vector array. Aborting (%d).", codeLine);
+					}
+
+					endIdx = rows - 1;  // Adjust for C++ starting at '0'
+					startIdx = 0;
+
+					// Output variables
+					int dataIdx, outElements;
+					double *outReal;
+
+					// Get optional input or assign default
+					if (nrhs == 3) 
+					{
+						#define lookback_IN	prhs[2]
+						if (!isRealScalar(lookback_IN))
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The LINEAR REGRESSION lookback must be a scalar. Aborting (%d).", codeLine);
+
+						/* Get the scalar input lookback */
+						// Assign
+						lookback = (int)mxGetScalar(lookback_IN);
+
+						if(lookback < 2)
+						{
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+								"The LINEAR REGRESSION lookback must be a scalar with a value of 2 or greater. Aborting (%d).", codeLine);
+						}
+					}
+					else
+						// Default lookback period
+					{
+						lookback = 14;
+					}
+
+					// Preallocate heap
+					outReal = (double*)mxCalloc(rows, sizeof(double));
+
+					// Invoke with error catch
+					retCode = TA_LINEARREG(startIdx, endIdx, dataPtr, lookback, &dataIdx, &outElements, outReal);
+
+					// Error handling
+					if (retCode) 
+					{
+						mxFree(outReal);
+						mexPrintf("%s%i","Return code=",retCode);
+						mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+					}
+
+					// Populate Output
+					linreg_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+					memcpy(((double *) mxGetData(linreg_OUT)) + dataIdx, outReal, outElements * mxGetElementSize(linreg_OUT));
+
+					// Cleanup
+					mxFree(outReal); 
+
+					// NaN data before lookback
+					// assign the variables for manipulating the arrays (by pointer reference)
+					double *outPtr = mxGetPr(linreg_OUT);
+
+					for (int iter = 0; iter < lookback; iter++)
+					{
+						outPtr[iter] = m_Nan;
+					}
+
+					break;
+				}
+
 		// Linear Regression Angle
 		case ta_linearreg_angle:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback	lookback period	(default 14)
+
+				// OUTPUT
+				//		LINREGA		vector of linear regression angle values in degrees
+
+				// Description: Linear Regression is a concept also known as the "least squares method" or "best fit." 
+				//	Linear Regression attempts to fit a straight line between several data points in such a way that 
+				//	distance between each data point and the line is minimized.
+				//  For each point, a straight line over the specified previous bar period is determined in terms of 
+				//	y = mx + b
+				//
+				//	TA_LINEARREG				Returns b+m*(period-1)
+				//	TA_LINEARREG_SLOPE			Returns 'm'
+				//	TA_LINEARREG_ANGLE			Returns 'm' in degrees
+				//	TA_LINEARREG_INTERCEPT		Returns 'b'
+				//	TA_TSF						Returns b+m*(period)
+
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_linearreg_angle:NumInputs",
+					"Number of input arguments to function 'ta_linearreg_angle' is incorrect. Observation data should be parsed into a single input vector. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_linearreg_angle:NumOutputs",
+					"The function 'ta_linearreg_angle' (Linear Regression Angle) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN			prhs[1]
+
+				// Outputs
+				#define linrega_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_linearreg_angle:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *outReal;
+
+				// Get optional input or assign default
+				if (nrhs == 3) 
+				{
+					#define lookback_IN	prhs[2]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The LINEAR REGRESSION ANGLE lookback must be a scalar. Aborting (%d).", codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					if(lookback < 2)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The LINEAR REGRESSION ANGLE lookback must be a scalar with a value of 2 or greater. Aborting (%d).", codeLine);
+					}
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_LINEARREG_ANGLE(startIdx, endIdx, dataPtr, lookback, &dataIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				linrega_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(linrega_OUT)) + dataIdx, outReal, outElements * mxGetElementSize(linrega_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *outPtr = mxGetPr(linrega_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					outPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+
 		// Linear Regression Intercept
 		case ta_linearreg_intercept:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback	lookback period	(default 14)
+
+				// OUTPUT
+				//		LINREGA		vector of linear regression intercept values in degrees
+
+				// Description: Linear Regression is a concept also known as the "least squares method" or "best fit." 
+				//	Linear Regression attempts to fit a straight line between several data points in such a way that 
+				//	distance between each data point and the line is minimized.
+				//  For each point, a straight line over the specified previous bar period is determined in terms of 
+				//	y = mx + b
+				//
+				//	TA_LINEARREG				Returns b+m*(period-1)
+				//	TA_LINEARREG_SLOPE			Returns 'm'
+				//	TA_LINEARREG_ANGLE			Returns 'm' in degrees
+				//	TA_LINEARREG_INTERCEPT		Returns 'b'
+				//	TA_TSF						Returns b+m*(period)
+
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_linearreg_intercept:NumInputs",
+					"Number of input arguments to function 'ta_linearreg_intercept' is incorrect. Observation data should be parsed into a single input vector. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_linearreg_intercept:NumOutputs",
+					"The function 'ta_linearreg_intercept' (Linear Regression Intercept) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN			prhs[1]
+
+				// Outputs
+				#define linregi_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_linearreg_intercept:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *outReal;
+
+				// Get optional input or assign default
+				if (nrhs == 3) 
+				{
+					#define lookback_IN	prhs[2]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The LINEAR REGRESSION ANGLE lookback must be a scalar. Aborting (%d).", codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					if(lookback < 2)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The LINEAR REGRESSION INTERCEPT lookback must be a scalar with a value of 2 or greater. Aborting (%d).", codeLine);
+					}
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_LINEARREG_INTERCEPT(startIdx, endIdx, dataPtr, lookback, &dataIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				linregi_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(linregi_OUT)) + dataIdx, outReal, outElements * mxGetElementSize(linregi_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *outPtr = mxGetPr(linregi_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					outPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+
 		// Linear Regression Slope
 		case ta_linearreg_slope:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback	lookback period	(default 14)
+
+				// OUTPUT
+				//		LINREGS		vector of linear regression slope values in degrees
+
+				// Description: Linear Regression is a concept also known as the "least squares method" or "best fit." 
+				//	Linear Regression attempts to fit a straight line between several data points in such a way that 
+				//	distance between each data point and the line is minimized.
+				//  For each point, a straight line over the specified previous bar period is determined in terms of 
+				//	y = mx + b
+				//
+				//	TA_LINEARREG				Returns b+m*(period-1)
+				//	TA_LINEARREG_SLOPE			Returns 'm'
+				//	TA_LINEARREG_ANGLE			Returns 'm' in degrees
+				//	TA_LINEARREG_INTERCEPT		Returns 'b'
+				//	TA_TSF						Returns b+m*(period)
+
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_linearreg_slope:NumInputs",
+					"Number of input arguments to function 'ta_linearreg_slope' is incorrect. Observation data should be parsed into a single input vector. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_linearreg_slope:NumOutputs",
+					"The function 'ta_linearreg_slope' (Linear Regression Slope) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN			prhs[1]
+
+				// Outputs
+				#define linregs_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_linearreg_slope:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *outReal;
+
+				// Get optional input or assign default
+				if (nrhs == 3) 
+				{
+					#define lookback_IN	prhs[2]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The LINEAR REGRESSION SLOPE lookback must be a scalar. Aborting (%d).", codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					if(lookback < 2)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The LINEAR REGRESSION SLOPE lookback must be a scalar with a value of 2 or greater. Aborting (%d).", codeLine);
+					}
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_LINEARREG_SLOPE(startIdx, endIdx, dataPtr, lookback, &dataIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				linregs_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(linregs_OUT)) + dataIdx, outReal, outElements * mxGetElementSize(linregs_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *outPtr = mxGetPr(linregs_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					outPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+
 		// Vector Log Natural
 		case ta_ln:       
+			{
+				// REQUIRED INPUTS
+				//		input	any single column vector of Real values
 
-			break;
-		// Vector Log10
+				// OPTIONAL INPUTS
+				//		none
+
+				// OUTPUTS
+				//		LN		Natural logarithm of input vector
+
+				// Check number of inputs
+				if (nrhs != 2)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ln:NumInputs",
+					"Number of input arguments to function 'ta_ln' is not correct. A single vector of values should be provided. Aborting (%d).",codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ln:NumOutputs",
+					"The function 'ta_ln' (Vector Natural Logarithm) produces a single vector output that must be assigned. Aborting (%d).",codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN		prhs[1]
+
+				// Outputs
+				#define ln_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+				rows		= (int)mxGetM(data_IN);
+
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_acos:InputErr",
+						"Cosine data should be a single vector array. Aborting (%d).",codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int lnIdx, outElements;
+				double *outReal;
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				// May have to change typeMA from decimal to name
+				retCode = TA_LN(startIdx, endIdx, dataPtr, &lnIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgTxt("Invocation to 'ta_ln' failed. Aborting (4735).");
+				}
+
+				// Populate Output
+				ln_OUT = mxCreateDoubleMatrix(lnIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(ln_OUT)) + lnIdx, outReal, outElements * mxGetElementSize(ln_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				break;
+			}
+
+		// Vector Base 10 Logarithm
 		case ta_log10:       
+			{
+				// REQUIRED INPUTS
+				//		input	any single column vector of Real values
 
-			break;
+				// OPTIONAL INPUTS
+				//		none
+
+				// OUTPUTS
+				//		LOG10	Base 10 logarithm of input vector
+
+				// Check number of inputs
+				if (nrhs != 2)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_log10:NumInputs",
+					"Number of input arguments to function 'ta_log10' is not correct. A single vector of values should be provided. Aborting (%d).",codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ln:NumOutputs",
+					"The function 'ta_log10' (Vector Base 10 Logarithm) produces a single vector output that must be assigned. Aborting (%d).",codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN		prhs[1]
+
+				// Outputs
+				#define log10_OUT	plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+				rows		= (int)mxGetM(data_IN);
+
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_log10:InputErr",
+						"Input data should be a single vector array. Aborting (%d).",codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int log10Idx, outElements;
+				double *outReal;
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				// May have to change typeMA from decimal to name
+				retCode = TA_LOG10(startIdx, endIdx, dataPtr, &log10Idx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgTxt("Invocation to 'ta_log10' failed. Aborting (4813).");
+				}
+
+				// Populate Output
+				log10_OUT = mxCreateDoubleMatrix(log10Idx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(log10_OUT)) + log10Idx, outReal, outElements * mxGetElementSize(log10_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				break;
+			}
+
 		// Moving average
 		case ta_ma:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback	lookback period	(default 14)
+				//		typeMA		Moving average calculation type:
+				//						0	-	Simple Moving Average				SMA	(default)
+				//						1	-	Exponential Moving Average			EMA
+				//						2	-	Weighted Moving Average				WMA
+				//						3	-	Double Exponential Moving Average	DEMA
+				//						4	-	Triple Exponential Moving Average	TEMA
+				//						5	-	Triangular Moving Average			TRIMA
+				//						6	-	Kaufman Adaptive Moving Average		KAMA
+				//						7	-	MESA Adaptive Moving Average		MAMA
+				//						8	-	Triple Exponential Moving Average	T3	
+
+				// OUTPUT
+				//		MA			vector of simple moving average values
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 4)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ma:NumInputs",
+					"Number of input arguments to function 'ta_ma' is incorrect. Observation data should be parsed into a single input vector.\nOptional inputs are lookback, typeMA. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ma:NumOutputs",
+					"The function 'ta_ma' (Moving Average) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN		prhs[1]
+
+				// Outputs
+				#define ma_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback, typeMA;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ma:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *outReal;
+
+				// Get optional input or assign default
+				if (nrhs > 2) 
+				{
+					#define lookback_IN	prhs[2]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MOVING AVERAGE lookback must be a scalar. Aborting (%d).", codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					if(lookback < 1)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MOVING AVERAGE lookback must be a scalar with a value of 1 or greater. Aborting (%d).", codeLine);
+					}
+
+					if(nrhs == 4)
+					{
+						#define typeMA_IN	prhs[3]
+						if (!isRealScalar(typeMA_IN))
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MOVING AVERAGE typeMA must be a scalar. Aborting (%d).", codeLine);
+
+						/* Get the scalar input typeMA */
+						// Assign
+						typeMA = (int)mxGetScalar(typeMA_IN);
+
+						// Validate
+						if(typeMA < 0 || typeMA > 8)
+						{
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+								"The MOVING AVERAGE typeMA must be a scalar with a value between 0 - 8. Aborting (%d).", codeLine);
+						}
+					}
+					else
+					{
+						typeMA = 0;
+					}
+				}
+				else
+				{
+					typeMA = 0;
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_MA(startIdx, endIdx, dataPtr, lookback, (TA_MAType)typeMA, &dataIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				ma_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(ma_OUT)) + dataIdx, outReal, outElements * mxGetElementSize(ma_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *outPtr = mxGetPr(ma_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					outPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+
 		// Moving Average Convergence/Divergence
 		case ta_macd:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
+				// OPTIONAL INPUTS
+				//		fastMA		Fast MA lookback	(default 12)
+				//		slowMA		Slow MA lookback	(default 26)
+				//		smoothP		Smoothing period	(default 9)
+
+				// OUTPUTS
+				//		MACD		Moving Average Convergence/Divergence
+				//		MACD		SigMoving Average Convergence/Divergence Signal
+				//		MACDHist	Moving Average Convergence/Divergence History
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 5)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_macd:NumInputs",
+					"Number of input arguments to function 'ta_macd' is incorrect. Observation data should be parsed into a single input vector.\nOptional inputs are fastMA, slowMA, smoothP. Aborting (%d).", codeLine);
+				if (nrhs == 3)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_macd:NumOutputs",
+					"The function 'ta_macd' (Moving Average Convergence/Divergence) cannot interpret the ambiguous input provided. Aborting (%d).",codeLine);
+
+				if (nlhs != 3)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_macd:NumOutputs",
+					"The function 'ta_macd' (Moving Average Convergence/Divergence) produces 3 vector outputs that must be assigned. Aborting (%d).",codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN			prhs[1]
+
+				// Outputs
+				#define macd_OUT		plhs[0]
+				#define macdSig_OUT		plhs[1]
+				#define macdHist_OUT	plhs[2]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback, fastMA, slowMA, smoothP;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_macd:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *macd, *macdSig, *macdHist;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs > 2) 
+				{
+					#define fastMA_IN	prhs[2]
+					#define slowMA_IN	prhs[3]
+
+					// Validate
+					if (!isRealScalar(fastMA_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MACD fastMA input must be a scalar. Aborting (%d).",codeLine);
+					if (!isRealScalar(slowMA_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MACD slowMA input must be a scalar. Aborting (%d).",codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					fastMA = (int)mxGetScalar(fastMA_IN);
+					slowMA = (int)mxGetScalar(slowMA_IN);
+
+					// Validate
+					if (fastMA > slowMA)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MACD fastMA must be less than or equal to slowMA input. Aborting (%d).",codeLine);
+					}
+
+					if (fastMA < 2 || slowMA < 2)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MACD average lookback values must be greater than or equal to 2. Aborting (%d).",codeLine);
+					}
+
+					if(nrhs == 5)
+					{
+						#define smoothP_IN	prhs[4]
+
+						if (!isRealScalar(smoothP_IN))
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MACD smoothing lookback input must be a scalar. Aborting (%d).",codeLine);
+
+						smoothP = (int)mxGetScalar(smoothP_IN);
+
+						// Validate
+						if (smoothP < 1)
+						{
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+								"The MACD smoothing lookback value must be greater than or equal to 1. Aborting (%d).",codeLine);
+						}
+
+					}
+					else
+					{
+						smoothP = 9;
+					}
+				}
+				else
+				// Assign defaults
+				{
+					fastMA = 12;
+					slowMA = 26;
+					smoothP = 9;
+
+					if (rows < slowMA || rows < fastMA)
+					{
+						fastMA = int(rows / 2);
+						slowMA = rows;
+					}
+
+					if (rows < 9)
+					{
+						smoothP = rows;
+					}
+				}
+
+				// Preallocate heap
+				macd		= (double*)mxCalloc(rows, sizeof(double));
+				macdSig		= (double*)mxCalloc(rows, sizeof(double));
+				macdHist	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_MACD(startIdx, endIdx, dataPtr, fastMA, slowMA, smoothP, &dataIdx, &outElements, macd, macdSig, macdHist);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(macd);
+					mxFree(macdSig);
+					mxFree(macdHist);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (5121).", taFuncNameIn);
+				}
+
+				// Populate Output
+				macd_OUT		= mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				macdSig_OUT		= mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				macdHist_OUT	= mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(macd_OUT)) + dataIdx, macd, outElements * mxGetElementSize(macd_OUT));
+				memcpy(((double *) mxGetData(macdSig_OUT)) + dataIdx, macdSig, outElements * mxGetElementSize(macdSig_OUT));
+				memcpy(((double *) mxGetData(macdHist_OUT)) + dataIdx, macdHist, outElements * mxGetElementSize(macdHist_OUT));
+
+				// Cleanup
+				mxFree(macd); 
+				mxFree(macdSig); 
+				mxFree(macdHist); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *macdPtr = mxGetPr(macd_OUT);
+				double *macdSigPtr = mxGetPr(macdSig_OUT);
+				double *macdHistPtr = mxGetPr(macdHist_OUT);
+
+				for (int iter = 0; iter < slowMA; iter++)
+				{
+					macdPtr[iter] = m_Nan;
+					macdSigPtr[iter] = m_Nan;
+				}
+
+				for (int iter = 0; iter < smoothP; iter++)
+				{
+					macdHistPtr[iter] = m_Nan;
+				}
+									
+				break;
+			}
+
 		// MACD with controllable MA type
 		case ta_macdext:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
-		// Moving Average Convergence/Divergence Fix 12/26
+				// OPTIONAL INPUTS
+				//		fastMA		Fast MA lookback		(default 12)
+				//		fastType	Fast MA type			(default 0)
+				//		slowMA		Slow MA lookback		(default 26)
+				//		slowType	Slow MA type			(default 0)
+				//		smoothP		Smoothing period		(default 9)
+				//		smoothType	Smoothing average type	(default 0)
+
+				// OUTPUTS
+				//		MACD		Moving Average Convergence/Divergence
+				//		MACD		SigMoving Average Convergence/Divergence Signal
+				//		MACDHist	Moving Average Convergence/Divergence History
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 8)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_macdext:NumInputs",
+					"Number of input arguments to function 'ta_macdext' is incorrect. Observation data should be parsed into a single input vector.\nOptional inputs are fastMA, fastType, slowMA, slowType, smoothP, smoothType./nAdditional arguments must be added in pairs to prevent ambiguity. Aborting (%d).", codeLine);
+				if (nrhs >= 3 && nrhs <= 5)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_macdext:NumOutputs",
+					"The function 'ta_macdext' (Moving Average Convergence/Divergence) cannot interpret the ambiguous input provided.\nIf specifying fastMA you must also specify slowMA including average types. Aborting (%d).",codeLine);
+				if (nrhs == 7)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_macdext:NumOutputs",
+					"The function 'ta_macdext' (Moving Average Convergence/Divergence) cannot interpret the ambiguous input provided.\nIf specifying smoothP lookback you must also specify the smoothP average type. Aborting (%d).",codeLine);
+				if (nlhs != 3)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_macdext:NumOutputs",
+					"The function 'ta_macdext' (Moving Average Convergence/Divergence) produces 3 vector outputs that must be assigned. Aborting (%d).",codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN			prhs[1]
+
+				// Outputs
+				#define macd_OUT		plhs[0]
+				#define macdSig_OUT		plhs[1]
+				#define macdHist_OUT	plhs[2]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback, fastMA, fastType, slowMA, slowType, smoothP, smoothType;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_macdext:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *macd, *macdSig, *macdHist;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs > 2) 
+				{
+					#define fastMA_IN	prhs[2]
+					#define fastType_IN	prhs[3]
+					#define slowMA_IN	prhs[4]
+					#define slowType_IN	prhs[5]
+
+					// Validate
+					if (!isRealScalar(fastMA_IN))
+						mexErrMsgIdAndTxt("MATLAB:taInvoke:inputErr",
+						"The MACDEXT fastMA input must be a scalar. Aborting (%d).",codeLine);
+					if (!isRealScalar(fastType_IN))
+						mexErrMsgIdAndTxt("MATLAB:taInvoke:inputErr",
+						"The MACDEXT fastType input must be a scalar. Aborting (%d).",codeLine);
+					if (!isRealScalar(slowMA_IN))
+						mexErrMsgIdAndTxt("MATLAB:taInvoke:inputErr",
+						"The MACDEXT slowMA input must be a scalar. Aborting (%d).",codeLine);
+					if (!isRealScalar(slowType_IN))
+						mexErrMsgIdAndTxt("MATLAB:taInvoke:inputErr",
+						"The MACDEXT slowType input must be a scalar. Aborting (%d).",codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					fastMA = (int)mxGetScalar(fastMA_IN);
+					fastType = (int)mxGetScalar(fastType_IN);
+					slowMA = (int)mxGetScalar(slowMA_IN);
+					slowType = (int)mxGetScalar(slowType_IN);
+
+					// Validate
+					if (fastMA > slowMA)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MACDEXT fastMA must be less than or equal to slowMA input. Aborting (%d).",codeLine);
+					}
+
+					if (fastMA < 2 || slowMA < 2)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MACDEXt average lookback values must be greater than or equal to 2. Aborting (%d).",codeLine);
+					}
+
+					if (slowType < 0 || slowType > 8 || fastType < 0 || fastType > 8)
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MACDEXT average types values must be a value between 0 - 8. Aborting (%d).",codeLine);
+
+					if(nrhs == 8)
+					{
+						#define smoothP_IN		prhs[6]
+						#define smoothType_IN	prhs[7]
+
+						if (!isRealScalar(smoothP_IN))
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MACDEXT smoothing lookback input must be a scalar. Aborting (%d).",codeLine);
+						if (!isRealScalar(smoothType_IN))
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MACDEXT smoothing average type must be a scalar. Aborting (%d).",codeLine);
+
+						smoothP = (int)mxGetScalar(smoothP_IN);
+						smoothType = (int)mxGetScalar(smoothType_IN);
+
+						// Validate
+						if (smoothP < 1)
+						{
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+								"The MACDEXT smoothing lookback value must be greater than or equal to 1. Aborting (%d).",codeLine);
+						}
+						if (smoothType < 0 || smoothType > 8)
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MACDEXT smoothing average type must be a value between 0 - 8. Aborting (%d).",codeLine);
+					}
+					else
+					{
+						smoothP = 9;
+						smoothType = 0;
+					}
+				}
+				else
+					// Assign defaults
+				{
+					fastMA = 12;
+					fastType = 0;
+					slowMA = 26;
+					slowType = 0;
+					smoothP = 9;
+					smoothType = 0;
+
+					if (rows < slowMA || rows < fastMA)
+					{
+						fastMA = int(rows / 2);
+						slowMA = rows;
+					}
+
+					if (rows < 9)
+					{
+						smoothP = rows;
+					}
+				}
+
+				// Preallocate heap
+				macd		= (double*)mxCalloc(rows, sizeof(double));
+				macdSig		= (double*)mxCalloc(rows, sizeof(double));
+				macdHist	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_MACDEXT(startIdx, endIdx, dataPtr, fastMA, (TA_MAType)fastType, slowMA, (TA_MAType)slowType, smoothP, (TA_MAType)smoothType, &dataIdx, &outElements, macd, macdSig, macdHist);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(macd);
+					mxFree(macdSig);
+					mxFree(macdHist);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (5121).", taFuncNameIn);
+				}
+
+				// Populate Output
+				macd_OUT		= mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				macdSig_OUT		= mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				macdHist_OUT	= mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(macd_OUT)) + dataIdx, macd, outElements * mxGetElementSize(macd_OUT));
+				memcpy(((double *) mxGetData(macdSig_OUT)) + dataIdx, macdSig, outElements * mxGetElementSize(macdSig_OUT));
+				memcpy(((double *) mxGetData(macdHist_OUT)) + dataIdx, macdHist, outElements * mxGetElementSize(macdHist_OUT));
+
+				// Cleanup
+				mxFree(macd); 
+				mxFree(macdSig); 
+				mxFree(macdHist); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *macdPtr = mxGetPr(macd_OUT);
+				double *macdSigPtr = mxGetPr(macdSig_OUT);
+				double *macdHistPtr = mxGetPr(macdHist_OUT);
+
+				for (int iter = 0; iter < slowMA; iter++)
+				{
+					macdPtr[iter] = m_Nan;
+					macdSigPtr[iter] = m_Nan;
+				}
+
+				for (int iter = 0; iter < smoothP; iter++)
+				{
+					macdHistPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+
+		// Moving Average Convergence/Divergence Fixed 12|26)
 		case ta_macdfix:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
+				// OPTIONAL INPUTS
+				//		smoothP		Smoothing period lookback	(default 9)
+
+				// OUTPUTS
+				//		MACD		Moving Average Convergence/Divergence
+				//		MACD		SigMoving Average Convergence/Divergence Signal
+				//		MACDHist	Moving Average Convergence/Divergence History
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 3)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_macdfix:NumInputs",
+					"Number of input arguments to function 'ta_macdfix' is incorrect. Observation data should be parsed into a single input vector.\nOptional input is smoothing period. Aborting (%d).", codeLine);
+				if (nlhs != 3)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_macdfix:NumOutputs",
+					"The function 'ta_macdfix' (Moving Average Convergence/Divergence Fixed 12|26) produces 3 vector outputs that must be assigned. Aborting (%d).",codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN			prhs[1]
+
+				// Outputs
+				#define macd_OUT		plhs[0]
+				#define macdSig_OUT		plhs[1]
+				#define macdHist_OUT	plhs[2]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, smoothP;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_macdfix:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				if (rows < 26)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_macdfix:InputErr",
+						"'ta_macdfix' requires a minimum of 26 observations. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *macd, *macdSig, *macdHist;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs > 2) 
+				{
+					#define smoothP_IN	prhs[2]
+
+					// Validate
+					if (!isRealScalar(smoothP_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MACDFIX smoothing lookback input must be a scalar. Aborting (%d).",codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					smoothP = (int)mxGetScalar(smoothP_IN);
+
+					// Validate
+					if (smoothP < 1)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MACDFEX smoothing lookback must be greater than or equal to 1. Aborting (%d).",codeLine);
+					}
+				}
+				else
+					// Assign defaults
+				{
+					smoothP = 9;
+				}
+
+				// Preallocate heap
+				macd		= (double*)mxCalloc(rows, sizeof(double));
+				macdSig		= (double*)mxCalloc(rows, sizeof(double));
+				macdHist	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_MACDFIX(startIdx, endIdx, dataPtr, smoothP, &dataIdx, &outElements, macd, macdSig, macdHist);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(macd);
+					mxFree(macdSig);
+					mxFree(macdHist);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (5121).", taFuncNameIn);
+				}
+
+				// Populate Output
+				macd_OUT		= mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				macdSig_OUT		= mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				macdHist_OUT	= mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(macd_OUT)) + dataIdx, macd, outElements * mxGetElementSize(macd_OUT));
+				memcpy(((double *) mxGetData(macdSig_OUT)) + dataIdx, macdSig, outElements * mxGetElementSize(macdSig_OUT));
+				memcpy(((double *) mxGetData(macdHist_OUT)) + dataIdx, macdHist, outElements * mxGetElementSize(macdHist_OUT));
+
+				// Cleanup
+				mxFree(macd); 
+				mxFree(macdSig); 
+				mxFree(macdHist); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *macdPtr = mxGetPr(macd_OUT);
+				double *macdSigPtr = mxGetPr(macdSig_OUT);
+				double *macdHistPtr = mxGetPr(macdHist_OUT);
+
+				for (int iter = 0; iter < 26; iter++)
+				{
+					macdPtr[iter] = m_Nan;
+					macdSigPtr[iter] = m_Nan;
+				}
+
+				for (int iter = 0; iter < smoothP; iter++)
+				{
+					macdHistPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+
 		// MESA Adaptive Moving Average
 		case ta_mama:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
+				// OPTIONAL INPUTS
+				//		fastLmt		Upper limit used in the adaptive algorithm (0.01 - 0.99, default: 0.5)
+				//		slowLmt		Lower limit used in the adaptive algorithm (0.01 - 0.99, default: 0.05)
+
+				// OUTPUT
+				//		MAMA		vector of MESA Adaptive Moving Average values
+				//		FAMA
+
+				// Description: “The MESA Adaptive Moving Average (MAMA) adapts to price movement based on the 
+				//	rate of change of phase as measured by the Hilbert Transform Discriminator 
+				//	(Technical Analysis of Stocks and Commodities magazine, December 2000). 
+				//	This method features a fast attack average and a slow decay average so that composite average 
+				//	rapidly ratchets behind price changes and holds the average value until the next ratchet occurs.” 
+				//
+				//	MAMA and FAMA lines can be used to generate Buy and Sell signals. 
+				//	When the MAMA crosses above the FAMA a buy signal is given. 
+				//	Alternatively, when the MAMA crosses below the FAMA a sell signal is given.
+
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 4)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_mama:NumInputs",
+					"Number of input arguments to function 'ta_mama' is incorrect. Observation data should be parsed into a single input vector.\nOptional inputs are fastLmt and slowLmt. Aborting (%d).", codeLine);
+				if (nlhs != 2)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_mama:NumOutputs",
+					"The function 'ta_mama' (MESA Adaptive Moving Average) produces two vectors as output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN			prhs[1]
+
+				// Outputs
+				#define mama_OUT		plhs[0]
+				#define fama_OUT		plhs[1]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback;
+				double *dataPtr, fastLmt, slowLmt;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_mama:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				if (rows < 32)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_mama:InputErr",
+						"'ta_mama' requires a minimum of 32 observations. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *mama, *fama;
+
+				// Get optional input or assign default
+				if (nrhs >= 3) 
+				{
+					#define fastLmt_IN	prhs[2]
+					if (!isRealScalar(fastLmt_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MESA ADAPTIVE MOVING AVERAGE fastLmt must be a scalar. Aborting (%d).", codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					fastLmt = (double)mxGetScalar(fastLmt_IN);
+
+					// Validate
+					if(fastLmt < .01 || fastLmt > .99)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MESA ADAPTIVE MOVING AVERAGE fastLmt must be a scalar with a value between 0.01 - 0.99. Aborting (%d).", codeLine);
+					}
+
+					slowLmt = 0.05;
+
+					if (nrhs == 4) 
+					{
+						#define slowLmt_IN	prhs[3]
+						if (!isRealScalar(slowLmt_IN))
+							mexErrMsgIdAndTxt("MATLAB:taInvoke:inputErr",
+							"The MESA ADAPTIVE MOVING AVERAGE slowLmt must be a scalar. Aborting (%d).", codeLine);
+
+						/* Get the scalar input lookback */
+						// Assign
+						slowLmt = (double)mxGetScalar(slowLmt_IN);
+
+						// Validate
+						if(slowLmt < .01 || slowLmt > .99)
+						{
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+								"The MESA ADAPTIVE MOVING AVERAGE slowLmt must be a scalar with a value between 0.01 - 0.99. Aborting (%d).", codeLine);
+						}
+					}
+					else
+					{
+						fastLmt = 0.5;
+					}
+				}
+				else
+				// Defaults
+				{
+					fastLmt = 0.5;
+					slowLmt = 0.05;
+				}
+
+				if (slowLmt > fastLmt)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MESA ADAPTIVE MOVING AVERAGE slowLmt must be less than or equal to the fastLmt. Aborting (%d).", codeLine);
+				}
+
+				// Preallocate heap
+				mama = (double*)mxCalloc(rows, sizeof(double));
+				fama = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_MAMA(startIdx, endIdx, dataPtr, fastLmt, slowLmt, &dataIdx, &outElements, mama, fama);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(mama);
+					mxFree(fama);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				mama_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				fama_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(mama_OUT)) + dataIdx, mama, outElements * mxGetElementSize(mama_OUT));
+				memcpy(((double *) mxGetData(fama_OUT)) + dataIdx, fama, outElements * mxGetElementSize(fama_OUT));
+
+				// Cleanup
+				mxFree(mama); 
+				mxFree(fama); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *mamaPtr = mxGetPr(mama_OUT);
+				double *famaPtr = mxGetPr(fama_OUT);
+
+				for (int iter = 0; iter < 32; iter++)
+				{
+					mamaPtr[iter] = m_Nan;
+					famaPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
 		// Moving average with variable period
 		case ta_mavp:       
 
@@ -4621,6 +6186,6 @@ void chkSingleVec(int colsO, int colsH, int colsL, int colsC, int lineNum )
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4935.37426
+//   Revision:	4936.22545
 //   Copyright:	(c)2013
 //
