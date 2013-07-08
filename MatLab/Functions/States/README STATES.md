@@ -41,6 +41,6 @@ By utilizing one or more conditional evaluations, we are able to create a desire
 |functionFunctionSIG|SIGNAL AGGREGATOR function|
 |functionFunctionSTA|STATE AGGREGATOR function| 
 
- Author:		Mark Tompkins
- Revision:		4937.18944
+ Author:		Mark Tompkins  
+ Revision:		4937.18944  
  All rights reserved.

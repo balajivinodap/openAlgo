@@ -9,18 +9,19 @@ One of the goals for this file is to make finding references fast.
 Please use maximum brevity.
 
 
-Most recent revision:
-July 1, 2013 - Mark Tompkins
+	Most recent revision:
+	July 1, 2013 - Mark Tompkins
 
-Previous revisions:
-July 1, 2013 - Mark Tompkins
+	Previous revisions:
+	July 1, 2013 - Mark Tompkins
 
 
 --------------------------------------------------------
-C / C++: COLLECTION: TA-Lib								
+C / C++: COLLECTION: TA-Lib  
 Multi-Platform Tools for Market Analysis
 
 Mario Fortier  
+
 SVN: [svn://svn.code.sf.net/p/ta-lib/code](svn://svn.code.sf.net/p/ta-lib/code)  
 WEB: [http://bit.ly/15ZefoF](http://bit.ly/15ZefoF)
 
