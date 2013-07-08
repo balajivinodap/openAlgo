@@ -1,10 +1,10 @@
-**This README file describes the SIGnal convention if greater detail.**
+**This README file describes the SIGnal convention in greater detail.**
 
 There are primarily two types of functions that call elemental function.  These are:
 > STAte functions  
 > SIGnal function  
 
-**STATE:** A state should reduce to a Boolean true or false condition.  
+**STATE:** A STAte should reduce to a Boolean true or false condition.  
 For example a given observational 'Price' either is or isn't less than a calculated 'Moving Average' value:  
 > (pseudo e.g.) Observational Price < Moving Average =?= TRUE || FALSE
 
@@ -54,14 +54,13 @@ The convention that is used further refines to the following to effectuate this 
 				NET		 	= 	-50						NET			=	-50
 				SIGNAL		=	 55						SIGNAL		=	5.5
 				final NET	=	 5						final NET	=	 5
-																							
-																						
 		
-		
-FUNDAMENTAL CONSIDERATION:
-		
+**FUNDAMENTAL CONSIDERATIONS:**
+
 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		!!!! STATES MAY OR MAY NOT REPEAT PER OBSERVATION !!!!
+		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		!!!!    SIGNALS SHOULD BE CLEAN AND NOT REPEAT    !!!!
 		!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 **Function Naming Convention:**  

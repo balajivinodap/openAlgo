@@ -8,7 +8,7 @@ additional and unnecessary calls to the function *calcProfitLoss* will occur.
 >INPUT:	A minimum of two SIGNAL vectors  
 >OUTPUT:	A minimum of a single actionable SIGNAL
 
-**Naming Convention:**  
+**Function Naming Convention:**  
 
 | Name Style | Description |
 | ---------- | ----------- |
