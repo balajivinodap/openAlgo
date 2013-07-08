@@ -12,7 +12,9 @@ additional and unnecessary calls to the function *calcProfitLoss* will occur.
 
 | Name Style | Description |
 | ---------- | ----------- |
-|function|ELEMENTAL function| 
+|function|ELEMENTAL function|
+|functionDIS|DISPLAY function|
+|functionPAR|PARAMETRIC function|
 |functionSIG|SIGNAL function|
 |functionSTA|STATE function|
 |functionFunctionSIG|SIGNAL AGGREGATOR function|
