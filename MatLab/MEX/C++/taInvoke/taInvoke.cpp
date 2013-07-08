@@ -5684,50 +5684,1255 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 				break;
 			}
+
 		// Moving average with variable period
 		case ta_mavp:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
+				//		period		lookback
 
-			break;
-		// Highest value over a specified period
+				// OPTIONAL INPUTS
+				//		minPeriod	Minimum lookback period threshold	(default: 2)
+				//					Period values less than minPeriod will be changed to minPeriod
+				//		maxPeriod	Maximum lookback period threshold	(default: 30)
+				//					Period values greater than maxPeriod will be changed to minPeriod
+				//		typeMA		Moving average calculation type:
+				//						0	-	Simple Moving Average				SMA	(default)
+				//						1	-	Exponential Moving Average			EMA
+				//						2	-	Weighted Moving Average				WMA
+				//						3	-	Double Exponential Moving Average	DEMA
+				//						4	-	Triple Exponential Moving Average	TEMA
+				//						5	-	Triangular Moving Average			TRIMA
+				//						6	-	Kaufman Adaptive Moving Average		KAMA
+				//						7	-	MESA Adaptive Moving Average		MAMA
+				//						8	-	Triple Exponential Moving Average	T3	
+
+				// OUTPUT
+				//		MAVP		vector of moving average variable period values
+
+				// Check number of inputs
+				if (nrhs < 3 || nrhs > 6)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_mavp:NumInputs",
+					"Number of input arguments to function 'ta_mavp' is incorrect. Observation data should be parsed into a single input vector and an initial lookback period provided.\nOptional inputs are minPeriod, maxPeriod, typeMA. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_mavp:NumOutputs",
+					"The function 'ta_mavp' (Moving average with variable period) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN			prhs[1]
+				#define period_IN		prhs[2]
+
+				// Outputs
+				#define mavp_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, minPeriod, maxPeriod, typeMA;
+				double *dataPtr, *periodPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+				
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_mavp:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				if (!isRealScalar(period_IN))
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+					"The MOVING AVERAGE VARIABLE PERIOD period must be a scalar. Aborting (%d).", codeLine);
+
+				periodPtr		= mxGetPr(period_IN);
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *mavp;
+
+				// Get optional input or assign default
+				if (nrhs >= 4) 
+				{
+					#define minPeriod_IN	prhs[3]
+					if (!isRealScalar(minPeriod_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MOVING AVERAGE VARIABLE PERIOD minPeriod must be a scalar. Aborting (%d).", codeLine);
+
+					// Assign
+					minPeriod = (int)mxGetScalar(minPeriod_IN);
+
+					// Validate
+					if(minPeriod < 2)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MOVING AVERAGE VARIABLE PERIOD minPeriod must be a scalar with a value greater than or equal to 2. Aborting (%d).", codeLine);
+					}
+
+					if (nrhs >= 5) 
+					{
+						#define maxPeriod_IN	prhs[4]
+						if (!isRealScalar(maxPeriod_IN))
+							mexErrMsgIdAndTxt("MATLAB:taInvoke:inputErr",
+							"The MOVING AVERAGE VARIABLE PERIOD maxPeriod must be a scalar with a value greater than or equal to 2. Aborting (%d).", codeLine);
+
+						// Assign
+						maxPeriod = (int)mxGetScalar(maxPeriod_IN);
+
+						// Validate
+						if(maxPeriod < 2)
+						{
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+								"The MOVING AVERAGE VARIABLE PERIOD maxPeriod must be a scalar with a value greater than or equal to 2. Aborting (%d).", codeLine);
+						}
+
+						if (nrhs == 6)
+						{
+							#define typeMA_IN	prhs[5]
+							if (!isRealScalar(typeMA_IN))
+								mexErrMsgIdAndTxt("MATLAB:taInvoke:inputErr",
+								"The MOVING AVERAGE VARIABLE PERIOD typeMA must be a scalar with a value between 0 - 8. Aborting (%d).", codeLine);
+
+							// Assign
+							typeMA = (int)mxGetScalar(typeMA_IN);
+
+							// Validate
+							if(typeMA < 0 || typeMA > 8)
+							{
+								mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+									"The MOVING AVERAGE VARIABLE PERIOD typeMA must be a scalar with a value between 0 - 8. Aborting (%d).", codeLine);
+							}
+						}
+						else
+						{
+							typeMA = 0;
+						}
+					}
+					else
+					{
+						maxPeriod = 30;
+						typeMA = 0;
+					}
+				}
+				else
+					// Defaults
+				{
+					minPeriod = 2;
+					maxPeriod = 30;
+					typeMA = 0;
+				}
+
+				if (minPeriod > maxPeriod)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MESA ADAPTIVE MOVING AVERAGE minPeriod must be less than or equal to the maxPeriod. Aborting (%d).", codeLine);
+				}
+
+				// Preallocate heap
+				mavp = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_MAVP(startIdx, endIdx, dataPtr, periodPtr, minPeriod, maxPeriod, (TA_MAType)typeMA, &dataIdx, &outElements, mavp);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(mavp);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				mavp_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(mavp_OUT)) + dataIdx, mavp, outElements * mxGetElementSize(mavp_OUT));
+
+				// Cleanup
+				mxFree(mavp); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *mavpPtr = mxGetPr(mavp_OUT);
+
+				// Get the larger of the minPeriod or the original lookback period
+				int isGtr = max((int)*periodPtr, minPeriod);
+
+				for (int iter = 0; iter < isGtr; iter++)
+				{
+					mavpPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+
+		// Maximum value over a specified period
 		case ta_max:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
-		// Index of highest value over a specified period
+				// OPTIONAL INPUTS
+				//		Lookback	lookback period	(default 30)
+
+				// OUTPUT
+				//		MAX			Vector of maximum value within lookback period
+
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_max:NumInputs",
+					"Number of input arguments to function 'ta_max' is incorrect. Observation data should be parsed into a single input vector. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_max:NumOutputs",
+					"The function 'ta_max' (Maximum value over a specified period) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN		prhs[1]
+
+				// Outputs
+				#define max_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_max:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *outReal;
+
+				// Get optional input or assign default
+				if (nrhs == 3) 
+				{
+					#define lookback_IN	prhs[2]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MAXIMUM VALUE OVER A SPECIFIED PERIOD lookback must be a scalar. Aborting (%d).", codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					if(lookback < 2)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MAXIMUM VALUE OVER A SPECIFIED PERIOD lookback must be a scalar with a value of 2 or greater. Aborting (%d).", codeLine);
+					}
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 30;
+				}
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_MAX(startIdx, endIdx, dataPtr, lookback, &dataIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				max_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(max_OUT)) + dataIdx, outReal, outElements * mxGetElementSize(max_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				break;
+			}
+
+		// Index of maximum value over a specified period
 		case ta_maxindex:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback	lookback period	(default 30)
+
+				// OUTPUT
+				//		MAXIDX		Vector of index locations of maximum value within lookback period
+
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_maxindex:NumInputs",
+					"Number of input arguments to function 'ta_maxindex' is incorrect. Observation data should be parsed into a single input vector. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_maxindex:NumOutputs",
+					"The function 'ta_maxindex' (Index of maximum value over a specified period) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN			prhs[1]
+
+				// Outputs
+				#define maxidx_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_maxindex:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				int *outInt;
+
+				// Get optional input or assign default
+				if (nrhs == 3) 
+				{
+					#define lookback_IN	prhs[2]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The INDEX OF MAXIMUM VALUE OVER A SPECIFIED PERIOD lookback must be a scalar. Aborting (%d).", codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					if(lookback < 2)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The INDEX OF MAXIMUM VALUE OVER A SPECIFIED PERIOD lookback must be a scalar with a value of 2 or greater. Aborting (%d).", codeLine);
+					}
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 30;
+				}
+
+				// Preallocate heap
+				outInt = (int*)mxCalloc(rows, sizeof(int));
+
+				// Invoke with error catch
+				retCode = TA_MAXINDEX(startIdx, endIdx, dataPtr, lookback, &dataIdx, &outElements, outInt);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outInt);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				maxidx_OUT = mxCreateNumericMatrix(dataIdx + outElements,1, mxINT32_CLASS, mxREAL);
+				memcpy(((int *) mxGetData(maxidx_OUT)) + dataIdx, outInt, outElements * mxGetElementSize(maxidx_OUT));
+
+				// Cleanup
+				mxFree(outInt); 
+
+				break;
+			}
+
 		// Median Price
 		case ta_medprice:       
+			{
+				// REQUIRED INPUTS
+				//		High		A single vector of HIGH price observations
+				//		Low			A single vector of LOW price observations
 
-			break;
+				// OPTIONAL INPUTS
+				//		none
+
+				// OUTPUT
+				//		MED			Vector of median prices derived from provided inputs
+
+
+				// Check number of inputs
+				if (nrhs != 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_medprice:NumInputs",
+					"Number of input arguments to function 'ta_maxindex' is incorrect. Observation data should be parsed into two input vectors (e.g. High | Low). Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_medprice:NumOutputs",
+					"The function 'ta_medprice' (Median Price) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define high_IN			prhs[1]
+				#define low_IN			prhs[2]
+
+				// Outputs
+				#define med_OUT			plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsH, colsL;
+				double *highPtr, *lowPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				highPtr		= mxGetPr(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				rows		= (int)mxGetM(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				colsL		= (int)mxGetN(low_IN);
+
+				// Validate
+				if (colsH != 1 || colsL != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_medprice:InputErr",
+						"Observational data should be provided as single vector arrays. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *outReal;
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_MEDPRICE(startIdx, endIdx, highPtr, lowPtr, &dataIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				med_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(med_OUT)) + dataIdx, outReal, outElements * mxGetElementSize(med_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				break;
+			}
+
 		// Money Flow Index
 		case ta_mfi:       
+			{
+				// REQUIRED INPUTS
+				//		Price		H | L | C	separate vectors
+				//		Volume
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback	lookback period	(default 14)	
+
+				// OUTPUT
+				//		MFI			vector of Chaikin advance / decline line values
+
+				// Check number of inputs
+				if (nrhs < 5 || nrhs > 6)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_mfi:NumInputs",
+					"Number of input arguments to function 'ta_mfi' is incorrect. Price data should be parsed into vectors H | L | C followed by a volume vector V.\nOptional input of lookback may be provided. Aborting (%d).",codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_mfi:NumOutputs",
+					"The function 'ta_mfi' (Money Flow Index) produces a single vector output that must be assigned. Aborting (%d).",codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define high_IN		prhs[1]
+				#define low_IN		prhs[2]
+				#define close_IN	prhs[3]
+				#define vol_IN		prhs[4]
+
+				// Outputs
+				#define mfi_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsH, colsL, colsC, colsV, lookback;
+				double *highPtr, *lowPtr, *closePtr, *volPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse inputs and error check
+				// Assign pointers and get dimensions
+				highPtr		= mxGetPr(high_IN);
+				rows		= (int)mxGetM(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				colsL		= (int)mxGetN(low_IN);
+				closePtr	= mxGetPr(close_IN);
+				colsC		= (int)mxGetN(close_IN);
+				volPtr		= mxGetPr(vol_IN);
+				colsV		= (int)mxGetN(vol_IN);
+
+				// Input validation
+				chkSingleVec(colsH, colsL, colsC, codeLine);
+
+				if (colsV != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_mfi:InputErr",
+						"Volume data should be a single vector array. Aborting (%d).",codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int adIdx, outElements;
+				double *outReal;
+
+				// Get optional input or assign default
+				if (nrhs == 6) 
+				{
+					#define lookback_IN	prhs[5]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MONEY FLOW INDEX lookback must be a scalar. Aborting (%d).", codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					if(lookback < 2)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MONEY FLOW INDEX lookback must be a scalar with a value of 2 or greater. Aborting (%d).", codeLine);
+					}
+				}
+				else
+				// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));			// added cast
+
+				// Invoke with error catch
+				retCode = TA_MFI(startIdx, endIdx, highPtr, lowPtr, closePtr, volPtr, lookback, &adIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgTxt("Invocation to 'ta_ad' failed. Aborting.");
+				}
+
+				// Populate Output
+				mfi_OUT = mxCreateDoubleMatrix(adIdx + outElements,1, mxREAL);
+				memcpy(((double*) mxGetData(mfi_OUT)) + adIdx, outReal, outElements * mxGetElementSize(mfi_OUT));
+
+				// Cleanup
+				mxFree(outReal);  
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *outPtr = mxGetPr(ma_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					outPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+
 		// MidPoint over period
 		case ta_midpoint:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback	lookback period	(default 14)
+
+				// OUTPUT
+				//		MID		Vector of midpoint values within lookback period
+
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_midpoint:NumInputs",
+					"Number of input arguments to function 'ta_midpoint' is incorrect. Observation data should be parsed into a single input vector. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_midpoint:NumOutputs",
+					"The function 'ta_midpoint' (MidPoint over period) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN			prhs[1]
+
+				// Outputs
+				#define midpt_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_midpoint:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *outReal;
+
+				// Get optional input or assign default
+				if (nrhs == 3) 
+				{
+					#define lookback_IN	prhs[2]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MIDPOINT OVER PERIOD lookback must be a scalar. Aborting (%d).", codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					if(lookback < 2)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MIDPOINT OVER PERIOD lookback must be a scalar with a value of 2 or greater. Aborting (%d).", codeLine);
+					}
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_MIDPOINT(startIdx, endIdx, dataPtr, lookback, &dataIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				midpt_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(midpt_OUT)) + dataIdx, outReal, outElements * mxGetElementSize(midpt_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				break;
+			}
+
 		// Midpoint Price over period
 		case ta_midprice:       
+			{
+				// REQUIRED INPUTS
+				//		High		A single vector of HIGH price observations
+				//		Low			A single vector of LOW price observations
 
-			break;
-		// Lowest value over a specified period
+				// OPTIONAL INPUTS
+				//		Lookback	lookback period	(default 14)
+
+				// OUTPUT
+				//		MID		Vector of midprice values within lookback period
+
+
+				// Check number of inputs
+				if (nrhs < 3 || nrhs > 4)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_midprice:NumInputs",
+					"Number of input arguments to function 'ta_midprice' is incorrect. Observation data should be parsed into two input vector (e.g. High | Low). Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_midprice:NumOutputs",
+					"The function 'ta_midprice' (Midpoint Price over period) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define high_IN			prhs[1]
+				#define low_IN			prhs[2]
+
+				// Outputs
+				#define midpr_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsH, colsL, lookback;
+				double *highPtr, *lowPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				highPtr		= mxGetPr(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				rows		= (int)mxGetM(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				colsL		= (int)mxGetN(low_IN);
+
+				// Validate
+				if (colsH != 1 || colsL != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_midprice:InputErr",
+						"Observational data should be provided as single vector arrays. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *outReal;
+
+				// Get optional input or assign default
+				if (nrhs == 4) 
+				{
+					#define lookback_IN	prhs[3]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MIDPOINT PRICE OVER PERIOD lookback must be a scalar. Aborting (%d).", codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					if(lookback < 2)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MIDPOINT PRICE OVER PERIOD lookback must be a scalar with a value of 2 or greater. Aborting (%d).", codeLine);
+					}
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_MIDPRICE(startIdx, endIdx, highPtr, lowPtr, lookback, &dataIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				midpr_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(midpr_OUT)) + dataIdx, outReal, outElements * mxGetElementSize(midpr_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				break;
+			}
+		
+		// Minimum value over a specified period
 		case ta_min:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
-		// Index of lowest value over a specified period
+				// OPTIONAL INPUTS
+				//		Lookback	lookback period	(default 30)
+
+				// OUTPUT
+				//		MIN			Vector of minimum values within lookback period
+
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_min:NumInputs",
+					"Number of input arguments to function 'ta_min is incorrect. Observation data should be parsed into a single input vector. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_max:NumOutputs",
+					"The function 'ta_min' (Minimum value over a specified period) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN		prhs[1]
+
+				// Outputs
+				#define min_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_min:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *outReal;
+
+				// Get optional input or assign default
+				if (nrhs == 3) 
+				{
+					#define lookback_IN	prhs[2]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MINIMUM VALUE OVER A SPECIFIED PERIOD lookback must be a scalar. Aborting (%d).", codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					if(lookback < 2)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MINIMUM VALUE OVER A SPECIFIED PERIOD lookback must be a scalar with a value of 2 or greater. Aborting (%d).", codeLine);
+					}
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 30;
+				}
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_MIN(startIdx, endIdx, dataPtr, lookback, &dataIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				min_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(min_OUT)) + dataIdx, outReal, outElements * mxGetElementSize(min_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				break;
+			}
+
+		// Index of minimum values over a specified period
 		case ta_minindex:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
-		// Lowest and highest values over a specified period
+				// OPTIONAL INPUTS
+				//		Lookback	lookback period	(default 30)
+
+				// OUTPUT
+				//		MINIDX		Vector of index locations of minimum value within lookback period
+
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_minindex:NumInputs",
+					"Number of input arguments to function 'ta_minindex' is incorrect. Observation data should be parsed into a single input vector. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_minindex:NumOutputs",
+					"The function 'ta_minindex' (Index of minimum values over a specified period) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN			prhs[1]
+
+				// Outputs
+				#define minidx_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_minindex:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				int *outInt;
+
+				// Get optional input or assign default
+				if (nrhs == 3) 
+				{
+					#define lookback_IN	prhs[2]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The INDEX OF MINIMUM VALUE OVER A SPECIFIED PERIOD lookback must be a scalar. Aborting (%d).", codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					if(lookback < 2)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The INDEX OF MINIMUM VALUE OVER A SPECIFIED PERIOD lookback must be a scalar with a value of 2 or greater. Aborting (%d).", codeLine);
+					}
+				}
+				else
+				// Default lookback period
+				{
+					lookback = 30;
+				}
+
+				// Preallocate heap
+				outInt = (int*)mxCalloc(rows, sizeof(int));
+
+				// Invoke with error catch
+				retCode = TA_MININDEX(startIdx, endIdx, dataPtr, lookback, &dataIdx, &outElements, outInt);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outInt);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				minidx_OUT = mxCreateNumericMatrix(dataIdx + outElements,1, mxINT32_CLASS, mxREAL);
+				memcpy(((int*) mxGetData(minidx_OUT)) + dataIdx, outInt, outElements * mxGetElementSize(minidx_OUT));
+
+				// Cleanup
+				mxFree(outInt); 
+
+				break;
+			}
+
+		// Minimum and Maximum values over a specified period
 		case ta_minmax:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
-		// Indexes of lowest and highest values over a specified period
+				// OPTIONAL INPUTS
+				//		Lookback	lookback period	(default 30)
+
+				// OUTPUT
+				//		MIN			Vector of minimum values within the lookback period
+				//		MAX			Vector of maximum values within the lookback period
+
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_max:NumInputs",
+					"Number of input arguments to function 'ta_minmax' is incorrect. Observation data should be parsed into a single input vector. Aborting (%d).", codeLine);
+				if (nlhs != 2)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_max:NumOutputs",
+					"The function 'ta_max' (Minimum and Maximum values over a specified period) produces two vector as output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN		prhs[1]
+
+				// Outputs
+				#define min_OUT		plhs[0]
+				#define max_OUT		plhs[1]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_max:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *outMin, *outMax;
+
+				// Get optional input or assign default
+				if (nrhs == 3) 
+				{
+					#define lookback_IN	prhs[2]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MINIMUM AND MAXIMUM VALUES OVER A SPECIFIED PERIOD lookback must be a scalar. Aborting (%d).", codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					if(lookback < 2)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MINIMUM AND MAXIMUM VALUE OVER A SPECIFIED PERIOD lookback must be a scalar with a value of 2 or greater. Aborting (%d).", codeLine);
+					}
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 30;
+				}
+
+				// Preallocate heap
+				outMin = (double*)mxCalloc(rows, sizeof(double));
+				outMax = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_MINMAX(startIdx, endIdx, dataPtr, lookback, &dataIdx, &outElements, outMin, outMax);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outMin);
+					mxFree(outMax);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				max_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				min_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(min_OUT)) + dataIdx, outMin, outElements * mxGetElementSize(min_OUT));
+				memcpy(((double *) mxGetData(max_OUT)) + dataIdx, outMax, outElements * mxGetElementSize(max_OUT));
+
+				// Cleanup
+				mxFree(outMin); 
+				mxFree(outMax); 
+
+				// NaN those values less than the lookback period
+				double *minPtr = mxGetPr(min_OUT);
+				double *maxPtr = mxGetPr(max_OUT);
+				for (int iter = 0; iter < lookback - 1; iter++)
+				{
+					minPtr[iter] = m_Nan;
+					maxPtr[iter] = m_Nan;
+				}
+
+
+				break;
+				break;
+			}
+
+		// Indeces of minimum and maximum values over a specified period
 		case ta_minmaxindex:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback	lookback period	(default 30)
+
+				// OUTPUT
+				//		MINIDX		Vector of minimum values index locations within the lookback period
+				//		MAXIDX		Vector of maximum values index locations within the lookback period
+
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_max:NumInputs",
+					"Number of input arguments to function 'ta_minmax' is incorrect. Observation data should be parsed into a single input vector. Aborting (%d).", codeLine);
+				if (nlhs != 2)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_max:NumOutputs",
+					"The function 'ta_max' (Minimum and Maximum values over a specified period) produces two vector as output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN			prhs[1]
+
+				// Outputs
+				#define minIdx_OUT		plhs[0]
+				#define maxIdx_OUT		plhs[1]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_max:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				int *outMinIdx, *outMaxIdx;
+
+				// Get optional input or assign default
+				if (nrhs == 3) 
+				{
+					#define lookback_IN	prhs[2]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The INDICES OF MINIMUM AND MAXIMUM VALUES OVER A SPECIFIED PERIOD lookback must be a scalar. Aborting (%d).", codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					if(lookback < 2)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The INDICES OF MINIMUM AND MAXIMUM VALUE OVER A SPECIFIED PERIOD lookback must be a scalar with a value of 2 or greater. Aborting (%d).", codeLine);
+					}
+				}
+				else
+				// Default lookback period
+				{
+					lookback = 30;
+				}
+
+				// Preallocate heap
+				outMinIdx = (int*)mxCalloc(rows, sizeof(int));
+				outMaxIdx = (int*)mxCalloc(rows, sizeof(int));
+
+				// Invoke with error catch
+				retCode = TA_MINMAXINDEX(startIdx, endIdx, dataPtr, lookback, &dataIdx, &outElements, outMinIdx, outMaxIdx);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outMinIdx);
+					mxFree(outMaxIdx);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				maxIdx_OUT = mxCreateNumericMatrix(dataIdx + outElements,1, mxINT32_CLASS, mxREAL);
+				minIdx_OUT = mxCreateNumericMatrix(dataIdx + outElements,1, mxINT32_CLASS, mxREAL);
+				memcpy(((int *) mxGetData(minIdx_OUT)) + dataIdx, outMinIdx, outElements * mxGetElementSize(minIdx_OUT));
+				memcpy(((int *) mxGetData(maxIdx_OUT)) + dataIdx, outMaxIdx, outElements * mxGetElementSize(maxIdx_OUT));
+
+				// Cleanup
+				mxFree(outMinIdx); 
+				mxFree(outMaxIdx); 
+
+				break;
+			}
+
 		// Minus Directional Indicator
 		case ta_minus_di:       
 
@@ -6186,6 +7391,6 @@ void chkSingleVec(int colsO, int colsH, int colsL, int colsC, int lineNum )
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4936.22545
+//   Revision:	4937.32889
 //   Copyright:	(c)2013
 //
