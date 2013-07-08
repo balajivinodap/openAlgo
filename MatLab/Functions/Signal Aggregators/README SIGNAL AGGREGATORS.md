@@ -9,11 +9,14 @@ additional and unnecessary calls to the function *calcProfitLoss* will occur.
 >OUTPUT:	A minimum of a single actionable SIGNAL
 
 **Naming Convention:**  
-			function ELEMENTAL function  
-			functionSIG				SIGNAL function  
-			functionSTA				STATE function  
-			functionFunctionSIG		SIGNAL AGGREGATOR function  
-			functionFunctionSTA		STATE AGGREGATOR function  
+
+| Name Style | Description |
+| ---------- | ----------- |
+|function|ELEMENTAL function| 
+|functionSIG|SIGNAL function|
+|functionSTA|STATE function|
+|functionFunctionSIG|SIGNAL AGGREGATOR function|
+|functionFunctionSTA|STATE AGGREGATOR function|  
 
 Author:			Mark Tompkins  
 Revision:		4902.23918  
