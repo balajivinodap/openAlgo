@@ -182,7 +182,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 					mxFree(accMid);
 					mxFree(accLower);
 					mexPrintf("%s%i","Return code=",retCode);
-					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (180).", taFuncNameIn);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
 				}
 
 				// Populate Output
@@ -1048,7 +1048,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				{
 					mxFree(aroonOsc);
 					mexPrintf("%s%i","Return code=",retCode);
-					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (749).", taFuncNameIn);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
 				}
 
 				// Populate Output
@@ -1416,7 +1416,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				{
 					mxFree(outReal);
 					mexPrintf("%s%i","Return code=",retCode);
-					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (1359).", taFuncNameIn);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
 				}
 
 				// Populate Output
@@ -1507,7 +1507,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				{
 					mxFree(outReal);
 					mexPrintf("%s%i","Return code=",retCode);
-					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (1442).", taFuncNameIn);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
 				}
 
 				// Populate Output
@@ -3129,7 +3129,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				{
 					mxFree(quotient);
 					mexPrintf("%s%i","Return code=",retCode);
-					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (3132).", taFuncNameIn);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
 				}
 
 				// Populate Output
@@ -5119,7 +5119,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 					mxFree(macdSig);
 					mxFree(macdHist);
 					mexPrintf("%s%i","Return code=",retCode);
-					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (5121).", taFuncNameIn);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
 				}
 
 				// Populate Output
@@ -5337,7 +5337,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 					mxFree(macdSig);
 					mxFree(macdHist);
 					mexPrintf("%s%i","Return code=",retCode);
-					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (5121).", taFuncNameIn);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
 				}
 
 				// Populate Output
@@ -5478,7 +5478,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 					mxFree(macdSig);
 					mxFree(macdHist);
 					mexPrintf("%s%i","Return code=",retCode);
-					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (5121).", taFuncNameIn);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
 				}
 
 				// Populate Output
@@ -6935,20 +6935,420 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 		// Minus Directional Indicator
 		case ta_minus_di:       
+			{
+				// REQUIRED INPUTS
+				//		Price	H | L | C	separate vectors
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback			Lookback period	(default 14)
+
+				// OUTPUTS
+				//		mDI					Vector of Minus directional indicator values for the lookback period
+
+				// Check number of inputs
+				if (nrhs < 4 || nrhs > 5)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_minus_di:NumInputs",
+					"Number of input arguments to function 'ta_minus_di' is incorrect. Price data should be parsed into vectors H | L | C. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_minus_di:NumOutputs",
+					"The function 'ta_minus_di' (Minus Directional Indicator) produces a single vector output that must be assigned. Aborting (%d).",codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define high_IN		prhs[1]
+				#define low_IN		prhs[2]
+				#define close_IN	prhs[3]
+
+				// Outputs
+				#define mDI_OUT	plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsH, colsL, colsC, lookback;
+				double *highPtr, *lowPtr, *closePtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				highPtr		= mxGetPr(high_IN);
+				rows		= (int)mxGetM(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				colsL		= (int)mxGetN(low_IN);
+				closePtr	= mxGetPr(close_IN);
+				colsC		= (int)mxGetN(close_IN);
+
+				// Validate
+				chkSingleVec(colsH, colsL, colsC, codeLine);
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *mDI;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs == 5) 
+				{
+					#define lookback_IN	prhs[4]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MINUS DIRECTIONAL INDICATOR lookback must be a scalar. Aborting (%d).",codeLine);
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					// Validate
+					if (lookback < 1)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MINUS DIRECTIONAL INDICATOR lookback must be an integer equal to or greater than 1. Aborting (%d).",codeLine);
+					}
+				}
+				else
+				// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				mDI	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_MINUS_DI(startIdx, endIdx, highPtr, lowPtr, closePtr, lookback, &dataIdx, &outElements, mDI);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(mDI);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				mDI_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(mDI_OUT)) + dataIdx, mDI, outElements * mxGetElementSize(mDI_OUT));
+
+				// Cleanup
+				mxFree(mDI); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *mDIPtr = mxGetPr(mDI_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					mDIPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+
 		// Minus Directional Movement
 		case ta_minus_dm:       
+			{
+				// REQUIRED INPUTS
+				//		Price	H | L | C	separate vectors
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback			Lookback period	(default 14)
+
+				// OUTPUTS
+				//		mDM					Vector of Minus directional movement values for the lookback period
+
+				// Check number of inputs
+				if (nrhs < 3 || nrhs > 4)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_minus_dm:NumInputs",
+					"Number of input arguments to function 'ta_minus_dm' is incorrect. Price data should be parsed into vectors H | L. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_minus_dm:NumOutputs",
+					"The function 'ta_minus_dm' (Minus Directional Movement) produces a single vector output that must be assigned. Aborting (%d).",codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define high_IN		prhs[1]
+				#define low_IN		prhs[2]
+
+				// Outputs
+				#define mDM_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsH, colsL, colsC, lookback;
+				double *highPtr, *lowPtr, *closePtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				highPtr		= mxGetPr(high_IN);
+				rows		= (int)mxGetM(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				colsL		= (int)mxGetN(low_IN);
+
+				// Validate
+				chkSingleVec(colsH, colsL, codeLine);
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *mDM;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs == 4) 
+				{
+					#define lookback_IN	prhs[3]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MINUS DIRECTIONAL MOVEMENT lookback must be a scalar. Aborting (%d).",codeLine);
+					
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					// Validate
+					if (lookback < 1)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MINUS DIRECTIONAL MOVEMENT lookback must be an integer equal to or greater than 1. Aborting (%d).",codeLine);
+					}
+				}
+				else
+				// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				mDM	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_MINUS_DM(startIdx, endIdx, highPtr, lowPtr, lookback, &dataIdx, &outElements, mDM);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(mDM);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				mDM_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(mDM_OUT)) + dataIdx, mDM, outElements * mxGetElementSize(mDM_OUT));
+
+				// Cleanup
+				mxFree(mDM); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *mDMPtr = mxGetPr(mDM_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					mDMPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+		
 		// Momentum
 		case ta_mom:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observations
 
-			break;
-		// Vector Arithmetic Mult
+				// OPTIONAL INPUTS
+				//		Lookback	Lookback period	(default 10)
+
+				// OUTPUTS
+				//		MOM			Vector of Momentum values for the lookback period
+
+				// Check number of inputs
+				if (nrhs < 2 || nrhs > 3)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_mom:NumInputs",
+					"Number of input arguments to function 'ta_mom' is incorrect. Price data should be a single vector of observations. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_mom:NumOutputs",
+					"The function 'ta_mom' (Momentum) produces a single vector output that must be assigned. Aborting (%d).",codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN		prhs[1]
+
+				// Outputs
+				#define MOM_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, lookback;
+				double *dataPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+
+				// Validate
+				if (colsD != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_minindex:InputErr",
+						"Observational data should be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *MOM;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs == 3) 
+				{
+					#define lookback_IN	prhs[2]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The MOMENTUM lookback must be a scalar. Aborting (%d).",codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					// Validate
+					if (lookback < 1)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The MOMENTUM lookback must be an integer equal to or greater than 1. Aborting (%d).",codeLine);
+					}
+				}
+				else
+				// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				MOM	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_MOM(startIdx, endIdx, dataPtr, lookback, &dataIdx, &outElements, MOM);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(MOM);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				MOM_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(MOM_OUT)) + dataIdx, MOM, outElements * mxGetElementSize(MOM_OUT));
+
+				// Cleanup
+				mxFree(MOM); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *momPtr = mxGetPr(MOM_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					momPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+		
+		// Vector Arithmetic Multiplication
 		case ta_mult:       
+			{
+				// REQUIRED INPUTS
+				//		Multiplicand
+				//		Multiplier
 
-			break;
+				// OPTIONAL INPUTS
+				//		none
+
+				// OUTPUTS
+				//		Product
+
+				// Check number of inputs
+				if (nrhs != 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_mult:NumInputs",
+					"Number of input arguments to function 'ta_mult' is not correct. Two vectors for multiplication should be provided. Aborting (%d).",codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define mCand_IN		prhs[1]
+				#define mPlier_IN		prhs[2]
+
+				// Outputs
+				#define product_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsC, colsP;
+				double *mCandPtr, *mPlierPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				mCandPtr		= mxGetPr(mCand_IN);
+				rows			= (int)mxGetM(mCand_IN);
+				colsC			= (int)mxGetN(mCand_IN);
+				mPlierPtr		= mxGetPr(mPlier_IN);
+				colsP			= (int)mxGetN(mPlier_IN);
+
+				if (colsC != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:InputErr",
+						"Vector multiplication inputs should be single dimensional vectors.\nThe multiplicand vector had more than 1 column.  Aborting (%d).",codeLine);
+				}
+
+				if (colsP != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:InputErr",
+						"Vector multiplication inputs should be single dimensional vectors.\nThe multiplier vector had more than 1 column.  Aborting (%d).",codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *product;
+
+				// Preallocate heap
+				product = (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_MULT(startIdx, endIdx, mCandPtr, mPlierPtr, &dataIdx, &outElements, product);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(product);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				product_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(product_OUT)) + dataIdx, product, outElements * mxGetElementSize(product_OUT));
+
+				// Cleanup
+				mxFree(product); 
+
+				break;
+			}
+
 		// Normalized Average True Range
 		case ta_natr:       
 
