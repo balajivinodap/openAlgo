@@ -3653,7 +3653,8 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 				break;
 			}
-		// Hilbert Transform - Phasor Components
+		
+			// Hilbert Transform - Phasor Components
 		case ta_ht_phasor:       
 			{
 				// REQUIRED INPUTS
@@ -7351,16 +7352,312 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 		// Normalized Average True Range
 		case ta_natr:       
+			{
+				// REQUIRED INPUTS
+				//		Price	H | L | C	separate vectors
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback period		(default 14)
+
+				// OUTPUT
+				//		NATR				a vector of normalized average true range values
+
+				// Check number of inputs
+				if (nrhs < 4 || nrhs > 5)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_natr:NumInputs",
+					"Number of input arguments to function 'ta_natr' is not correct. Price data should be parsed into vectors H | L | C.\nAn optional lookback scalar may also be provided. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_natr:NumOutputs",
+					"The function 'ta_natr' (Average True Range) produces a single vector output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define high_IN		prhs[1]
+				#define low_IN		prhs[2]
+				#define close_IN	prhs[3]
+
+				// Outputs
+				#define natr_OUT	plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsH, colsL, colsC, lookback;
+				double *highPtr, *lowPtr, *closePtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				highPtr		= mxGetPr(high_IN);
+				rows		= (int)mxGetM(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				colsL		= (int)mxGetN(low_IN);
+				closePtr	= mxGetPr(close_IN);
+				colsC		= (int)mxGetN(close_IN);
+
+				// Validate
+				chkSingleVec(colsH, colsL, colsC, codeLine);
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int natrIdx, outElements;
+				double *outReal;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs == 5) 
+				{
+					#define lookback_IN	prhs[4]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The NORMALIZED ATR lookback must be a scalar. Aborting (%d).", codeLine);
+
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					// Validate
+					if (lookback < 1)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The NORMALIZED ATR lookback must be an integer equal to or greater than 1. Aborting (%d).",codeLine);
+					}
+
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				outReal	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_NATR(startIdx, endIdx, highPtr, lowPtr, closePtr, lookback, &natrIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				natr_OUT = mxCreateDoubleMatrix(natrIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(natr_OUT)) + natrIdx, outReal, outElements * mxGetElementSize(natr_OUT));
+
+				// Cleanup
+				mxFree(outReal);
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *outPtr = mxGetPr(natr_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					outPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
+
 		// On Balance Volume
 		case ta_obv:       
+			{
+				// REQUIRED INPUTS
+				//		data		A single vector of observational price data
+				//		Volume		A single vector of volume data per observation
 
-			break;
+				// OPTIONAL INPUTS
+				//		none
+
+				// OUTPUT
+				//		OBV			A vector of On Balance Volume values
+
+				// Check number of inputs
+				if (nrhs != 3)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_obv:NumInputs",
+					"The number of input arguments to function 'ta_obv' is incorrect. Observational price data and volume data should each be a single vector. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_obv:NumOutputs",
+					"The function 'ta_obv' (On Balance Volume) produces a single vector output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define data_IN		prhs[1]
+				#define vol_IN		prhs[2]
+
+				// Outputs
+				#define obv_OUT		plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsD, colsV;
+				double *dataPtr, *volPtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse inputs and error check
+				// Assign pointers and get dimensions
+				dataPtr		= mxGetPr(data_IN);
+				rows		= (int)mxGetM(data_IN);
+				colsD		= (int)mxGetN(data_IN);
+				volPtr		= mxGetPr(vol_IN);
+				colsV		= (int)mxGetN(vol_IN);
+
+				// Input validation
+				if (colsV != 1 || colsV != 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_obv:InputErr",
+						"Observational price data and volume data should each be a single vector array. Aborting (%d).", codeLine);
+				}
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *outReal;
+
+				// Preallocate heap
+				outReal = (double*)mxCalloc(rows, sizeof(double));			// added cast
+
+				// Invoke with error catch
+				retCode = TA_OBV(startIdx, endIdx, dataPtr, volPtr, &dataIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				obv_OUT = mxCreateDoubleMatrix(dataIdx + outElements, 1, mxREAL);
+				memcpy(((double*) mxGetData(obv_OUT)) + dataIdx, outReal, outElements * mxGetElementSize(obv_OUT));
+
+				// Cleanup
+				mxFree(outReal);  
+
+				break;
+			}
+		
 		// Plus Directional Indicator
-		case ta_plus_di:       
+		case ta_plus_di:
+			{
+				// REQUIRED INPUTS
+				//		Price	H | L | C	separate vectors
 
-			break;
+				// OPTIONAL INPUTS
+				//		Lookback			Lookback period	(default 14)
+
+				// OUTPUTS
+				//		plusOUT				Vector of Minus indicator values for the lookback period
+
+				// Check number of inputs
+				if (nrhs < 4 || nrhs > 5)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:NumInputs",
+					"Number of input arguments to function 'ta_plus_di' is incorrect. Price data should be parsed into vectors H | L | C.\nAn optional lookback period may be provided. Aborting (%d).", codeLine);
+				if (nlhs != 1)
+					mexErrMsgIdAndTxt("MATLAB:taInvoke:ta_plus_di:NumOutputs",
+					"The function 'ta_plus_di' produces a single vector output that must be assigned. Aborting (%d).", codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define high_IN		prhs[1]
+				#define low_IN		prhs[2]
+				#define close_IN	prhs[3]
+
+				// Outputs
+				#define plus_OUT	plhs[0]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsH, colsL, colsC, lookback;
+				double *highPtr, *lowPtr, *closePtr;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				highPtr		= mxGetPr(high_IN);
+				rows		= (int)mxGetM(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				colsL		= (int)mxGetN(low_IN);
+				closePtr	= mxGetPr(close_IN);
+				colsC		= (int)mxGetN(close_IN);
+
+				// Validate
+				chkSingleVec(colsH, colsL, colsC, codeLine);
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int dataIdx, outElements;
+				double *outReal;
+
+				// Parse optional inputs if given, else default 
+				if (nrhs == 5) 
+				{
+					#define lookback_IN	prhs[4]
+					if (!isRealScalar(lookback_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The PLUS DIRECTIONAL INDICATOR lookback must be a scalar. Aborting (%d).", codeLine);
+					
+					/* Get the scalar input lookback */
+					// Assign
+					lookback = (int)mxGetScalar(lookback_IN);
+
+					// Validate
+					if (lookback < 1)
+					{
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The PLUS DIRECTIONAL INDICATORL lookback must be an integer equal to or greater than 1. Aborting (%d).",codeLine);
+					}
+				}
+				else
+					// Default lookback period
+				{
+					lookback = 14;
+				}
+
+				// Preallocate heap
+				outReal	= (double*)mxCalloc(rows, sizeof(double));
+
+				retCode = TA_PLUS_DI(startIdx, endIdx, highPtr, lowPtr, closePtr, lookback, &dataIdx, &outElements, outReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				plus_OUT = mxCreateDoubleMatrix(dataIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(plus_OUT)) + dataIdx, outReal, outElements * mxGetElementSize(plus_OUT));
+
+				// Cleanup
+				mxFree(outReal); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *plusPtr = mxGetPr(plus_OUT);
+
+				for (int iter = 0; iter < lookback; iter++)
+				{
+					plusPtr[iter] = m_Nan;
+				}
+
+				break;
+			}
 		// Plus Directional Movement
 		case ta_plus_dm:       
 

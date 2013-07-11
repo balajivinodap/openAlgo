@@ -1,10 +1,31 @@
 function [SIG, R, SH] = maRsiSIG(price,N,M,typeMA,Mrsi,thresh,typeRSI,isSignal,bigPoint,cost,scaling)
-% MA+RSI in function call
-%%
+%MARSISIG aggregate of a lead/lag moving average crossover and RSI calculations
+%   MARSISIG returns a trading signal derived from the aggregation of a lead/lag moving average crossover
+%	state 'ma2inputsSTA' and the calculated values of a relative value index (RSI).
 %
-%   isSignal:   0 - Filter (default)    We can either combine the signals from
-%               1 - Signal              each element, MA + RSI or we can use
-%                                       the RSI as a filter condition for MA.
+%   INPUTS:     price       an array of [O | C] or [O | H | L | C]
+%               N           fast period
+%               M           slow period
+%               typeMA      Available average types are:
+%                           -5  Triangle (Double smoothed similar to Hull)
+%                           -4  Trimmed
+%                           -3  Harmonic
+%                           -2  Geometric
+%                           -1	Exponential
+%                            0  Simple
+%                          > 0  Weighted e.g. 0.5 Square root weighted, 1 = linear, 2 = square weighted
+%				Mrsi		RSI lookback period
+%				thresh		Threshold where the price activity is considered overbought or oversold.
+%							Input is given as an integer percentage value >= 50. Values above this threshold
+%							are defined as an existing overbought condition. The lower threshold is
+%							automatically calculated as 100 - thresh. Future development may allow more
+%							granular control of thresholds.
+%				typeRSI		The type of smoothing average to use (see typeMA)
+%   			isSignal    0 - Filter (default)    We can either combine the signals from the two states
+%               			1 - Signal              (i.e. SIG[MA + RSI]) or we can use the RSI as a filter %													to only trade when a certain RSI value exists.
+%               bigPoint    value of a full tick for P&L calculation
+%               cost        commission cost for P&L calculation per round turn
+%               scaling     sharpe ratio adjuster
 
 %% MEX code to be skipped
 coder.extrinsic('sharpe','calcProfitLoss','remEchos_mex','ma2inputsSTA_mex','OHLCSplitter','rsiSTA_mex')
@@ -114,7 +135,7 @@ end; %if
 %   -------------------------------------------------------------------------
 %
 %   Author:        Mark Tompkins
-%   Revision:      4925.31406
+%   Revision:      4939.24194
 %   Copyright:     (c)2013
 %
 
