@@ -139,6 +139,7 @@
 "\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_SINH.c"
 "\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_SQRT.c"
 "\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_STDDEV.c"
+"\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_STOCH.c"
 "\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_T3.c"
 "\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_TEMA.c"
 "\\DISKSTATION\Trading Repository\ta-lib\ta-lib\c\src\ta_func\ta_TRANGE.c"

@@ -47,6 +47,7 @@ static map<string, StringValue> s_mapStringValues;
 void chkSingleVec(int colsH, int colsL, int lineNum);
 void chkSingleVec(int colsH, int colsL, int colsC, int lineNum);
 void chkSingleVec(int colsO, int colsH, int colsL, int colsC, int lineNum);
+void typeMAcheck(string taFuncNameIn, string taFuncDesc, string taFuncOptName, int typeMA);
 
 static void InitSwitchMapping();
 
@@ -80,6 +81,8 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	if (status != 0) mexErrMsgTxt("Could not parse the given function.");
 
 	string taFuncNameIn((funcAsChars));
+	string taFuncDesc;						// Descriptive name of function for user feedback
+	string taFuncOptName = "typeMA";		// Descriptive name for the optional input being validated (default to 'typeMA')
 
 	transform(taFuncNameIn.begin(), taFuncNameIn.end(), taFuncNameIn.begin(), ::tolower);
 
@@ -750,6 +753,9 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				// OUTPUT
 				//		xPO				vector of Price Oscillator values
 
+				// Strings for validation
+				taFuncDesc = "Percentage Price Oscillator";
+
 				// Check number of inputs
 				if (nrhs < 2 || nrhs > 5)
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_apo:NumInputs",
@@ -829,10 +835,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 							"The typeMA must be a scalar value of available types. Aborting (%d).", codeLine);
 
 						typeMA = (int)mxGetScalar(typeMA_IN);
-
-						if (typeMA < 0 || typeMA > 8)
-							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
-							"The typeMA must be a scalar value of available types (0 - 8). Aborting (%d).", codeLine);
 					}
 					else
 					// No typeMA provided
@@ -852,6 +854,9 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 					slowMA = 26;
 					typeMA = 0;
 				}
+
+				// Validate
+				typeMAcheck(taFuncNameIn, taFuncDesc, taFuncOptName, typeMA);
 
 				// Preallocate heap
 				outReal = (double*)mxCalloc(rows, sizeof(double));			// added cast
@@ -1161,7 +1166,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				outReal = (double*)mxCalloc(rows, sizeof(double));
 
 				// Invoke with error catch
-				// May have to change typeMA from decimal to name
 				retCode = TA_ASIN(startIdx, endIdx, sinPtr, &asinIdx, &outElements, outReal);
 
 				// Error handling
@@ -1240,7 +1244,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				outReal = (double*)mxCalloc(rows, sizeof(double));
 
 				// Invoke with error catch
-				// May have to change typeMA from decimal to name
 				retCode = TA_ATAN(startIdx, endIdx, tanPtr, &atanIdx, &outElements, outReal);
 
 				// Error handling
@@ -1681,16 +1684,19 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				//		midBand
 				//		lowerBand
 
+				// Strings for validation
+				taFuncDesc = "Bollinger Bands";
+
 				// Check number of inputs
 				if (nrhs < 2 || nrhs > 6)
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_bbands:NumInputs",
-					"Number of input arguments to function 'ta_bbands' is incorrect. Observational data should be a single vector.\nOptional inputs are: Lookback period, Upper STD Multiplier, Lower STD Multiplier. Aborting (%d).", codeLine);
+					"Number of input arguments to function '%s' is incorrect. Observational data should be a single vector.\nOptional inputs are: Lookback period, Upper STD Multiplier, Lower STD Multiplier. Aborting (%d).", taFuncNameIn, codeLine);
 				if (nrhs == 4)
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_bbands:NumInputs",
-					"Number of input arguments to function 'ta_bbands' is ambiguous.\nWhen providing optional inputs, you may provide just the 'Lookback period, or 'Lookback period, Upper STD Multiplier, Lower STD Multiplier'. Aborting (%d).", codeLine);
+					"Number of input arguments to function '%s' is ambiguous.\nWhen providing optional inputs, you may provide just the 'Lookback period, or 'Lookback period, Upper STD Multiplier, Lower STD Multiplier'. Aborting (%d).", taFuncNameIn, codeLine);
 				if (nlhs != 3)
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_bbands:NumOutputs",
-					"The function 'ta_bbands' (Bollinger Bands) produces 3 vector outputs that must be assigned. Aborting (%d).", codeLine);
+					"The function '%s' (%s) produces 3 vector outputs that must be assigned. Aborting (%d).", taFuncNameIn, taFuncDesc, codeLine);
 
 				// Create constants for readability
 				// Inputs
@@ -1796,6 +1802,9 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 					dnMult = 2;
 					typeMA = 0;
 				}
+
+				// Validate
+				typeMAcheck(taFuncNameIn, taFuncDesc, taFuncOptName, typeMA);
 
 				// Preallocate heap
 				bbUpper	= (double*)mxCalloc(rows, sizeof(double));
@@ -2686,7 +2695,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				outReal = (double*)mxCalloc(rows, sizeof(double));
 
 				// Invoke with error catch
-				// May have to change typeMA from decimal to name
 				retCode = TA_CEIL(startIdx, endIdx, dataPtr, &dataIdx, &outElements, outReal);
 
 				// Error handling
@@ -2980,7 +2988,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				outReal = (double*)mxCalloc(rows, sizeof(double));
 
 				// Invoke with error catch
-				// May have to change typeMA from decimal to name
 				retCode = TA_COS(startIdx, endIdx, thetaPtr, &cosIdx, &outElements, outReal);
 
 				// Error handling
@@ -3059,7 +3066,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				outReal = (double*)mxCalloc(rows, sizeof(double));
 
 				// Invoke with error catch
-				// May have to change typeMA from decimal to name
 				retCode = TA_COSH(startIdx, endIdx, thetaPtr, &coshIdx, &outElements, outReal);
 
 				// Error handling
@@ -3576,7 +3582,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				outReal = (double*)mxCalloc(rows, sizeof(double));
 
 				// Invoke with error catch
-				// May have to change typeMA from decimal to name
 				retCode = TA_FLOOR(startIdx, endIdx, dataPtr, &dataIdx, &outElements, outReal);
 
 				// Error handling
@@ -3660,7 +3665,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				outReal = (double*)mxCalloc(rows, sizeof(double));
 
 				// Invoke with error catch
-				// May have to change typeMA from decimal to name
 				retCode = TA_HT_DCPERIOD(startIdx, endIdx, dataPtr, &dataIdx, &outElements, outReal);
 
 				// Error handling
@@ -3753,7 +3757,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				outReal = (double*)mxCalloc(rows, sizeof(double));
 
 				// Invoke with error catch
-				// May have to change typeMA from decimal to name
 				retCode = TA_HT_DCPHASE(startIdx, endIdx, dataPtr, &dataIdx, &outElements, outReal);
 
 				// Error handling
@@ -3854,7 +3857,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				quad = (double*)mxCalloc(rows, sizeof(double));
 
 				// Invoke with error catch
-				// May have to change typeMA from decimal to name
 				retCode = TA_HT_PHASOR(startIdx, endIdx, dataPtr, &dataIdx, &outElements, inPhase, quad);
 
 				// Error handling
@@ -3979,7 +3981,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				leadSine = (double*)mxCalloc(rows, sizeof(double));
 
 				// Invoke with error catch
-				// May have to change typeMA from decimal to name
 				retCode = TA_HT_SINE(startIdx, endIdx, dataPtr, &dataIdx, &outElements, sine, leadSine);
 
 				// Error handling
@@ -4078,7 +4079,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				outReal = (double*)mxCalloc(rows, sizeof(double));
 
 				// Invoke with error catch
-				// May have to change typeMA from decimal to name
 				retCode = TA_HT_TRENDLINE(startIdx, endIdx, dataPtr, &dataIdx, &outElements, outReal);
 
 				// Error handling
@@ -4171,7 +4171,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				outInt = (int*)mxCalloc(rows, sizeof(int));
 
 				// Invoke with error catch
-				// May have to change typeMA from decimal to name
 				retCode = TA_HT_TRENDMODE(startIdx, endIdx, dataPtr, &dataIdx, &outElements, outInt);
 
 				// Error handling
@@ -4854,7 +4853,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				outReal = (double*)mxCalloc(rows, sizeof(double));
 
 				// Invoke with error catch
-				// May have to change typeMA from decimal to name
 				retCode = TA_LN(startIdx, endIdx, dataPtr, &lnIdx, &outElements, outReal);
 
 				// Error handling
@@ -4932,7 +4930,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				outReal = (double*)mxCalloc(rows, sizeof(double));
 
 				// Invoke with error catch
-				// May have to change typeMA from decimal to name
 				retCode = TA_LOG10(startIdx, endIdx, dataPtr, &log10Idx, &outElements, outReal);
 
 				// Error handling
@@ -4975,13 +4972,16 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				// OUTPUT
 				//		MA			vector of simple moving average values
 
+				// Strings for validation
+				taFuncDesc = "Moving average";
+
 				// Check number of inputs
 				if (nrhs < 2 || nrhs > 4)
-					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ma:NumInputs",
-					"Number of input arguments to function 'ta_ma' is incorrect. Observation data should be parsed into a single input vector.\nOptional inputs are lookback, typeMA. Aborting (%d).", codeLine);
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:NumInputs",
+					"Number of input arguments to function '%s' is incorrect. Observation data should be parsed into a single input vector.\nOptional inputs are lookback, typeMA. Aborting (%d).", taFuncNameIn, codeLine);
 				if (nlhs != 1)
-					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_ma:NumOutputs",
-					"The function 'ta_ma' (Moving Average) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:NumOutputs",
+					"The function '%s' (%s) produces a single vector as output that must be assigned. Aborting (%d).", taFuncNameIn, taFuncDesc, codeLine);
 
 				// Create constants for readability
 				// Inputs
@@ -5040,18 +5040,11 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 						#define typeMA_IN	prhs[3]
 						if (!isRealScalar(typeMA_IN))
 							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
-							"The MOVING AVERAGE typeMA must be a scalar. Aborting (%d).", codeLine);
+							"The %s typeMA must be a scalar. Aborting (%d).", taFuncDesc, codeLine);
 
 						/* Get the scalar input typeMA */
 						// Assign
 						typeMA = (int)mxGetScalar(typeMA_IN);
-
-						// Validate
-						if(typeMA < 0 || typeMA > 8)
-						{
-							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
-								"The MOVING AVERAGE typeMA must be a scalar with a value between 0 - 8. Aborting (%d).", codeLine);
-						}
 					}
 					else
 					{
@@ -5063,6 +5056,9 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 					typeMA = 0;
 					lookback = 14;
 				}
+
+				// Validate
+				typeMAcheck(taFuncNameIn, taFuncDesc, taFuncOptName, typeMA);
 
 				// Preallocate heap
 				outReal = (double*)mxCalloc(rows, sizeof(double));
@@ -5841,13 +5837,16 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				// OUTPUT
 				//		MAVP		vector of moving average variable period values
 
+				// Strings for validation
+				taFuncDesc = "Moving Average With Variable Period";
+
 				// Check number of inputs
 				if (nrhs < 3 || nrhs > 6)
-					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_mavp:NumInputs",
-					"Number of input arguments to function 'ta_mavp' is incorrect. Observation data should be parsed into a single input vector and an initial lookback period provided.\nOptional inputs are minPeriod, maxPeriod, typeMA. Aborting (%d).", codeLine);
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:NumInputs",
+					"Number of input arguments to function '%s' is incorrect. Observation data should be parsed into a single input vector and an initial lookback period provided.\nOptional inputs are minPeriod, maxPeriod, typeMA. Aborting (%d).", taFuncNameIn, codeLine);
 				if (nlhs != 1)
-					mexErrMsgIdAndTxt( "MATLAB:taInvoke:ta_mavp:NumOutputs",
-					"The function 'ta_mavp' (Moving average with variable period) produces a single vector as output that must be assigned. Aborting (%d).", codeLine);
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:NumOutputs",
+					"The function '%s' (%s) produces a single vector as output that must be assigned. Aborting (%d).", taFuncNameIn, taFuncDesc, codeLine);
 
 				// Create constants for readability
 				// Inputs
@@ -5897,7 +5896,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 					#define minPeriod_IN	prhs[3]
 					if (!isRealScalar(minPeriod_IN))
 						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
-						"The MOVING AVERAGE VARIABLE PERIOD minPeriod must be a scalar. Aborting (%d).", codeLine);
+						"The %s minPeriod must be a scalar. Aborting (%d).", taFuncDesc, codeLine);
 
 					// Assign
 					minPeriod = (int)mxGetScalar(minPeriod_IN);
@@ -5936,12 +5935,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 							// Assign
 							typeMA = (int)mxGetScalar(typeMA_IN);
 
-							// Validate
-							if(typeMA < 0 || typeMA > 8)
-							{
-								mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
-									"The MOVING AVERAGE VARIABLE PERIOD typeMA must be a scalar with a value between 0 - 8. Aborting (%d).", codeLine);
-							}
 						}
 						else
 						{
@@ -5967,6 +5960,9 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 					mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
 						"The MESA ADAPTIVE MOVING AVERAGE minPeriod must be less than or equal to the maxPeriod. Aborting (%d).", codeLine);
 				}
+
+				// Validate
+				typeMAcheck(taFuncNameIn, taFuncDesc, taFuncOptName, typeMA);
 
 				// Preallocate heap
 				mavp = (double*)mxCalloc(rows, sizeof(double));
@@ -8060,7 +8056,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				break;
 			}
 		
-		//	Inputs: H | L			Optional: OPT1 | OPT2 | OPT3 | OPT 4 | OPT5 | OPT6 | OPT7 | OPT8		Outputs: 1 Dbl
+		//	Inputs: H | L			Optional: OPT1 | OPT2 | OPT3 | OPT 4 | OPT5 | OPT6 | OPT7 | OPT8		Outputs: Dbl
 		//	Parabolic SAR - Extended
 		case ta_sarext:       
 			{
@@ -8499,10 +8495,265 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				break;
 			}
 
-		// Stochastic
+		//	Inputs: H | L | C			Optional: OPT1 | OPT2 | OPT3 | OPT 4 | OPT5 		Outputs: Dbl | Dbl
+		//	Stochastic
 		case ta_stoch:       
+			{
+				// REQUIRED INPUTS
+				//		Price	H | L | C	separate vectors
 
-			break;
+				// OPTIONAL INPUTS
+				//		fastKperiod		Time period for building the Fast-K line		Default 5
+				//		slowKperiod		Smoothing for making the Slow-K line. 			Default 3
+				//		slowKtypeMA		Type of Moving Average for Slow-K				Default 0
+				//							0	-	Simple Moving Average				SMA	(default)
+				//							1	-	Exponential Moving Average			EMA
+				//							2	-	Weighted Moving Average				WMA
+				//							3	-	Double Exponential Moving Average	DEMA
+				//							4	-	Triple Exponential Moving Average	TEMA
+				//							5	-	Triangular Moving Average			TRIMA
+				//							6	-	Kaufman Adaptive Moving Average		KAMA
+				//							7	-	MESA Adaptive Moving Average		MAMA
+				//							8	-	Triple Exponential Moving Average	T3	
+				//		slowDperiod		Smoothing for making the Slow-D line			Default 3
+				//		slowDtypeMA		Type of Moving Average for Slow-D				Default 0
+				//							For types see 'slowKtypeMA' above
+
+				// OUTPUT
+				//		SLOWK
+				//		SLOWD
+
+				/*
+
+				With stochastic, there is a total of 4 different lines that are defined: FASTK, FASTD, SLOWK and SLOWD.
+	
+				The D is the signal line usually drawn over its corresponding K function.
+				 
+								  (Today's Close - LowestLow)
+				FASTK(Kperiod) =  --------------------------- * 100
+								   (HighestHigh - LowestLow)
+				    
+				FASTD(FastDperiod, MA type) = MA Smoothed FASTK over FastDperiod
+				 
+				SLOWK(SlowKperiod, MA type) = MA Smoothed FASTK over SlowKperiod
+				 
+				SLOWD(SlowDperiod, MA Type) = MA Smoothed SLOWK over SlowDperiod
+				*
+				The HighestHigh and LowestLow are the extreme values among the last 'Kperiod'.
+				   
+				SLOWK and FASTD are equivalent when using the same period.
+				 
+				The following shows how these four lines are made available in TA-LIB:
+				 
+				TA_STOCH  : Returns the SLOWK and SLOWD
+				TA_STOCHF : Returns the FASTK and FASTD
+				 
+				The TA_STOCH function correspond to the more widely implemented version
+				found in many software/charting package. The TA_STOCHF is more rarely
+				used because its higher volatility cause often whipsaws.
+
+				*/
+
+				// Strings for validation
+				taFuncDesc = "Stochastic";
+
+				// Check number of inputs
+				if (nrhs < 4 || nrhs > 9)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:NumInputs",
+					"Number of input arguments is incorrect. Price data should be parsed into vectors H | L | C.\nOptional inputs are 'fastKperiod | slowKperiod | slowKtypeMA | slowDperiod | slowDtypeMA'. Aborting (%d).", taFuncNameIn, codeLine);
+				if (nlhs != 2)
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:NumOutputs",
+					"The function '%s' produces two vector outputs that must be assigned. Aborting (%d).", taFuncNameIn, codeLine);
+
+				// Create constants for readability
+				// Inputs
+				#define high_IN		prhs[1]
+				#define low_IN		prhs[2]
+				#define close_IN	prhs[3]
+
+				// Outputs
+				#define slowK_OUT	plhs[0]
+				#define slowD_OUT	plhs[1]
+
+				// Declare variables
+				int startIdx, endIdx, rows, colsH, colsL, colsC;
+				int opt3, opt5;
+				double *highPtr, *lowPtr, *closePtr;
+				double opt1, opt2, opt4;
+
+				// Initialize error handling 
+				TA_RetCode retCode;
+
+				// Parse required inputs and error check
+				// Assign pointers and get dimensions
+				highPtr		= mxGetPr(high_IN);
+				rows		= (int)mxGetM(high_IN);
+				colsH		= (int)mxGetN(high_IN);
+				lowPtr		= mxGetPr(low_IN);
+				colsL		= (int)mxGetN(low_IN);
+				closePtr	= mxGetPr(close_IN);
+				colsC		= (int)mxGetN(close_IN);
+
+				// Input validation
+				chkSingleVec(colsH, colsL, colsC, codeLine);
+
+				endIdx = rows - 1;  // Adjust for C++ starting at '0'
+				startIdx = 0;
+
+				// Output variables
+				int vecIdx, outElements;
+				double *outDReal, *outKReal;
+
+				if (nrhs > 4)
+				{
+					#define opt1_IN	prhs[4]
+
+					if (!isRealScalar(opt1_IN))
+						mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"The first optional input must be a scalar. Aborting (%d).",codeLine);
+
+					/* Get the scalar inputs */
+					// Assign
+					opt1 = (double)mxGetScalar(opt1_IN);
+
+					if (nrhs > 5)
+					{
+						#define opt2_IN	prhs[5]
+
+						if (!isRealScalar(opt2_IN))
+							mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+							"The second optional input must be a scalar. Aborting (%d).",codeLine);
+
+						/* Get the scalar inputs */
+						// Assign
+						opt2 = (double)mxGetScalar(opt2_IN);
+
+						if (nrhs > 6)
+						{
+							#define opt3_IN	prhs[6]
+
+							if (!isRealScalar(opt3_IN))
+								mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+								"The third optional input must be a scalar. Aborting (%d).",codeLine);
+
+							/* Get the scalar inputs */
+							// Assign
+							opt3 = (int)mxGetScalar(opt3_IN);
+
+							if (nrhs > 7)
+							{
+								#define opt4_IN	prhs[7]
+
+								if (!isRealScalar(opt4_IN))
+								mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+								"The fourth optional input must be a scalar. Aborting (%d).",codeLine);
+
+								/* Get the scalar inputs */
+								// Assign
+								opt4 = (double)mxGetScalar(opt4_IN);
+
+								if (nrhs > 8)
+								{
+									#define opt5_IN	prhs[8]
+
+									if (!isRealScalar(opt5_IN))
+										mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+										"The fifth optional input must be a scalar. Aborting (%d).",codeLine);
+
+									/* Get the scalar inputs */
+									// Assign
+									opt5 = (int)mxGetScalar(opt5_IN);
+
+								} 
+								else
+								{
+									opt5 = 0;
+								}
+							} 
+							else
+							{
+								opt4 = 3;
+								opt5 = 0;
+							}
+						} 
+						else
+						{
+							opt3 = 0;
+							opt4 = 3;
+							opt5 = 0;
+						}
+					}
+					else
+					{
+						opt2 = 3;
+						opt3 = 0;
+						opt4 = 3;
+						opt5 = 0;
+					}
+				}
+				// Full defaults
+				else
+				{
+					opt1 = 5;
+					opt2 = 3;
+					opt3 = 0;
+					opt4 = 3;
+					opt5 = 0;
+				}
+
+				// Validate
+				if (opt1 < 1 || opt2 < 1 || opt4 < 1)
+				{
+					mexErrMsgIdAndTxt( "MATLAB:taInvoke:inputErr",
+						"Period based optional inputs must be a scalar greater than or equal to 1. Aborting (%d).", codeLine);
+				}
+
+				// Validate
+				typeMAcheck(taFuncNameIn, taFuncDesc, "slowKtypeMA", opt3);
+				typeMAcheck(taFuncNameIn, taFuncDesc, "slowDtypeMA", opt5);
+
+				// Preallocate heap
+				outDReal = (double*)mxCalloc(rows, sizeof(double));
+				outKReal = (double*)mxCalloc(rows, sizeof(double));
+
+				// Invoke with error catch
+				retCode = TA_STOCH(startIdx, endIdx, highPtr, lowPtr, closePtr, opt1, opt2, (TA_MAType)opt3, opt4, (TA_MAType)opt5, &vecIdx, &outElements, outKReal, outDReal);
+
+				// Error handling
+				if (retCode) 
+				{
+					mxFree(outKReal);
+					mxFree(outDReal);
+					mexPrintf("%s%i","Return code=",retCode);
+					mexErrMsgIdAndTxt("MATLAB:taInvoke","Invocation to '%s' failed. Aborting (%d).", taFuncNameIn, codeLine);
+				}
+
+				// Populate Output
+				slowK_OUT = mxCreateDoubleMatrix(vecIdx + outElements,1, mxREAL);
+				slowD_OUT = mxCreateDoubleMatrix(vecIdx + outElements,1, mxREAL);
+				memcpy(((double *) mxGetData(slowK_OUT)) + vecIdx, outKReal, outElements * mxGetElementSize(slowK_OUT));
+				memcpy(((double *) mxGetData(slowD_OUT)) + vecIdx, outDReal, outElements * mxGetElementSize(slowD_OUT));
+
+				// Cleanup
+				mxFree(outKReal);
+				mxFree(outDReal); 
+
+				// NaN data before lookback
+				// assign the variables for manipulating the arrays (by pointer reference)
+				double *kPtr = mxGetPr(slowK_OUT);
+				double *dPtr = mxGetPr(slowD_OUT);
+
+				for (int iter = 0; iter < opt1 + max(opt2, opt4); iter++)
+				{
+					kPtr[iter] = m_Nan;
+					dPtr[iter] = m_Nan;
+				}
+
+				break;
+
+				break;
+			}
+
 		// Stochastic Fast
 		case ta_stochf:       
 
@@ -8751,6 +9002,8 @@ void InitSwitchMapping()
 
 }
 
+// Validation Methods
+// H | L
 void chkSingleVec( int colsH, int colsL, int lineNum )
 {
 	if (colsH != 1)
@@ -8766,6 +9019,7 @@ void chkSingleVec( int colsH, int colsL, int lineNum )
 	}
 }
 
+// H | L | C
 void chkSingleVec( int colsH, int colsL, int colsC, int lineNum )
 {
 	if (colsH != 1)
@@ -8787,6 +9041,7 @@ void chkSingleVec( int colsH, int colsL, int colsC, int lineNum )
 	}
 }
 
+// O | H | L | C
 void chkSingleVec(int colsO, int colsH, int colsL, int colsC, int lineNum )
 {
 	if (colsO != 1)
@@ -8814,6 +9069,50 @@ void chkSingleVec(int colsO, int colsH, int colsL, int colsC, int lineNum )
 	}
 }
 
+// typeMA
+void typeMAcheck(string taFuncNameIn, string taFuncDesc, string taFuncOptName, int typeMA)
+{
+	
+	if (typeMA < 0 || typeMA > 8)
+	{
+
+		char *type0, *type1, *type2, *type3, *type4, *type5, *type6, *type7, *type8;	// Chars for user feedback;
+
+		// Break out each type for ease of later additions;
+		type0 = "	0	-	Simple Moving Average				SMA	(default)\n";
+		type1 = "	1	-	Exponential Moving Average			EMA\n";
+		type2 = "	2	-	Weighted Moving Average				WMA\n";
+		type3 = "	3	-	Double Exponential Moving Average	DEMA\n";
+		type4 = "	4	-	Triple Exponential Moving Average	TEMA\n";
+		type5 = "	5	-	Triangular Moving Average			TRIMA\n";
+		type6 = "	6	-	Kaufman Adaptive Moving Average		KAMA\n";
+		type7 = "	7	-	MESA Adaptive Moving Average		MAMA\n";
+		type8 = "	8	-	Triple Exponential Moving Average	T3\n";
+
+		// Get size of the entire array and preallocate
+		char *typeOut = (char *)mxMalloc(strlen(type0) + strlen(type1) + strlen(type2)
+					   + strlen(type3) + strlen(type4) + strlen(type5) + strlen(type6)
+					   + strlen(type7) + strlen(type8) + 1);
+		
+		if (typeOut != NULL)
+		{
+			strcpy(typeOut, type0);
+			strcat(typeOut, type1);
+			strcat(typeOut, type2);
+			strcat(typeOut, type3);
+			strcat(typeOut, type4);
+			strcat(typeOut, type5);
+			strcat(typeOut, type6);
+			strcat(typeOut, type7);
+			strcat(typeOut, type8);
+		}
+
+		mexErrMsgIdAndTxt("MATLAB:taInvoke:inputErr",
+			"The function '%s' (%s) '%s' must be a scalar with a value between 0 - 8.\nAvailable average types are:\n%s\n Aborting (%d).", taFuncNameIn, taFuncDesc, taFuncOptName, typeOut, codeLine);
+	
+		mxFree(typeOut);
+	}
+}
 
 //
 //  -------------------------------------------------------------------------
