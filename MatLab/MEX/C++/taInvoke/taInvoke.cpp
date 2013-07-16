@@ -44,10 +44,14 @@ static enum StringValue { taNotDefined, ta_accbands, ta_acos, ta_ad, ta_add, ta_
 // Map to associate the strings with the enum values
 static map<string, StringValue> s_mapStringValues;
 void taInvokeInfoOnly();
+void taInvokeFuncInfo(string taFuncNameIn);
 void chkSingleVec(int colsD, int lineNum);
 void chkSingleVec(int colsH, int colsL, int lineNum);
 void chkSingleVec(int colsH, int colsL, int colsC, int lineNum);
 void chkSingleVec(int colsO, int colsH, int colsL, int colsC, int lineNum);
+void printToMatLab(char *para1, char *form);
+void printToMatLab(char *para1, char *para2, char *form);
+void printToMatLab(char *para1, char *para2, char *para3, char *form);
 void typeMAcheck(string taFuncNameIn, string taFuncDesc, string taFuncOptName, int typeMA);
 
 static void InitSwitchMapping();
@@ -69,12 +73,6 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 		taInvokeInfoOnly();			// Overloaded information only call
 		return;						// End mex call
 	}
-
-	// <<<<<<<<<<<<<<<<<<<< WHEN ADDING THE ABILITY TO CALL A FUNCTION FOR INFORMATION WITHOUT PARAMETERS
-	// <<<<<<<<<<<<<<<<<<<< THIS WILL NEED TO BE UPDATED
-	if (nrhs == 1)
-		mexErrMsgIdAndTxt( "MATLAB:taInvoke:NumInputs",
-		"Number of input arguments is incorrect. All function calls require input. Aborting (%d).",codeLine);
 
 	// Define constants (#define assigns a variable as either a constant or a macro)
 	// Inputs
@@ -101,6 +99,14 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 
 	// Init the switch function string mapping to the enum
 	InitSwitchMapping();
+
+	// If we have no parameters the user is requesting information about a given function.
+	// Provide and exit.
+	if (nrhs == 1)
+	{
+		taInvokeFuncInfo(taFuncNameIn);
+		return;
+	}
 
 	switch (s_mapStringValues[taFuncNameIn])
 	{
@@ -10548,7 +10554,7 @@ void chkSingleVec(int colsO, int colsH, int colsL, int colsC, int lineNum )
 	}
 }
 
-// typeMA
+// typeMA 
 void typeMAcheck(string taFuncNameIn, string taFuncDesc, string taFuncOptName, int typeMA)
 {
 	if (typeMA < 0 || typeMA > 8)
@@ -10591,6 +10597,162 @@ void typeMAcheck(string taFuncNameIn, string taFuncDesc, string taFuncOptName, i
 	}
 }
 
+void taInvokeFuncInfo(string taFuncNameIn)
+{
+	char *para1;
+	char *para2 = NULL;
+	char *para3 = NULL;
+	char *form = NULL;
+	char *typeOut;
+
+	switch (s_mapStringValues[taFuncNameIn])
+	{
+		case ta_accbands:
+			para1 = "\nFunction: Acceleration Bands\nSource: http://www.iqchart.com\n\n";
+			para2 = "Definition:\nPrice Headley's Acceleration Bands serve as a trading envelope that factor in a stock's typical\nvolatility over standard settings of 20 or 80 bars. They can be used across any time frame,\nthough Headley prefers to use them most across weekly and monthly timeframes as breakout\nindicators outside these bands, while using the shorter time frames to define likely support and\nresistance levels at the lower and upper Acceleration Bands.\nAcceleration Bands are plotted around a simple moving average as the midpoint,\nand the upper and lower bands are of equal distance from this midpoint.\n\n";
+			para3 = "Interpretation:\nThe principle of Acceleration is one of the most critical lessons that active traders must learn.\nStock traders need to get the best bang for their buck. They desire to rotate capital to the best\nperforming stocks quickly and then rotate out of those stocks when the acceleration period ends.\nThe goal is to keep moving your capital into the best-performing stocks. And option buyers especially\nneed to be in the best trending stocks, as the time lost while holding an option can best be overcome\nby stocks that move sharply in the anticipated direction. We want to achieve maximum movement in the\nstock over the least amount of time possible.\n\n";
+				
+			form = "H = High Values | L = Low Values | C = Close Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[upperBand, midBand, lowerBand] = taInvoke('ta_accbands', H, L, C, {Lookback=14})\n";
+			
+			printToMatLab(para1, para2, para3, form);
+
+			break;
+		case ta_acos:
+			para1 = "Function: Vector Trigonometric ACos\nSource: https://en.wikipedia.org/wiki/Inverse_trigonometric_functions\n\n";
+			para2 = "Definition:\nIn mathematics, the inverse trigonometric functions (occasionally called cyclometric functions[1])\nare the inverse functions of the trigonometric functions with suitably restricted domains.\nThey are the inverse sine, cosine, tangent, cosecant, secant and cotangent functions.\nThey are used for computing the angle, from any of its trigonometric ratios.\nThese functions have a wide range of use in navigation, physics, engineering, etc.\n\n";
+			
+			form = "[acos] = taInvoke('acos', CosineValues)\n";	
+
+			printToMatLab(para1, para2, form);
+
+			break;
+		case ta_ad:
+			para1 = "Function: Chaikin A/D Line\nSource: http://en.wikipedia.org/wiki/Chaikin_Stock_Research\n\n";
+			para2 = "Definition:\nThe Chaikin Oscillator was developed in the 1970s. The indicator is based upon the momentum\nof the Accumulation/Distribution (AD). AD calculates the position of a stock's daily closing\nprice as a fraction of the daily price range of the stock—a fraction that is multiplied by\nthe daily volume in order to quantify the net accumulation or distribution of a stock.\n\n";
+			
+			form = "H = High Values | L = Low Values | C = Close Values | V = Volume Values\n\n[AD] = taInvoke('ta_ad', H, L, C, V)\n";
+
+			printToMatLab(para1, para2, form);
+
+			break;
+
+		case ta_add:
+			para1 = "\nSource: openAlgo.org\n\n";
+			para2 = "Definition:\nStandard arithmetic addition across vector inputs.\n\n";
+
+			form = "[ADD] = taInvoke('ta_add', Augend, Addend)\n";
+
+			printToMatLab(para1, para2, form);
+
+			break;
+
+		case ta_adosc:
+			para1 = "Function: Chaikin A/D Oscillator\nSource: http://en.wikipedia.org/wiki/Chaikin_Stock_Research\n\n";
+			para2 = "Definition:\nThe Chaikin Oscillator was developed in the 1970s. The indicator is based upon the momentum\nof the Accumulation/Distribution (AD). AD calculates the position of a stock's daily closing\nprice as a fraction of the daily price range of the stock—a fraction that is multiplied by\nthe daily volume in order to quantify the net accumulation or distribution of a stock.\n\n";
+
+			form = "H = High Values | L = Low Values | C = Close Values | V = Volume Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[ADOSC] = taInvoke('ta_adosc', H, L, C, V, {fastMA = 3}, {slowMA = 10})\n";
+
+			printToMatLab(para1, para2, form);
+
+			break;
+
+		case ta_adx:
+			para1 = "Function: Average Directional Movement Index\nSource: http://en.wikipedia.org/wiki/Average_directional_movement_index\n\n";
+			para2 = "Definition:\nThe average directional movement index (ADX) was developed in 1978 by J. Welles Wilder as\nan indicator of trend strength in a series of prices of a financial instrument.\nADX has become a widely used indicator for technical analysts, and is provided as a\nstandard in collections of indicators offered by various trading platforms.\n\n";
+
+			form = "H = High Values | L = Low Values | C = Close Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[ADX] = taInvoke('ta_adx', H, L, C, {Lookback=14})\n";
+
+			printToMatLab(para1, para2, form);
+
+			break;
+
+		case ta_adxr:
+			para1 = "Function: Average Directional Movement Index Rating\nSource: http://www.traderslog.com/adxr\n\n";
+			para2 = "Definition:\nThe Average Directional Movement Index Rating measures momentum change in the ADX.\nADXR is calculated by adding the current ADX value and an ADX value n periods back,\nthen dividing the sum by two. This serves to smooth the ADX values.\nAs with the ADX, a rising ADXR reflects a strong underlying trend and likely\ncontinuation while falling ADXR suggests a weakening trend and possible trend reversal.\n\n";
+
+			form = "Values enclosed in {} are optional and indicates a default value if not provided.\n\n[ADXR] = taInvoke('ta_adxr', H, L, C, {Lookback=14})\n";
+
+			printToMatLab(para1, para2, form);
+
+			break;
+
+		case ta_apo:
+			para1 = "Function: Absolute Price Oscillator\nSource: http://www.traderslog.com/absolute-price-oscillator\n\n";
+			para2 = "Definition:\nAn indicator based on the difference between two exponential moving averages,\nexpressed in absolute terms. Also known as the MACD indicator,\nthe APO is calculated by subtracting the longer exponential moving average\nfrom the shorter exponential moving average.\n\n";
+
+			form = "Values enclosed in {} are optional and indicates a default value if not provided.\nFor a list of moving average types (typeMA), reference 'ta_ma'.\n\n[APO] = taInvoke('ta_apo', data, {fastMA = 12}, {slowMA = 26}, {typeMA = 0})\n";
+
+			printToMatLab(para1, para2, form);
+
+			break;
+
+		case ta_aroon:
+			para1 = "Function: Aroon\nSource: http://www.investopedia.com/terms/a/aroon.asp\n\n";
+			para2 = "Definition:\nA technical indicator used for identifying trends in an underlying security and the\nlikelihood that the trends will reverse. It is made up of two lines:\n  one line is called 'Aroon up', which measures the strength of the uptrend,\n  and the other line is called 'Aroon down', which measures the downtrend.\nThe indicator reports the time it is taking for the price to reach, from a starting point,\nthe highest and lowest points over a given time period, each reported as a percentage of total time.\n\n";
+
+			form = "H = High Values | L = Low Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[AROON] = taInvoke('ta_aroon', H, L, {Lookback=14})\n";
+
+			printToMatLab(para1, para2, form);
+
+			break;
+
+		case ta_aroonosc:
+			para1 = "Function: Aroon Oscillator\nSource: http://www.investopedia.com/terms/a/aroonoscillator.asp\n\n";
+			para2 = "Definition:\nA trend-following indicator that uses aspects of the Aroon indicator\n('Aroon up' and 'Aroon down') to gauge the strength of a current trend\nand the likelihood that it will continue.\nThe Aroon oscillator is calculated by subtracting Aroon down from Aroon up.\nReadings above zero indicate that an uptrend is present, while readings\nbelow zero indicate that a downtrend is present.\n\n";
+
+			form = "H = High Values | L = Low Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[AROONOSC] = taInvoke('ta_aroonosc', H, L, {Lookback=14})\n";
+
+			printToMatLab(para1, para2, form);
+
+			break;
+		default:
+			para1 = "The supplied function '%s' was either not found or not yet added to the information routine.\n\nExecute 'taInvoke' in the MatLab command window for a list of available functions.\n";
+			typeOut =  (char *)mxMalloc(strlen(para1) +1);
+			strcpy(typeOut, para1);
+			mexPrintf(typeOut, taFuncNameIn);
+			mxFree(typeOut);
+			return;
+	}
+
+	return;
+}
+
+void printToMatLab(char *para1, char *form)
+{
+	char *typeOut = (char *)mxMalloc(strlen(para1) + strlen(form) +1);
+	strcpy(typeOut, para1);
+	strcat(typeOut, form);
+
+	mexPrintf(typeOut);
+	mxFree(typeOut);
+	return;
+}
+
+void printToMatLab(char *para1, char *para2, char *form)
+{
+	char *typeOut = (char *)mxMalloc(strlen(para1) + strlen(para2) + strlen(form) +1);
+	strcpy(typeOut, para1);
+	strcat(typeOut, para2);
+	strcat(typeOut, form);
+
+	mexPrintf(typeOut);
+	mxFree(typeOut);
+	return;
+}
+
+void printToMatLab(char *para1, char *para2, char *para3, char *form)
+{
+	char *typeOut = (char *)mxMalloc(strlen(para1) + strlen(para2) + strlen(para3) + strlen(form) +1);
+	strcpy(typeOut, para1);
+	strcat(typeOut, para2);
+	strcat(typeOut, para3);
+	strcat(typeOut, form);
+
+	mexPrintf(typeOut);
+	mxFree(typeOut);
+	return;
+
+}
 //
 //  -------------------------------------------------------------------------
 //                                  _    _ 
@@ -10649,6 +10811,6 @@ void typeMAcheck(string taFuncNameIn, string taFuncDesc, string taFuncOptName, i
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4944.36988
+//   Revision:	4945.19866
 //   Copyright:	(c)2013
 //

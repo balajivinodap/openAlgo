@@ -7,3 +7,11 @@ The ta-library is available from [http://www.ta-lib.org](http://www.ta-lib.org "
 
 If the size of the compiled taInvoke file is of concern, the individual functions can be mex'ed individually and called.  This may be useful in not appropriate in HPC parametric sweeps to minimize data transfer of unused functions in the larger compilation.
 
+To produce a list of available functions in the MatLab command window, execute:
+
+	taInvoke
+
+To produce information on any specific function in the MatLab command window, execute:
+
+	taInvoke('function')
+
