@@ -1,7 +1,8 @@
 // taInvoke.cpp
 // Localized mex'ing: mex taInvoke.cpp @mexOpts.txt
 // Matlab function: 
-// [varout] = taInvoke(taFunction, varin)
+//			taInvoke()										This will return a list of available TA-LIB functions to the MatLab command window
+//			[varout] = taInvoke(taFunction, varin)
 //
 // Inputs:
 //		taFunction	The name of the TA-Lib function to call
@@ -16,8 +17,6 @@
 #include <algorithm>	// So we can transform the function name string input ...
 #include <string>		// from char to string ensuring lowercase
 #include "myMath.h"
-
-//#include "matrix.h" <-- May not be necessary
 
 using namespace std;
 
@@ -56,7 +55,7 @@ static void InitSwitchMapping();
 // Macros
 #define isReal2DfullDouble(P) (!mxIsComplex(P) && mxGetNumberOfDimensions(P) == 2 && !mxIsSparse(P) && mxIsDouble(P))
 #define isRealScalar(P) (isReal2DfullDouble(P) && mxGetNumberOfElements(P) == 1)
-#define codeLine	__LINE__	// help error trapping
+#define codeLine	__LINE__	// help error trapping in MatLab
 
 // Global variables
 double m_Nan = std::numeric_limits<double>::quiet_NaN(); 
@@ -67,13 +66,15 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	// Check number of inputs
 	if (nrhs == 0) 
 	{
-		taInvokeInfoOnly();			// Information only call
-		return;
+		taInvokeInfoOnly();			// Overloaded information only call
+		return;						// End mex call
 	}
 
+	// <<<<<<<<<<<<<<<<<<<< WHEN ADDING THE ABILITY TO CALL A FUNCTION FOR INFORMATION WITHOUT PARAMETERS
+	// <<<<<<<<<<<<<<<<<<<< THIS WILL NEED TO BE UPDATED
 	if (nrhs == 1)
 		mexErrMsgIdAndTxt( "MATLAB:taInvoke:NumInputs",
-		"Number of input arguments is not correct. All function calls require input. Aborting (%d).",codeLine);
+		"Number of input arguments is incorrect. All function calls require input. Aborting (%d).",codeLine);
 
 	// Define constants (#define assigns a variable as either a constant or a macro)
 	// Inputs
@@ -86,7 +87,8 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	if (funcAsChars == NULL) mexErrMsgTxt("Not enough heap space to hold converted string.");
 
 	int status = mxGetString(taFuncName_IN, funcAsChars, funcNumChars); 
-	if (status != 0) mexErrMsgTxt("Could not parse the given function.");
+	if (status != 0) mexErrMsgIdAndTxt("MATLAB:taInvoke:Parsing",
+						"Could not parse the given function. Aborting (%d).", codeLine);
 
 	string taFuncNameIn((funcAsChars));
 	string taFuncDesc;						// Descriptive name of function for user feedback
@@ -97,7 +99,7 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 	// Quick cleanup
 	mxFree(funcAsChars);
 
-	// Init the string mapping
+	// Init the switch function string mapping to the enum
 	InitSwitchMapping();
 
 	switch (s_mapStringValues[taFuncNameIn])
@@ -10551,7 +10553,6 @@ void typeMAcheck(string taFuncNameIn, string taFuncDesc, string taFuncOptName, i
 {
 	if (typeMA < 0 || typeMA > 8)
 	{
-
 		char *type0, *type1, *type2, *type3, *type4, *type5, *type6, *type7, *type8;	// Chars for user feedback;
 
 		// Break out each type for ease of later additions;
@@ -10648,6 +10649,6 @@ void typeMAcheck(string taFuncNameIn, string taFuncDesc, string taFuncOptName, i
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4944.18357
+//   Revision:	4944.36988
 //   Copyright:	(c)2013
 //
