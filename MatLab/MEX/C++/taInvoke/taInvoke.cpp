@@ -1,4 +1,4 @@
-// taInvoke.cpp
+﻿// taInvoke.cpp
 // Localized mex'ing: mex taInvoke.cpp @mexOpts.txt
 // Matlab function: 
 //			taInvoke()										This will return a list of available TA-LIB functions to the MatLab command window
@@ -5834,11 +5834,11 @@ void mexFunction(int nlhs, mxArray *plhs[], /* Output variables */
 				//		MAMA		vector of MESA Adaptive Moving Average values
 				//		FAMA
 
-				// Description: �The MESA Adaptive Moving Average (MAMA) adapts to price movement based on the 
+				// Description: “The MESA Adaptive Moving Average (MAMA) adapts to price movement based on the 
 				//	rate of change of phase as measured by the Hilbert Transform Discriminator 
 				//	(Technical Analysis of Stocks and Commodities magazine, December 2000). 
 				//	This method features a fast attack average and a slow decay average so that composite average 
-				//	rapidly ratchets behind price changes and holds the average value until the next ratchet occurs.� 
+				//	rapidly ratchets behind price changes and holds the average value until the next ratchet occurs.” 
 				//
 				//	MAMA and FAMA lines can be used to generate Buy and Sell signals. 
 				//	When the MAMA crosses above the FAMA a buy signal is given. 
@@ -10608,110 +10608,184 @@ void taInvokeFuncInfo(string taFuncNameIn)
 	switch (s_mapStringValues[taFuncNameIn])
 	{
 		case ta_accbands:
+			{
 			para1 = "\nFunction: Acceleration Bands\nSource: http://www.iqchart.com\n\n";
 			para2 = "Definition:\nPrice Headley's Acceleration Bands serve as a trading envelope that factor in a stock's typical\nvolatility over standard settings of 20 or 80 bars. They can be used across any time frame,\nthough Headley prefers to use them most across weekly and monthly timeframes as breakout\nindicators outside these bands, while using the shorter time frames to define likely support and\nresistance levels at the lower and upper Acceleration Bands.\nAcceleration Bands are plotted around a simple moving average as the midpoint,\nand the upper and lower bands are of equal distance from this midpoint.\n\n";
 			para3 = "Interpretation:\nThe principle of Acceleration is one of the most critical lessons that active traders must learn.\nStock traders need to get the best bang for their buck. They desire to rotate capital to the best\nperforming stocks quickly and then rotate out of those stocks when the acceleration period ends.\nThe goal is to keep moving your capital into the best-performing stocks. And option buyers especially\nneed to be in the best trending stocks, as the time lost while holding an option can best be overcome\nby stocks that move sharply in the anticipated direction. We want to achieve maximum movement in the\nstock over the least amount of time possible.\n\n";
 				
-			form = "H = High Values | L = Low Values | C = Close Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[upperBand, midBand, lowerBand] = taInvoke('ta_accbands', H, L, C, {Lookback=14})\n";
+			form = "H = High Values | L = Low Values | C = Close Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[UPPERBAND, MIDBAND, LOWERBAND] = taInvoke('ta_accbands', H, L, C, {Lookback=14})\n";
 			
 			printToMatLab(para1, para2, para3, form);
 
 			break;
+			}
 		case ta_acos:
+			{
 			para1 = "Function: Vector Trigonometric ACos\nSource: https://en.wikipedia.org/wiki/Inverse_trigonometric_functions\n\n";
-			para2 = "Definition:\nIn mathematics, the inverse trigonometric functions (occasionally called cyclometric functions[1])\nare the inverse functions of the trigonometric functions with suitably restricted domains.\nThey are the inverse sine, cosine, tangent, cosecant, secant and cotangent functions.\nThey are used for computing the angle, from any of its trigonometric ratios.\nThese functions have a wide range of use in navigation, physics, engineering, etc.\n\n";
+			para2 = "Definition:\nIn mathematics, the inverse trigonometric functions (occasionally called cyclometric functions)\nare the inverse functions of the trigonometric functions with suitably restricted domains.\nThey are the inverse sine, cosine, tangent, cosecant, secant and cotangent functions.\nThey are used for computing the angle, from any of its trigonometric ratios.\nThese functions have a wide range of use in navigation, physics, engineering, etc.\n\n";
 			
-			form = "[acos] = taInvoke('acos', CosineValues)\n";	
+			form = "[ACOS] = taInvoke('ta_acos', CosineValues)\n";	
 
 			printToMatLab(para1, para2, form);
 
 			break;
+			}
 		case ta_ad:
+			{
 			para1 = "Function: Chaikin A/D Line\nSource: http://en.wikipedia.org/wiki/Chaikin_Stock_Research\n\n";
-			para2 = "Definition:\nThe Chaikin Oscillator was developed in the 1970s. The indicator is based upon the momentum\nof the Accumulation/Distribution (AD). AD calculates the position of a stock's daily closing\nprice as a fraction of the daily price range of the stock�a fraction that is multiplied by\nthe daily volume in order to quantify the net accumulation or distribution of a stock.\n\n";
-			
-			form = "H = High Values | L = Low Values | C = Close Values | V = Volume Values\n\n[AD] = taInvoke('ta_ad', H, L, C, V)\n";
-
-			printToMatLab(para1, para2, form);
-
-			break;
-
+				para2 = "Definition:\nThe Chaikin Oscillator was developed in the 1970s. The indicator is based upon the momentum\nof the Accumulation/Distribution (AD). AD calculates the position of a stock's daily closing\nprice as a fraction of the daily price range of the stock—a fraction that is multiplied by\nthe daily volume in order to quantify the net accumulation or distribution of a stock.\n\n";
+				
+				form = "H = High Values | L = Low Values | C = Close Values | V = Volume Values\n\n[AD] = taInvoke('ta_ad', H, L, C, V)\n";
+	
+				printToMatLab(para1, para2, form);
+	
+				break;
+			}
 		case ta_add:
-			para1 = "\nSource: openAlgo.org\n\n";
-			para2 = "Definition:\nStandard arithmetic addition across vector inputs.\n\n";
-
-			form = "[ADD] = taInvoke('ta_add', Augend, Addend)\n";
-
-			printToMatLab(para1, para2, form);
-
-			break;
-
+			{
+				para1 = "Function: Addition\nSource: openAlgo.org\n\n";
+				para2 = "Definition:\nStandard arithmetic addition across vector inputs.\n\n";
+	
+				form = "[ADD] = taInvoke('ta_add', Augend, Addend)\n";
+	
+				printToMatLab(para1, para2, form);
+	
+				break;
+			}
 		case ta_adosc:
-			para1 = "Function: Chaikin A/D Oscillator\nSource: http://en.wikipedia.org/wiki/Chaikin_Stock_Research\n\n";
-			para2 = "Definition:\nThe Chaikin Oscillator was developed in the 1970s. The indicator is based upon the momentum\nof the Accumulation/Distribution (AD). AD calculates the position of a stock's daily closing\nprice as a fraction of the daily price range of the stock�a fraction that is multiplied by\nthe daily volume in order to quantify the net accumulation or distribution of a stock.\n\n";
-
-			form = "H = High Values | L = Low Values | C = Close Values | V = Volume Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[ADOSC] = taInvoke('ta_adosc', H, L, C, V, {fastMA = 3}, {slowMA = 10})\n";
-
-			printToMatLab(para1, para2, form);
-
-			break;
-
+			{
+				para1 = "Function: Chaikin A/D Oscillator\nSource: http://en.wikipedia.org/wiki/Chaikin_Stock_Research\n\n";
+				para2 = "Definition:\nThe Chaikin Oscillator was developed in the 1970s. The indicator is based upon the momentum\nof the Accumulation/Distribution (AD). AD calculates the position of a stock's daily closing\nprice as a fraction of the daily price range of the stock—a fraction that is multiplied by\nthe daily volume in order to quantify the net accumulation or distribution of a stock.\n\n";
+	
+				form = "H = High Values | L = Low Values | C = Close Values | V = Volume Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[ADOSC] = taInvoke('ta_adosc', H, L, C, V, {fastMA = 3}, {slowMA = 10})\n";
+	
+				printToMatLab(para1, para2, form);
+	
+				break;
+			}
 		case ta_adx:
-			para1 = "Function: Average Directional Movement Index\nSource: http://en.wikipedia.org/wiki/Average_directional_movement_index\n\n";
-			para2 = "Definition:\nThe average directional movement index (ADX) was developed in 1978 by J. Welles Wilder as\nan indicator of trend strength in a series of prices of a financial instrument.\nADX has become a widely used indicator for technical analysts, and is provided as a\nstandard in collections of indicators offered by various trading platforms.\n\n";
-
-			form = "H = High Values | L = Low Values | C = Close Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[ADX] = taInvoke('ta_adx', H, L, C, {Lookback=14})\n";
-
-			printToMatLab(para1, para2, form);
-
-			break;
+			{
+				para1 = "Function: Average Directional Movement Index\nSource: http://en.wikipedia.org/wiki/Average_directional_movement_index\n\n";
+				para2 = "Definition:\nThe average directional movement index (ADX) was developed in 1978 by J. Welles Wilder as\nan indicator of trend strength in a series of prices of a financial instrument.\nADX has become a widely used indicator for technical analysts, and is provided as a\nstandard in collections of indicators offered by various trading platforms.\n\n";
+	
+				form = "H = High Values | L = Low Values | C = Close Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[ADX] = taInvoke('ta_adx', H, L, C, {Lookback=14})\n";
+	
+				printToMatLab(para1, para2, form);
+	
+				break;
+			}
 
 		case ta_adxr:
-			para1 = "Function: Average Directional Movement Index Rating\nSource: http://www.traderslog.com/adxr\n\n";
-			para2 = "Definition:\nThe Average Directional Movement Index Rating measures momentum change in the ADX.\nADXR is calculated by adding the current ADX value and an ADX value n periods back,\nthen dividing the sum by two. This serves to smooth the ADX values.\nAs with the ADX, a rising ADXR reflects a strong underlying trend and likely\ncontinuation while falling ADXR suggests a weakening trend and possible trend reversal.\n\n";
-
-			form = "Values enclosed in {} are optional and indicates a default value if not provided.\n\n[ADXR] = taInvoke('ta_adxr', H, L, C, {Lookback=14})\n";
-
-			printToMatLab(para1, para2, form);
-
-			break;
+			{
+				para1 = "Function: Average Directional Movement Index Rating\nSource: http://www.traderslog.com/adxr\n\n";
+				para2 = "Definition:\nThe Average Directional Movement Index Rating measures momentum change in the ADX.\nADXR is calculated by adding the current ADX value and an ADX value n periods back,\nthen dividing the sum by two. This serves to smooth the ADX values.\nAs with the ADX, a rising ADXR reflects a strong underlying trend and likely\ncontinuation while falling ADXR suggests a weakening trend and possible trend reversal.\n\n";
+	
+				form = "Values enclosed in {} are optional and indicates a default value if not provided.\n\n[ADXR] = taInvoke('ta_adxr', H, L, C, {Lookback=14})\n";
+	
+				printToMatLab(para1, para2, form);
+	
+				break;
+			}
 
 		case ta_apo:
-			para1 = "Function: Absolute Price Oscillator\nSource: http://www.traderslog.com/absolute-price-oscillator\n\n";
-			para2 = "Definition:\nAn indicator based on the difference between two exponential moving averages,\nexpressed in absolute terms. Also known as the MACD indicator,\nthe APO is calculated by subtracting the longer exponential moving average\nfrom the shorter exponential moving average.\n\n";
-
-			form = "Values enclosed in {} are optional and indicates a default value if not provided.\nFor a list of moving average types (typeMA), reference 'ta_ma'.\n\n[APO] = taInvoke('ta_apo', data, {fastMA = 12}, {slowMA = 26}, {typeMA = 0})\n";
-
-			printToMatLab(para1, para2, form);
-
-			break;
+			{
+				para1 = "Function: Absolute Price Oscillator\nSource: http://www.traderslog.com/absolute-price-oscillator\n\n";
+				para2 = "Definition:\nAn indicator based on the difference between two exponential moving averages,\nexpressed in absolute terms. Also known as the MACD indicator,\nthe APO is calculated by subtracting the longer exponential moving average\nfrom the shorter exponential moving average.\n\n";
+	
+				form = "Values enclosed in {} are optional and indicates a default value if not provided.\nFor a list of moving average types (typeMA), reference 'ta_ma'.\n\n[APO] = taInvoke('ta_apo', data, {fastMA = 12}, {slowMA = 26}, {typeMA = 0})\n";
+	
+				printToMatLab(para1, para2, form);
+	
+				break;
+			}
 
 		case ta_aroon:
-			para1 = "Function: Aroon\nSource: http://www.investopedia.com/terms/a/aroon.asp\n\n";
-			para2 = "Definition:\nA technical indicator used for identifying trends in an underlying security and the\nlikelihood that the trends will reverse. It is made up of two lines:\n  one line is called 'Aroon up', which measures the strength of the uptrend,\n  and the other line is called 'Aroon down', which measures the downtrend.\nThe indicator reports the time it is taking for the price to reach, from a starting point,\nthe highest and lowest points over a given time period, each reported as a percentage of total time.\n\n";
-
-			form = "H = High Values | L = Low Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[AROON] = taInvoke('ta_aroon', H, L, {Lookback=14})\n";
-
-			printToMatLab(para1, para2, form);
-
-			break;
+			{
+				para1 = "Function: Aroon\nSource: http://www.investopedia.com/terms/a/aroon.asp\n\n";
+				para2 = "Definition:\nA technical indicator used for identifying trends in an underlying security and the\nlikelihood that the trends will reverse. It is made up of two lines:\n  one line is called 'Aroon up', which measures the strength of the uptrend,\n  and the other line is called 'Aroon down', which measures the downtrend.\nThe indicator reports the time it is taking for the price to reach, from a starting point,\nthe highest and lowest points over a given time period, each reported as a percentage of total time.\n\n";
+	
+				form = "H = High Values | L = Low Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[AROON] = taInvoke('ta_aroon', H, L, {Lookback=14})\n";
+	
+				printToMatLab(para1, para2, form);
+	
+				break;
+			}
 
 		case ta_aroonosc:
-			para1 = "Function: Aroon Oscillator\nSource: http://www.investopedia.com/terms/a/aroonoscillator.asp\n\n";
-			para2 = "Definition:\nA trend-following indicator that uses aspects of the Aroon indicator\n('Aroon up' and 'Aroon down') to gauge the strength of a current trend\nand the likelihood that it will continue.\nThe Aroon oscillator is calculated by subtracting Aroon down from Aroon up.\nReadings above zero indicate that an uptrend is present, while readings\nbelow zero indicate that a downtrend is present.\n\n";
+			{
+				para1 = "Function: Aroon Oscillator\nSource: http://www.investopedia.com/terms/a/aroonoscillator.asp\n\n";
+				para2 = "Definition:\nA trend-following indicator that uses aspects of the Aroon indicator\n('Aroon up' and 'Aroon down') to gauge the strength of a current trend\nand the likelihood that it will continue.\nThe Aroon oscillator is calculated by subtracting Aroon down from Aroon up.\nReadings above zero indicate that an uptrend is present, while readings\nbelow zero indicate that a downtrend is present.\n\n";
+	
+				form = "H = High Values | L = Low Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[AROONOSC] = taInvoke('ta_aroonosc', H, L, {Lookback=14})\n";
+	
+				printToMatLab(para1, para2, form);
+	
+				break;
+			}
+		case ta_asin:
+			{
+				para1 = "Function: Inverse Trigonometric Function Arcsin\nSource: http://en.wikipedia.org/wiki/Arcsin\n\n";
+				para2 = "Usual notation: y = arcsin x\nDefinition: x = sin y\nDomain of x for real result: \−1 =< x =< 1\nRange of usual principal value (radians): \−pi/2 =< y =< pi/2\nRange of usual principal value (degrees): \−90° =< y =< 90°\n\n";
+				
+				form = "[ASIN] = taInvoke('ta_asin',data)\n";
 
-			form = "H = High Values | L = Low Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[AROONOSC] = taInvoke('ta_aroonosc', H, L, {Lookback=14})\n";
+				printToMatLab(para1, para2, form);
 
-			printToMatLab(para1, para2, form);
+				break;
+			}
+		case ta_atan:
+			{
+				para1 = "Function: Inverse Trigonometric Function Arctan\nSource: http://en.wikipedia.org/wiki/Arctan\n\n";
+				para2 = "Usual notation: y = arctan x\nDefinition: x = tan y\nDomain of x for real result: \−1 =< x =< 1\nRange of usual principal value (radians): 0 =< y =< pi\nRange of usual principal value (degrees): 0° =< y =< 180°\n\n";
 
-			break;
+				form = "[ATAN] = taInvoke('ta_atan',data)\n";
+
+				printToMatLab(para1, para2, form);
+
+				break;
+			}
+		case ta_atr:
+			{
+				para1 = "Function: Average True Range\nSource: http://en.wikipedia.org/wiki/Average_true_range\n\n";
+				para2 = "Definition:\nAverage true range (ATR) is a technical analysis volatility indicator originally developed by J. Welles Wilder, Jr. for commodities.\nThe indicator does not provide an indication of price trend, simply the degree of price volatility.\nThe average true range is an N-day exponential moving average of the true range values.\nWilder recommended a 14-period smoothing.\n\n";
+
+				form = "H = High Values | L = Low Values | C = Close Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[ATR] = taInvoke('ta_atr', H, L, C, {Lookback=14})\n";
+
+				printToMatLab(para1, para2, form);
+
+				break;
+			}
+		case ta_avgprice:
+			{
+				para1 = "Function: Average Price\nSource: openAlgo.org\n\n";
+				para2 = "Definition:\nAveraged value of Open, High, Low and Close prices.\n\n";
+				
+				form = "O = Open Values | H = High Values | L = Low Values | C = Close Values\n\n[AVGPRICE] = taInvoke('ta_avgprice', O, H, L, C)\n";
+
+				printToMatLab(para1, para2, form);
+
+				break;
+			}
+		case ta_avgdev:
+			{
+				para1 = "Function: Average Deviation\nSource: http://en.wikipedia.org/wiki/Average_deviation\n\n";
+				para2 = "Definition:\nIn statistics, the absolute deviation of an element of a data set is the absolute difference\nbetween that element and a given point. Typically the deviation is reckoned from the central value,\nbeing construed as some type of average, most often the median or sometimes the mean of the data set.\n\n";
+
+				form = "Values enclosed in {} are optional and indicates a default value if not provided.\n\n[AVGDEV] = taInvoke('ta_avgdev', data, {Lookback=14})\n";
+
+				printToMatLab(para1, para2, form);
+
+				break;
+			}
 		default:
-			para1 = "The supplied function '%s' was either not found or not yet added to the information routine.\n\nExecute 'taInvoke' in the MatLab command window for a list of available functions.\n";
-			typeOut =  (char *)mxMalloc(strlen(para1) +1);
-			strcpy(typeOut, para1);
-			mexPrintf(typeOut, taFuncNameIn);
-			mxFree(typeOut);
-			return;
+			{
+				para1 = "The supplied function '%s' was either not found or not yet added to the information routine.\n\nExecute 'taInvoke' in the MatLab command window for a list of available functions.\n";
+				typeOut =  (char *)mxMalloc(strlen(para1) +1);
+				strcpy(typeOut, para1);
+				mexPrintf(typeOut, taFuncNameIn);
+				mxFree(typeOut);
+				return;
+			}
 	}
 
 	return;
