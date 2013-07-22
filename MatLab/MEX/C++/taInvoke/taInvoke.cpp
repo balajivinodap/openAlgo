@@ -52,6 +52,7 @@ void chkSingleVec(int colsO, int colsH, int colsL, int colsC, int lineNum);
 void printToMatLab(char *para1, char *form);
 void printToMatLab(char *para1, char *para2, char *form);
 void printToMatLab(char *para1, char *para2, char *para3, char *form);
+void printToMatLab(char *para1, char *para2, char *para3, char *para4, char *form);
 void typeMAcheck(string taFuncNameIn, string taFuncDesc, string taFuncOptName, int typeMA);
 
 static void InitSwitchMapping();
@@ -10602,6 +10603,7 @@ void taInvokeFuncInfo(string taFuncNameIn)
 	char *para1;
 	char *para2 = NULL;
 	char *para3 = NULL;
+	char *para4 = NULL;
 	char *form = NULL;
 	char *typeOut;
 
@@ -10609,30 +10611,30 @@ void taInvokeFuncInfo(string taFuncNameIn)
 	{
 		case ta_accbands:
 			{
-			para1 = "\nFunction: Acceleration Bands\nSource: http://www.iqchart.com\n\n";
-			para2 = "Definition:\nPrice Headley's Acceleration Bands serve as a trading envelope that factor in a stock's typical\nvolatility over standard settings of 20 or 80 bars. They can be used across any time frame,\nthough Headley prefers to use them most across weekly and monthly timeframes as breakout\nindicators outside these bands, while using the shorter time frames to define likely support and\nresistance levels at the lower and upper Acceleration Bands.\nAcceleration Bands are plotted around a simple moving average as the midpoint,\nand the upper and lower bands are of equal distance from this midpoint.\n\n";
-			para3 = "Interpretation:\nThe principle of Acceleration is one of the most critical lessons that active traders must learn.\nStock traders need to get the best bang for their buck. They desire to rotate capital to the best\nperforming stocks quickly and then rotate out of those stocks when the acceleration period ends.\nThe goal is to keep moving your capital into the best-performing stocks. And option buyers especially\nneed to be in the best trending stocks, as the time lost while holding an option can best be overcome\nby stocks that move sharply in the anticipated direction. We want to achieve maximum movement in the\nstock over the least amount of time possible.\n\n";
+				para1 = "\nFunction: Acceleration Bands\nSource: http://www.iqchart.com\n\n";
+				para2 = "Definition:\nPrice Headley's Acceleration Bands serve as a trading envelope that factor in a stock's typical\nvolatility over standard settings of 20 or 80 bars. They can be used across any time frame,\nthough Headley prefers to use them most across weekly and monthly timeframes as breakout\nindicators outside these bands, while using the shorter time frames to define likely support and\nresistance levels at the lower and upper Acceleration Bands.\nAcceleration Bands are plotted around a simple moving average as the midpoint,\nand the upper and lower bands are of equal distance from this midpoint.\n\n";
+				para3 = "Interpretation:\nThe principle of Acceleration is one of the most critical lessons that active traders must learn.\nStock traders need to get the best bang for their buck. They desire to rotate capital to the best\nperforming stocks quickly and then rotate out of those stocks when the acceleration period ends.\nThe goal is to keep moving your capital into the best-performing stocks. And option buyers especially\nneed to be in the best trending stocks, as the time lost while holding an option can best be overcome\nby stocks that move sharply in the anticipated direction. We want to achieve maximum movement in the\nstock over the least amount of time possible.\n\n";
 				
-			form = "H = High Values | L = Low Values | C = Close Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[UPPERBAND, MIDBAND, LOWERBAND] = taInvoke('ta_accbands', H, L, C, {Lookback=14})\n";
+				form = "H = High Values | L = Low Values | C = Close Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[UPPERBAND, MIDBAND, LOWERBAND] = taInvoke('ta_accbands', H, L, C, {Lookback=14})\n";
 			
-			printToMatLab(para1, para2, para3, form);
+				printToMatLab(para1, para2, para3, form);
 
-			break;
+				break;
 			}
 		case ta_acos:
 			{
-			para1 = "Function: Vector Trigonometric ACos\nSource: https://en.wikipedia.org/wiki/Inverse_trigonometric_functions\n\n";
-			para2 = "Definition:\nIn mathematics, the inverse trigonometric functions (occasionally called cyclometric functions)\nare the inverse functions of the trigonometric functions with suitably restricted domains.\nThey are the inverse sine, cosine, tangent, cosecant, secant and cotangent functions.\nThey are used for computing the angle, from any of its trigonometric ratios.\nThese functions have a wide range of use in navigation, physics, engineering, etc.\n\n";
+				para1 = "Function: Vector Trigonometric ACos\nSource: https://en.wikipedia.org/wiki/Inverse_trigonometric_functions\n\n";
+				para2 = "Definition:\nIn mathematics, the inverse trigonometric functions (occasionally called cyclometric functions)\nare the inverse functions of the trigonometric functions with suitably restricted domains.\nThey are the inverse sine, cosine, tangent, cosecant, secant and cotangent functions.\nThey are used for computing the angle, from any of its trigonometric ratios.\nThese functions have a wide range of use in navigation, physics, engineering, etc.\n\n";
 			
-			form = "[ACOS] = taInvoke('ta_acos', CosineValues)\n";	
+				form = "[ACOS] = taInvoke('ta_acos', CosineValues)\n";	
 
-			printToMatLab(para1, para2, form);
+				printToMatLab(para1, para2, form);
 
-			break;
+				break;
 			}
 		case ta_ad:
 			{
-			para1 = "Function: Chaikin A/D Line\nSource: http://en.wikipedia.org/wiki/Chaikin_Stock_Research\n\n";
+				para1 = "Function: Chaikin A/D Line\nSource: http://en.wikipedia.org/wiki/Chaikin_Stock_Research\n\n";
 				para2 = "Definition:\nThe Chaikin Oscillator was developed in the 1970s. The indicator is based upon the momentum\nof the Accumulation/Distribution (AD). AD calculates the position of a stock's daily closing\nprice as a fraction of the daily price range of the stock—a fraction that is multiplied by\nthe daily volume in order to quantify the net accumulation or distribution of a stock.\n\n";
 				
 				form = "H = High Values | L = Low Values | C = Close Values | V = Volume Values\n\n[AD] = taInvoke('ta_ad', H, L, C, V)\n";
@@ -10777,6 +10779,19 @@ void taInvokeFuncInfo(string taFuncNameIn)
 
 				break;
 			}
+		case ta_bbands:
+			{
+				para1 = "Function: Bollinger Bands\nSource: http://en.wikipedia.org/wiki/Bollinger_bands\n\n";
+				para2 = "Definition: Bollinger Bands is a technical analysis tool invented by John Bollinger in the 1980s, and a term trademarked by him in 2011.\nHaving evolved from the concept of trading bands, Bollinger Bands and the related indicators %b and bandwidth can be used to\nmeasure the 'highness' or 'lowness' of the price relative to previous trades.\nBollinger Bands are a volatility indicator similar to the Keltner channel.\n\n";
+				para3 = "Bollinger Bands consist of:\nan N-period moving average (MA)\nan upper band at K times an N-period standard deviation above the moving average (MA \+ K*sigma)\na lower band at K times an N-period standard deviation below the moving average (MA \− K*sigma)\n\n";
+				para4 = "Typical values for N and K are 20 and 2, respectively. The default choice for the average is a simple moving average,\nbut other types of averages can be employed as needed. Exponential moving averages are a common second choice.\nUsually the same period is used for both the middle band and the calculation of standard deviation.\n\n";
+			
+				form = "Values enclosed in {} are optional and indicates a default value if not provided.\nFor a list of moving average types (typeMA), reference 'ta_ma'.\n\n[UPPERBAND, MIDBAND, LOWERBAND] = taInvoke('ta_bbands', data, {Lookback=5}, {DevUp=2}, {DevDn=2}, {typeMA=0})\n";
+			
+				printToMatLab(para1, para2, para3, para4, form);
+				
+				break;
+			}
 		default:
 			{
 				para1 = "The supplied function '%s' was either not found or not yet added to the information routine.\n\nExecute 'taInvoke' in the MatLab command window for a list of available functions.\n";
@@ -10827,6 +10842,22 @@ void printToMatLab(char *para1, char *para2, char *para3, char *form)
 	return;
 
 }
+
+void printToMatLab(char *para1, char *para2, char *para3, char *para4, char *form)
+{
+	char *typeOut = (char *)mxMalloc(strlen(para1) + strlen(para2) + strlen(para3) + strlen(para4) + strlen(form) +1);
+	strcpy(typeOut, para1);
+	strcat(typeOut, para2);
+	strcat(typeOut, para3);
+	strcat(typeOut, para4);
+	strcat(typeOut, form);
+
+	mexPrintf(typeOut);
+	mxFree(typeOut);
+	return;
+
+}
+
 //
 //  -------------------------------------------------------------------------
 //                                  _    _ 
@@ -10885,6 +10916,6 @@ void printToMatLab(char *para1, char *para2, char *para3, char *form)
 //   -------------------------------------------------------------------------
 //
 //   Author:	Mark Tompkins
-//   Revision:	4945.19866
+//   Revision:	4951.29330
 //   Copyright:	(c)2013
 //
