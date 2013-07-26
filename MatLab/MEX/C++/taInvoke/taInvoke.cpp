@@ -10792,6 +10792,43 @@ void taInvokeFuncInfo(string taFuncNameIn)
 				
 				break;
 			}
+		case ta_beta:
+			{
+				para1 = "Function: Beta\nSource: http://en.wikipedia.org/wiki/Beta_(finance)\n\n";
+				para2 = "In finance, the Beta of a stock or portfolio is a number describing the correlated volatility\nof an asset in relation to the volatility of the benchmark that said asset is being compared to.\nThis benchmark is generally the overall financial market and is often estimated via the use of\nrepresentative indices, such as the S&P 500.\n\n";
+			
+				form="Values enclosed in {} are optional and indicates a default value if not provided.\n\n[BETA] = taInvoke('ta_beta', data, base, {Lookback=5})\n";
+			
+				printToMatLab(para1, para2, form);
+
+				break;
+			}
+
+		case ta_bop:
+			{
+				para1 = "Function: Balance of Power\nSource: Igor Livshin - author\n\n";
+				para2 = "The balance of power (BOP) indicator measures the strength of the bulls vs. the bears by\nassessing the ability of each to push price to an extreme level.\n'I deliberately developed BOP not to be a range-bound indicator,\nso it is as sensitive at extreme points as it is at other levels.'\n\n";
+			
+				form="O = Open Values | H = High Values | L = Low Values | C = Close Values\n\n[BOP] = taInvoke('ta_bop', O, H, L, C)\n";
+				
+				printToMatLab(para1, para2, form);
+
+				break;
+			}
+
+		case ta_cci:
+			{
+				para1 = "Function: Commodity Channel Index (CCI)\nSource: http://en.wikipedia.org/wiki/Commodity_channel_index\n\n";
+				para2 = "The commodity channel index (CCI) is an oscillator originally introduced by Donald Lambert in an\narticle published in the October 1980 issue of Commodities magazine (now known as Futures magazine).\nSince its introduction, the indicator has grown in popularity and is now a very common tool for\ntraders in identifying cyclical trends not only in commodities, but also equities and currencies.\nThe CCI can be adjusted to the timeframe of the market traded on by changing the averaging period.\n\n";
+				para3 = "CCI measures a security's variation from the statistical mean.\n\n";
+
+				form="H = High Values | L = Low Values | C = Close Values\n\nValues enclosed in {} are optional and indicates a default value if not provided.\n\n[CCI] = taInvoke('ta_cci', H, L, C, {Lookback=14})\n";
+			
+				printToMatLab(para1, para2, para3, form);
+
+				break;
+			
+			}
 		default:
 			{
 				para1 = "The supplied function '%s' was either not found or not yet added to the information routine.\n\nExecute 'taInvoke' in the MatLab command window for a list of available functions.\n";
